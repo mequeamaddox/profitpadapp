@@ -1,0 +1,377 @@
+import {
+  users,
+  inventoryItems,
+  salesRecords,
+  reminders,
+  type User,
+  type UpsertUser,
+  type InventoryItem,
+  type InsertInventoryItem,
+  type SalesRecord,
+  type InsertSalesRecord,
+  type Reminder,
+  type InsertReminder,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
+
+export interface IStorage {
+  // User operations
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
+  // Inventory operations
+  getInventoryItems(userId: string, archived?: boolean): Promise<InventoryItem[]>;
+  getInventoryItem(id: string, userId: string): Promise<InventoryItem | undefined>;
+  createInventoryItem(item: InsertInventoryItem & { userId: string }): Promise<InventoryItem>;
+  updateInventoryItem(id: string, userId: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined>;
+  deleteInventoryItem(id: string, userId: string): Promise<boolean>;
+  searchInventoryItems(userId: string, query: string): Promise<InventoryItem[]>;
+
+  // Sales operations
+  getSalesRecords(userId: string): Promise<SalesRecord[]>;
+  getSalesRecord(id: string, userId: string): Promise<SalesRecord | undefined>;
+  createSalesRecord(record: InsertSalesRecord & { userId: string }): Promise<SalesRecord>;
+  updateSalesRecord(id: string, userId: string, record: Partial<InsertSalesRecord>): Promise<SalesRecord | undefined>;
+  deleteSalesRecord(id: string, userId: string): Promise<boolean>;
+
+  // Reminders operations
+  getReminders(userId: string): Promise<Reminder[]>;
+  getReminder(id: string, userId: string): Promise<Reminder | undefined>;
+  createReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder>;
+  updateReminder(id: string, userId: string, reminder: Partial<InsertReminder>): Promise<Reminder | undefined>;
+  deleteReminder(id: string, userId: string): Promise<boolean>;
+  getOverdueReminders(userId: string): Promise<Reminder[]>;
+
+  // Analytics operations
+  getDashboardMetrics(userId: string): Promise<{
+    totalSales: string;
+    totalProfit: string;
+    itemsSold: number;
+    monthlyGoalProgress: number;
+    recentSales: any[];
+    revenueData: any[];
+    inventoryStats: any;
+  }>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async getInventoryItems(userId: string, archived?: boolean): Promise<InventoryItem[]> {
+    const conditions = [eq(inventoryItems.userId, userId)];
+    if (archived !== undefined) {
+      conditions.push(eq(inventoryItems.archived, archived));
+    }
+    
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(and(...conditions))
+      .orderBy(desc(inventoryItems.createdAt));
+  }
+
+  async getInventoryItem(id: string, userId: string): Promise<InventoryItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(inventoryItems)
+      .where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, userId)));
+    return item;
+  }
+
+  async createInventoryItem(item: InsertInventoryItem & { userId: string }): Promise<InventoryItem> {
+    const [newItem] = await db
+      .insert(inventoryItems)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async updateInventoryItem(id: string, userId: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined> {
+    const [updatedItem] = await db
+      .update(inventoryItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, userId)))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteInventoryItem(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(inventoryItems)
+      .where(and(eq(inventoryItems.id, id), eq(inventoryItems.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async searchInventoryItems(userId: string, query: string): Promise<InventoryItem[]> {
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          sql`(
+            ${inventoryItems.title} ILIKE ${`%${query}%`} OR
+            ${inventoryItems.sku} ILIKE ${`%${query}%`} OR
+            ${inventoryItems.notes} ILIKE ${`%${query}%`}
+          )`
+        )
+      )
+      .orderBy(desc(inventoryItems.createdAt));
+  }
+
+  async getSalesRecords(userId: string): Promise<SalesRecord[]> {
+    return await db
+      .select()
+      .from(salesRecords)
+      .where(eq(salesRecords.userId, userId))
+      .orderBy(desc(salesRecords.dateSold));
+  }
+
+  async getSalesRecord(id: string, userId: string): Promise<SalesRecord | undefined> {
+    const [record] = await db
+      .select()
+      .from(salesRecords)
+      .where(and(eq(salesRecords.id, id), eq(salesRecords.userId, userId)));
+    return record;
+  }
+
+  async createSalesRecord(record: InsertSalesRecord & { userId: string }): Promise<SalesRecord> {
+    const [newRecord] = await db
+      .insert(salesRecords)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  async updateSalesRecord(id: string, userId: string, record: Partial<InsertSalesRecord>): Promise<SalesRecord | undefined> {
+    const [updatedRecord] = await db
+      .update(salesRecords)
+      .set({ ...record, updatedAt: new Date() })
+      .where(and(eq(salesRecords.id, id), eq(salesRecords.userId, userId)))
+      .returning();
+    return updatedRecord;
+  }
+
+  async deleteSalesRecord(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(salesRecords)
+      .where(and(eq(salesRecords.id, id), eq(salesRecords.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getReminders(userId: string): Promise<Reminder[]> {
+    return await db
+      .select()
+      .from(reminders)
+      .where(eq(reminders.userId, userId))
+      .orderBy(desc(reminders.dueDate));
+  }
+
+  async getReminder(id: string, userId: string): Promise<Reminder | undefined> {
+    const [reminder] = await db
+      .select()
+      .from(reminders)
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
+    return reminder;
+  }
+
+  async createReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder> {
+    const [newReminder] = await db
+      .insert(reminders)
+      .values(reminder)
+      .returning();
+    return newReminder;
+  }
+
+  async updateReminder(id: string, userId: string, reminder: Partial<InsertReminder>): Promise<Reminder | undefined> {
+    const [updatedReminder] = await db
+      .update(reminders)
+      .set({ ...reminder, updatedAt: new Date() })
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)))
+      .returning();
+    return updatedReminder;
+  }
+
+  async deleteReminder(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(reminders)
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getOverdueReminders(userId: string): Promise<Reminder[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(reminders)
+      .where(
+        and(
+          eq(reminders.userId, userId),
+          eq(reminders.completed, false),
+          lte(reminders.dueDate, now)
+        )
+      )
+      .orderBy(desc(reminders.dueDate));
+  }
+
+  async getDashboardMetrics(userId: string): Promise<{
+    totalSales: string;
+    totalProfit: string;
+    itemsSold: number;
+    monthlyGoalProgress: number;
+    recentSales: any[];
+    revenueData: any[];
+    inventoryStats: any;
+  }> {
+    // Get current month start/end
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Total sales amount
+    const [totalSalesResult] = await db
+      .select({ total: sum(salesRecords.salePrice) })
+      .from(salesRecords)
+      .where(eq(salesRecords.userId, userId));
+
+    // Total profit calculation (sale price - purchase price - fees - shipping)
+    const salesWithItems = await db
+      .select({
+        salePrice: salesRecords.salePrice,
+        platformFee: salesRecords.platformFee,
+        shippingCost: salesRecords.shippingCost,
+        purchasePrice: inventoryItems.purchasePrice,
+      })
+      .from(salesRecords)
+      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
+      .where(eq(salesRecords.userId, userId));
+
+    const totalProfit = salesWithItems.reduce((acc, sale) => {
+      const profit = parseFloat(sale.salePrice || "0") - 
+                    parseFloat(sale.purchasePrice || "0") - 
+                    parseFloat(sale.platformFee || "0") - 
+                    parseFloat(sale.shippingCost || "0");
+      return acc + profit;
+    }, 0);
+
+    // Items sold count
+    const [itemsSoldResult] = await db
+      .select({ count: count() })
+      .from(salesRecords)
+      .where(eq(salesRecords.userId, userId));
+
+    // Monthly goal progress
+    const [userResult] = await db
+      .select({ monthlyGoal: users.monthlyGoal })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const [monthlyProfitResult] = await db
+      .select({ total: sum(salesRecords.salePrice) })
+      .from(salesRecords)
+      .where(
+        and(
+          eq(salesRecords.userId, userId),
+          gte(salesRecords.dateSold, monthStart),
+          lte(salesRecords.dateSold, monthEnd)
+        )
+      );
+
+    const monthlyGoal = parseFloat(userResult?.monthlyGoal || "0");
+    const monthlyProgress = monthlyGoal > 0 ? 
+      Math.round((parseFloat(monthlyProfitResult?.total || "0") / monthlyGoal) * 100) : 0;
+
+    // Recent sales with inventory details
+    const recentSales = await db
+      .select({
+        id: salesRecords.id,
+        salePrice: salesRecords.salePrice,
+        platform: salesRecords.platform,
+        dateSold: salesRecords.dateSold,
+        itemTitle: inventoryItems.title,
+        itemSku: inventoryItems.sku,
+        itemImages: inventoryItems.images,
+      })
+      .from(salesRecords)
+      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
+      .where(eq(salesRecords.userId, userId))
+      .orderBy(desc(salesRecords.dateSold))
+      .limit(5);
+
+    // Revenue data for the last 12 months
+    const revenueData = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      
+      const [monthlyRevenue] = await db
+        .select({ total: sum(salesRecords.salePrice) })
+        .from(salesRecords)
+        .where(
+          and(
+            eq(salesRecords.userId, userId),
+            gte(salesRecords.dateSold, date),
+            lte(salesRecords.dateSold, nextDate)
+          )
+        );
+
+      revenueData.push({
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        revenue: parseFloat(monthlyRevenue?.total || "0"),
+      });
+    }
+
+    // Inventory stats
+    const [totalItemsResult] = await db
+      .select({ count: count() })
+      .from(inventoryItems)
+      .where(and(eq(inventoryItems.userId, userId), eq(inventoryItems.archived, false)));
+
+    const [activeListingsResult] = await db
+      .select({ count: count() })
+      .from(inventoryItems)
+      .leftJoin(salesRecords, eq(inventoryItems.id, salesRecords.inventoryItemId))
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          eq(inventoryItems.archived, false),
+          sql`${salesRecords.id} IS NULL`
+        )
+      );
+
+    return {
+      totalSales: totalSalesResult?.total || "0",
+      totalProfit: totalProfit.toFixed(2),
+      itemsSold: itemsSoldResult?.count || 0,
+      monthlyGoalProgress: monthlyProgress,
+      recentSales,
+      revenueData,
+      inventoryStats: {
+        totalItems: totalItemsResult?.count || 0,
+        activeListings: activeListingsResult?.count || 0,
+        lowStock: 0, // Could be calculated based on quantity if we add that field
+      },
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
