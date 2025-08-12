@@ -8,6 +8,7 @@ import RevenueChart from "@/components/dashboard/revenue-chart";
 import RecentSales from "@/components/dashboard/recent-sales";
 import QuickActions from "@/components/dashboard/quick-actions";
 import InventoryOverview from "@/components/dashboard/inventory-overview";
+import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -44,24 +45,29 @@ export default function Dashboard() {
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Dashboard" subtitle="Welcome back! Here's what's happening with your business." />
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
           <MetricsGrid />
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div className="lg:col-span-2 order-2 lg:order-1">
               <RevenueChart />
             </div>
-            <RecentSales />
+            <div className="order-1 lg:order-2">
+              <RecentSales />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <QuickActions />
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="order-2 lg:order-1">
+              <QuickActions />
+            </div>
+            <div className="lg:col-span-2 order-1 lg:order-2">
               <InventoryOverview />
             </div>
           </div>
         </div>
       </main>
+      <PWAInstallPrompt />
     </div>
   );
 }

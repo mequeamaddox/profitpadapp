@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512" style="display: none;"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function createIcon(size) {
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background
+            ctx.fillStyle = '#1e40af';
+            ctx.roundRect(0, 0, size, size, size/8);
+            ctx.fill();
+            
+            // Chart bars
+            ctx.fillStyle = 'white';
+            const barWidth = size * 0.08;
+            const spacing = size * 0.08;
+            const baseY = size * 0.75;
+            
+            // Bar 1
+            ctx.fillRect(size * 0.25, baseY - size * 0.25, barWidth, size * 0.25);
+            // Bar 2
+            ctx.fillRect(size * 0.25 + barWidth + spacing, baseY - size * 0.35, barWidth, size * 0.35);
+            // Bar 3
+            ctx.fillRect(size * 0.25 + 2 * (barWidth + spacing), baseY - size * 0.15, barWidth, size * 0.15);
+            // Bar 4
+            ctx.fillRect(size * 0.25 + 3 * (barWidth + spacing), baseY - size * 0.45, barWidth, size * 0.45);
+            
+            // P letter
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.08}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('P', size / 2, size * 0.25);
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        sizes.forEach(size => {
+            const dataUrl = createIcon(size);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `icon-${size}x${size}.png`;
+            link.click();
+        });
+    </script>
+</body>
+</html>

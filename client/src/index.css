@@ -108,6 +108,62 @@
   }
 }
 
+/* PWA and Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .btn, button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile forms */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Prevent zooming on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Mobile-friendly tables */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* PWA Install Prompt Animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-install-prompt {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Mobile Navigation Animation */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobile-nav-sheet {
+  animation: slideInLeft 0.3s ease-out;
+}
+
 /* Custom styles for the ProfitPad theme */
 .bg-slate-50 {
   background-color: hsl(214 31% 97%);

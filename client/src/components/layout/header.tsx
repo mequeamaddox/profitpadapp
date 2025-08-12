@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Bell, Plus, LogOut, User as UserIcon } from "lucide-react";
 import AddMenuModal from "@/components/modals/add-menu-modal";
+import MobileNav from "./mobile-nav";
 import { User, Reminder } from "@shared/schema";
 
 interface HeaderProps {
@@ -27,12 +28,15 @@ export default function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
+      <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+          {/* Mobile Navigation */}
+          <MobileNav />
+          
+          <div className="flex-1 md:flex-initial md:mr-4">
+            <h1 className="text-lg md:text-2xl font-bold text-slate-900 truncate">{title}</h1>
             {subtitle && (
-              <p className="text-slate-600 mt-1">
+              <p className="text-slate-600 mt-1 text-sm md:text-base hidden sm:block">
                 {subtitle.includes("Welcome back") 
                   ? `Welcome back, ${user?.firstName || "there"}! Here's what's happening with your business.`
                   : subtitle
@@ -40,9 +44,9 @@ export default function Header({ title, subtitle }: HeaderProps) {
               </p>
             )}
           </div>
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Search - Hidden on mobile */}
+            <div className="relative hidden lg:block">
               <Input
                 type="text"
                 placeholder="Search inventory, sales..."
@@ -63,10 +67,10 @@ export default function Header({ title, subtitle }: HeaderProps) {
               )}
             </Button>
             
-            {/* Add New Button */}
-            <Button onClick={() => setShowAddMenu(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add New
+            {/* Add New Button - Responsive */}
+            <Button onClick={() => setShowAddMenu(true)} size="sm" className="md:h-auto">
+              <Plus className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Add New</span>
             </Button>
 
             {/* User Profile Dropdown */}
