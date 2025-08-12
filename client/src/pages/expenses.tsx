@@ -114,7 +114,7 @@ export default function Expenses() {
       <Sidebar />
       <main className="flex-1 overflow-hidden">
         <Header title="Business Expenses" subtitle="Track and manage all your business expenses with comprehensive tax calculations" />
-        <div className="flex-1 overflow-y-auto p-6 pb-20 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ paddingBottom: '120px' }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
