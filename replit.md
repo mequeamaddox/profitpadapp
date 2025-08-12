@@ -6,6 +6,19 @@ ProfitPad is a comprehensive business management application designed for online
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+Updated pricing tiers to higher amounts:
+- Professional: $19.99/month (was $9.99/month)  
+- Enterprise: $49.99/month (was $29.99/month)
+
+Implemented subscription-based feature restrictions:
+- Starter (Free): Limited to 50 inventory items, 100 sales records, 20 reminders
+- Professional ($19.99/month): Unlimited inventory/sales/reminders, advanced analytics, multi-platform integration
+- Enterprise ($49.99/month): All Professional features plus team access, API integrations, dedicated support
+
+Feature blocking logic implemented in backend with upgrade prompts in frontend forms.
+
 # System Architecture
 
 ## Frontend Architecture

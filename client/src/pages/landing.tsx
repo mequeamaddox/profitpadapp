@@ -145,7 +145,7 @@ export default function Landing() {
               </div>
               <CardHeader>
                 <CardTitle className="text-2xl">Professional</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">$9.99<span className="text-base font-normal text-slate-500">/month</span></div>
+                <div className="text-4xl font-bold text-slate-900">$19.99<span className="text-base font-normal text-slate-500">/month</span></div>
                 <CardDescription>For growing businesses</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -171,7 +171,7 @@ export default function Landing() {
             <Card className="relative">
               <CardHeader>
                 <CardTitle className="text-2xl">Enterprise</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">$29.99<span className="text-base font-normal text-slate-500">/month</span></div>
+                <div className="text-4xl font-bold text-slate-900">$49.99<span className="text-base font-normal text-slate-500">/month</span></div>
                 <CardDescription>For serious entrepreneurs</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

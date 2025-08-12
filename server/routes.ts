@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { canPerformAction, getSubscriptionLimits } from "./subscriptionLimits";
 import {
   insertInventoryItemSchema,
   insertSalesRecordSchema,
@@ -74,6 +75,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/inventory", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // Check subscription limits
+      const currentCount = await storage.getInventoryCount(userId);
+      const canCreate = canPerformAction(user?.subscriptionTier || 'starter', 'inventoryLimit', currentCount);
+      
+      if (!canCreate) {
+        const limits = getSubscriptionLimits(user?.subscriptionTier || 'starter');
+        return res.status(403).json({ 
+          message: `Inventory limit reached. Your ${user?.subscriptionTier || 'starter'} plan allows ${limits.inventoryLimit} items. Upgrade to add more.`,
+          upgradeRequired: true
+        });
+      }
+      
       const validatedData = insertInventoryItemSchema.parse(req.body);
       const item = await storage.createInventoryItem({ ...validatedData, userId });
       res.status(201).json(item);
@@ -147,6 +162,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/sales", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // Check subscription limits
+      const currentCount = await storage.getSalesCount(userId);
+      const canCreate = canPerformAction(user?.subscriptionTier || 'starter', 'salesLimit', currentCount);
+      
+      if (!canCreate) {
+        const limits = getSubscriptionLimits(user?.subscriptionTier || 'starter');
+        return res.status(403).json({ 
+          message: `Sales limit reached. Your ${user?.subscriptionTier || 'starter'} plan allows ${limits.salesLimit} sales records. Upgrade to add more.`,
+          upgradeRequired: true
+        });
+      }
+      
       const validatedData = insertSalesRecordSchema.parse(req.body);
       const sale = await storage.createSalesRecord({ ...validatedData, userId });
       res.status(201).json(sale);
@@ -228,6 +257,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reminders", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // Check subscription limits
+      const currentCount = await storage.getRemindersCount(userId);
+      const canCreate = canPerformAction(user?.subscriptionTier || 'starter', 'remindersLimit', currentCount);
+      
+      if (!canCreate) {
+        const limits = getSubscriptionLimits(user?.subscriptionTier || 'starter');
+        return res.status(403).json({ 
+          message: `Reminders limit reached. Your ${user?.subscriptionTier || 'starter'} plan allows ${limits.remindersLimit} reminders. Upgrade to add more.`,
+          upgradeRequired: true
+        });
+      }
+      
       const validatedData = insertReminderSchema.parse(req.body);
       const reminder = await storage.createReminder({ ...validatedData, userId });
       res.status(201).json(reminder);

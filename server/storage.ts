@@ -61,6 +61,30 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getInventoryCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(inventoryItems)
+      .where(eq(inventoryItems.userId, userId));
+    return result[0]?.count || 0;
+  }
+
+  async getSalesCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(salesRecords)
+      .where(eq(salesRecords.userId, userId));
+    return result[0]?.count || 0;
+  }
+
+  async getRemindersCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reminders)
+      .where(eq(reminders.userId, userId));
+    return result[0]?.count || 0;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)

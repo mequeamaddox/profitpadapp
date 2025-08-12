@@ -32,7 +32,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").default("standard"), // "standard" or "premium"
+  subscriptionTier: varchar("subscription_tier").default("starter"), // "starter", "professional", "enterprise"
   monthlyGoal: decimal("monthly_goal", { precision: 10, scale: 2 }).default("0.00"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

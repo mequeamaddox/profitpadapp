@@ -15,6 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import UpgradePrompt from "@/components/upgrade-prompt";
+import { useState } from "react";
+import { User } from "@shared/schema";
 
 interface ReminderFormProps {
   reminder?: Reminder | null;
@@ -24,6 +27,11 @@ interface ReminderFormProps {
 export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/auth/user"],
+  });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ["/api/inventory"],
@@ -67,6 +75,10 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
+        return;
+      }
+      if (error.message.includes('Reminders limit reached')) {
+        setShowUpgradePrompt(true);
         return;
       }
       toast({
@@ -127,7 +139,8 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
   const selectedDate = form.watch("dueDate");
 
   return (
-    <Form {...form}>
+    <div>
+      <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
@@ -286,5 +299,14 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
         </div>
       </form>
     </Form>
+
+    <UpgradePrompt 
+      isOpen={showUpgradePrompt}
+      onClose={() => setShowUpgradePrompt(false)}
+      currentTier={user?.subscriptionTier || 'starter'}
+      feature="reminders"
+      limit={20}
+    />
+  </div>
   );
 }

@@ -15,6 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import UpgradePrompt from "@/components/upgrade-prompt";
+import { useState } from "react";
+import { User } from "@shared/schema";
 
 interface SalesFormProps {
   sale?: SalesRecord | null;
@@ -29,6 +32,11 @@ const platforms = [
 export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/auth/user"],
+  });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ["/api/inventory"],
@@ -72,6 +80,10 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
+        return;
+      }
+      if (error.message.includes('Sales limit reached')) {
+        setShowUpgradePrompt(true);
         return;
       }
       toast({
@@ -132,7 +144,8 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Form {...form}>
+    <div>
+      <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -349,5 +362,14 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
         </div>
       </form>
     </Form>
+
+      <UpgradePrompt 
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        currentTier={user?.subscriptionTier || 'starter'}
+        feature="sales records"
+        limit={100}
+      />
+    </div>
   );
 }

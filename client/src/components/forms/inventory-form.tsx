@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
-import { insertInventoryItemSchema, type InventoryItem, type InsertInventoryItem } from "@shared/schema";
+import { insertInventoryItemSchema, type InventoryItem, type InsertInventoryItem, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import UpgradePrompt from "@/components/upgrade-prompt";
 
 interface InventoryFormProps {
   item?: InventoryItem | null;
@@ -40,6 +42,11 @@ const conditions = [
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/auth/user"],
+  });
 
   const form = useForm<InsertInventoryItem>({
     resolver: zodResolver(insertInventoryItemSchema),
@@ -82,6 +89,10 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
+        return;
+      }
+      if (error.message.includes('Inventory limit reached')) {
+        setShowUpgradePrompt(true);
         return;
       }
       toast({
@@ -141,8 +152,9 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -368,11 +380,20 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : item ? "Update Item" : "Create Item"}
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "Saving..." : item ? "Update Item" : "Create Item"}
           </Button>
         </div>
       </form>
     </Form>
+
+    <UpgradePrompt 
+      isOpen={showUpgradePrompt}
+      onClose={() => setShowUpgradePrompt(false)}
+      currentTier={user?.subscriptionTier || 'starter'}
+      feature="inventory items"
+      limit={50}
+    />
+  </div>
   );
 }
