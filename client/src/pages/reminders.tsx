@@ -7,12 +7,15 @@ import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import ReminderForm from "@/components/forms/reminder-form";
+import NotificationCenter from "@/components/notifications/notification-center";
+import NotificationSettings from "@/components/notifications/notification-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Clock, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Clock, CheckCircle, Bell, Settings } from "lucide-react";
 import type { Reminder } from "@shared/schema";
 
 export default function Reminders() {
@@ -146,37 +149,56 @@ export default function Reminders() {
         <Header title="Reminders" subtitle="Stay on top of your tasks and deadlines." />
         
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Actions Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant={showCompleted ? "default" : "outline"}
-                onClick={() => setShowCompleted(!showCompleted)}
-              >
-                {showCompleted ? "Hide Completed" : "Show Completed"}
-              </Button>
-            </div>
-            
-            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditingReminder(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Reminder
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingReminder ? "Edit Reminder" : "Create New Reminder"}
-                  </DialogTitle>
-                </DialogHeader>
-                <ReminderForm
-                  reminder={editingReminder}
-                  onSuccess={handleFormClose}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Tabs defaultValue="reminders" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="reminders">My Reminders</TabsTrigger>
+              <TabsTrigger value="notifications" className="relative">
+                <Bell className="h-4 w-4 mr-2" />
+                Notifications
+                {overdueReminders.length > 0 && (
+                  <Badge variant="destructive" className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
+                    {overdueReminders.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="settings">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="reminders" className="space-y-6">
+              {/* Actions Bar */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant={showCompleted ? "default" : "outline"}
+                    onClick={() => setShowCompleted(!showCompleted)}
+                  >
+                    {showCompleted ? "Hide Completed" : "Show Completed"}
+                  </Button>
+                </div>
+                
+                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingReminder(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Reminder
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingReminder ? "Edit Reminder" : "Create New Reminder"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <ReminderForm
+                      reminder={editingReminder}
+                      onSuccess={handleFormClose}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
 
           {/* Overdue Alert */}
           {overdueReminders.length > 0 && (
@@ -280,7 +302,17 @@ export default function Reminders() {
               ))
             )}
           </div>
-        </div>
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <NotificationCenter />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <NotificationSettings />
+        </TabsContent>
+      </Tabs>
+    </div>
       </main>
     </div>
   );

@@ -87,7 +87,7 @@ export const salesRecords = pgTable("sales_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Reminders table
+// Advanced Reminders table with notification features
 export const reminders = pgTable("reminders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
@@ -97,16 +97,45 @@ export const reminders = pgTable("reminders", {
   description: text("description"),
   dueDate: timestamp("due_date").notNull(),
   completed: boolean("completed").default(false),
+  priority: varchar("priority").default("medium"), // low, medium, high, critical
+  category: varchar("category"), // inventory, sales, marketing, admin, etc.
+  isRecurring: boolean("is_recurring").default(false),
+  recurringType: varchar("recurring_type"), // daily, weekly, monthly, yearly
+  recurringInterval: integer("recurring_interval").default(1), // every X days/weeks/months
+  recurringEndDate: timestamp("recurring_end_date"),
+  lastNotified: timestamp("last_notified"),
+  notificationMethods: text("notification_methods").array().default(sql`ARRAY['browser']`), // browser, email
   snoozedUntil: timestamp("snoozed_until"),
+  relatedItemId: varchar("related_item_id"), // generic relation to any item
+  relatedItemType: varchar("related_item_type"), // inventory, sale, expense, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Notification settings table for user preferences
+export const notificationSettings = pgTable("notification_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  browserNotifications: boolean("browser_notifications").default(true),
+  emailNotifications: boolean("email_notifications").default(false),
+  reminderLeadTime: integer("reminder_lead_time").default(60), // minutes before due date
+  dailyDigest: boolean("daily_digest").default(false),
+  weeklyReport: boolean("weekly_report").default(true),
+  lowStockAlerts: boolean("low_stock_alerts").default(true),
+  profitGoalAlerts: boolean("profit_goal_alerts").default(true),
+  quietHoursStart: varchar("quiet_hours_start").default("22:00"),
+  quietHoursEnd: varchar("quiet_hours_end").default("08:00"),
+  timezone: varchar("timezone").default("UTC"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   inventoryItems: many(inventoryItems),
   salesRecords: many(salesRecords),
   reminders: many(reminders),
+  notificationSettings: one(notificationSettings),
 }));
 
 export const inventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
@@ -175,6 +204,13 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
   }),
 }));
 
+export const notificationSettingsRelations = relations(notificationSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationSettings.userId],
+    references: [users.id],
+  }),
+}));
+
 // Update users relations to include expenses
 export const updatedUsersRelations = relations(users, ({ many }) => ({
   inventoryItems: many(inventoryItems),
@@ -205,6 +241,13 @@ export const insertReminderSchema = createInsertSchema(reminders).omit({
   updatedAt: true,
 });
 
+export const insertNotificationSettingsSchema = createInsertSchema(notificationSettings).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   userId: true,
@@ -228,6 +271,8 @@ export type InsertReminder = z.infer<typeof insertReminderSchema>;
 export type Reminder = typeof reminders.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Expense = typeof expenses.$inferSelect;
+export type InsertNotificationSettings = z.infer<typeof insertNotificationSettingsSchema>;
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
 
 // Dashboard metrics types
 export interface DashboardMetrics {

@@ -4,6 +4,7 @@ import {
   salesRecords,
   reminders,
   expenses,
+  notificationSettings,
   type User,
   type UpsertUser,
   type InventoryItem,
@@ -14,6 +15,8 @@ import {
   type InsertReminder,
   type Expense,
   type InsertExpense,
+  type NotificationSettings,
+  type InsertNotificationSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
@@ -52,6 +55,15 @@ export interface IStorage {
   createExpense(expense: InsertExpense & { userId: string }): Promise<Expense>;
   updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: string, userId: string): Promise<boolean>;
+
+  // Notification settings operations
+  getNotificationSettings(userId: string): Promise<NotificationSettings | undefined>;
+  upsertNotificationSettings(settings: InsertNotificationSettings & { userId: string }): Promise<NotificationSettings>;
+
+  // Advanced reminder operations
+  getDueReminders(userId: string, leadTimeMinutes?: number): Promise<Reminder[]>;
+  createRecurringReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder>;
+  snoozeReminder(id: string, userId: string, minutes: number): Promise<Reminder | undefined>;
 
   searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]>;
   
@@ -465,6 +477,85 @@ export class DatabaseStorage implements IStorage {
         lowStock: 0, // Could be calculated based on quantity if we add that field
       },
     };
+  }
+
+  // Notification settings operations
+  async getNotificationSettings(userId: string): Promise<NotificationSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(notificationSettings)
+      .where(eq(notificationSettings.userId, userId));
+    return settings;
+  }
+
+  async upsertNotificationSettings(settings: InsertNotificationSettings & { userId: string }): Promise<NotificationSettings> {
+    const [result] = await db
+      .insert(notificationSettings)
+      .values(settings)
+      .onConflictDoUpdate({
+        target: notificationSettings.userId,
+        set: {
+          ...settings,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  // Advanced reminder operations
+  async getDueReminders(userId: string, leadTimeMinutes: number = 60): Promise<Reminder[]> {
+    const now = new Date();
+    const leadTime = new Date(now.getTime() + leadTimeMinutes * 60000);
+    
+    return await db
+      .select()
+      .from(reminders)
+      .where(
+        and(
+          eq(reminders.userId, userId),
+          eq(reminders.completed, false),
+          lte(reminders.dueDate, leadTime),
+          sql`(${reminders.snoozedUntil} IS NULL OR ${reminders.snoozedUntil} <= ${now})`
+        )
+      )
+      .orderBy(reminders.dueDate);
+  }
+
+  async createRecurringReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder> {
+    const [result] = await db
+      .insert(reminders)
+      .values(reminder)
+      .returning();
+    return result;
+  }
+
+  async snoozeReminder(id: string, userId: string, minutes: number): Promise<Reminder | undefined> {
+    const snoozeUntil = new Date(Date.now() + minutes * 60000);
+    
+    const [result] = await db
+      .update(reminders)
+      .set({ 
+        snoozedUntil: snoozeUntil,
+        updatedAt: new Date()
+      })
+      .where(and(eq(reminders.id, id), eq(reminders.userId, userId)))
+      .returning();
+    
+    return result[0];
+  }
+
+  async searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]> {
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          eq(inventoryItems.barcode, barcode),
+          eq(inventoryItems.archived, false)
+        )
+      );
   }
 }
 

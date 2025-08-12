@@ -8,6 +8,7 @@ import {
   insertSalesRecordSchema,
   insertReminderSchema,
   insertExpenseSchema,
+  insertNotificationSettingsSchema,
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -199,15 +200,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reminder routes
+  // Advanced Reminders routes
   app.get("/api/reminders", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { overdue } = req.query;
+      const { overdue, due } = req.query;
       
       let reminders;
       if (overdue === "true") {
         reminders = await storage.getOverdueReminders(userId);
+      } else if (due === "true") {
+        const settings = await storage.getNotificationSettings(userId);
+        const leadTime = settings?.reminderLeadTime || 60;
+        reminders = await storage.getDueReminders(userId, leadTime);
       } else {
         reminders = await storage.getReminders(userId);
       }
@@ -350,6 +355,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting expense:", error);
       res.status(500).json({ message: "Failed to delete expense" });
+    }
+  });
+
+  // Snooze reminder route
+  app.post("/api/reminders/:id/snooze", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { minutes } = req.body;
+      const reminder = await storage.snoozeReminder(req.params.id, userId, minutes || 15);
+      if (!reminder) {
+        return res.status(404).json({ message: "Reminder not found" });
+      }
+      res.json(reminder);
+    } catch (error) {
+      console.error("Error snoozing reminder:", error);
+      res.status(500).json({ message: "Failed to snooze reminder" });
+    }
+  });
+
+  // Notification settings routes
+  app.get("/api/notification-settings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const settings = await storage.getNotificationSettings(userId);
+      // Return default settings if none exist
+      const defaultSettings = {
+        browserNotifications: true,
+        emailNotifications: false,
+        reminderLeadTime: 60,
+        dailyDigest: false,
+        weeklyReport: true,
+        lowStockAlerts: true,
+        profitGoalAlerts: true,
+        quietHoursStart: "22:00",
+        quietHoursEnd: "08:00",
+        timezone: "UTC",
+      };
+      res.json(settings || defaultSettings);
+    } catch (error) {
+      console.error("Error fetching notification settings:", error);
+      res.status(500).json({ message: "Failed to fetch notification settings" });
+    }
+  });
+
+  app.put("/api/notification-settings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertNotificationSettingsSchema.parse(req.body);
+      const settings = await storage.upsertNotificationSettings({ ...validatedData, userId });
+      res.json(settings);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating notification settings:", error);
+      res.status(500).json({ message: "Failed to update notification settings" });
     }
   });
 
