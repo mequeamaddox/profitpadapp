@@ -110,7 +110,7 @@ export default function Reports() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Reports" subtitle="Comprehensive analytics and insights for your business">
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => handleExportReport("csv")}>
@@ -123,7 +123,7 @@ export default function Reports() {
             </Button>
           </div>
         </Header>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
 
       {/* Filters */}
       <Card className="mb-8">

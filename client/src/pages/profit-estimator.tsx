@@ -32,11 +32,11 @@ export default function ProfitEstimatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header title="Profit Estimator" />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-8">
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Profit Estimator" subtitle="Calculate potential profits for items before purchasing or listing them." />
+        <div className="flex-1 overflow-y-auto p-8" style={{ paddingBottom: '150px' }}>
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900">Profit Estimator</h1>
@@ -47,8 +47,8 @@ export default function ProfitEstimatorPage() {
             
             <ProfitEstimator />
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -108,10 +108,10 @@ export default function Sales() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Sales" subtitle="Track and manage your sales transactions." />
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
           {/* Actions Bar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">

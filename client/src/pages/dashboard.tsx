@@ -42,9 +42,9 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Dashboard" subtitle="Welcome back! Here's what's happening with your business." />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
           <MetricsGrid />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

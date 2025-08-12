@@ -96,10 +96,10 @@ export default function Settings() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Settings" subtitle="Manage your account preferences and goals." />
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
           <div className="max-w-2xl space-y-6">
             {/* Profile Settings */}
             <Card>
