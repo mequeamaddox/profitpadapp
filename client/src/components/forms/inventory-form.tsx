@@ -505,8 +505,8 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancel
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Saving..." : item ? "Update Item" : "Create Item"}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update Item" : "Create Item"}
           </Button>
         </div>
       </form>
