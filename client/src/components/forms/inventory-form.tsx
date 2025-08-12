@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Scan } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import TrialExpiredPrompt from "@/components/trial-expired-prompt";
+import BarcodeScanner from "@/components/barcode-scanner";
 
 interface InventoryFormProps {
   item?: InventoryItem | null;
@@ -48,6 +49,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const queryClient = useQueryClient();
   const [showTrialExpiredPrompt, setShowTrialExpiredPrompt] = useState(false);
   const [trialEndedAt, setTrialEndedAt] = useState<string | null>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
@@ -70,6 +72,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       notes: item?.notes || "",
       tags: item?.tags || [],
       images: item?.images || [],
+      barcode: item?.barcode || "",
       archived: item?.archived || false,
     },
   });
@@ -166,6 +169,30 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
+  const handleBarcodeScanned = (barcode: string, existingItem?: any) => {
+    form.setValue("barcode", barcode);
+    if (existingItem) {
+      // If item already exists, pre-fill form with existing data
+      form.setValue("title", existingItem.title);
+      form.setValue("sku", existingItem.sku);
+      form.setValue("category", existingItem.category);
+      form.setValue("purchasePrice", existingItem.purchasePrice);
+      form.setValue("listedPrice", existingItem.listedPrice);
+      form.setValue("condition", existingItem.condition);
+      form.setValue("notes", existingItem.notes || "");
+      toast({
+        title: "Item Found",
+        description: `Pre-filled form with existing item: ${existingItem.title}`,
+      });
+    } else {
+      toast({
+        title: "Barcode Scanned",
+        description: `Barcode ${barcode} added. You can now add this as a new item.`,
+      });
+    }
+    setShowBarcodeScanner(false);
+  };
+
   return (
     <div>
       <Form {...form}>
@@ -208,6 +235,30 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <FormControl>
                   <Input placeholder="UPC barcode" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="barcode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Barcode</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input placeholder="Scan or enter barcode" {...field} />
+                  </FormControl>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setShowBarcodeScanner(true)}
+                  >
+                    <Scan className="w-4 h-4" />
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -460,6 +511,12 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
         </div>
       </form>
     </Form>
+
+    <BarcodeScanner
+      isOpen={showBarcodeScanner}
+      onClose={() => setShowBarcodeScanner(false)}
+      onScanSuccess={handleBarcodeScanned}
+    />
 
     <TrialExpiredPrompt 
       isOpen={showTrialExpiredPrompt}

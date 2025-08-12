@@ -60,6 +60,7 @@ export const inventoryItems = pgTable("inventory_items", {
   notes: text("notes"),
   tags: text("tags").array(),
   images: text("images").array(),
+  barcode: varchar("barcode"),
   archived: boolean("archived").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

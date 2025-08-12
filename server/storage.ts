@@ -53,6 +53,8 @@ export interface IStorage {
   updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: string, userId: string): Promise<boolean>;
 
+  searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]>;
+  
   // Analytics operations
   getDashboardMetrics(userId: string): Promise<{
     totalSales: string;
@@ -172,11 +174,24 @@ export class DatabaseStorage implements IStorage {
           sql`(
             ${inventoryItems.title} ILIKE ${`%${query}%`} OR
             ${inventoryItems.sku} ILIKE ${`%${query}%`} OR
-            ${inventoryItems.notes} ILIKE ${`%${query}%`}
+            ${inventoryItems.notes} ILIKE ${`%${query}%`} OR
+            ${inventoryItems.barcode} = ${query}
           )`
         )
       )
       .orderBy(desc(inventoryItems.createdAt));
+  }
+
+  async searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]> {
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          eq(inventoryItems.barcode, barcode)
+        )
+      );
   }
 
   async getSalesRecords(userId: string): Promise<SalesRecord[]> {
