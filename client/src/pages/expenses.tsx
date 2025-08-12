@@ -26,8 +26,8 @@ export default function Expenses() {
     const matchesSearch = expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || expense.category === selectedCategory;
-    const matchesTaxType = !selectedTaxType || expense.taxType === selectedTaxType;
+    const matchesCategory = !selectedCategory || selectedCategory === "all" || expense.category === selectedCategory;
+    const matchesTaxType = !selectedTaxType || selectedTaxType === "all" || expense.taxType === selectedTaxType;
     return matchesSearch && matchesCategory && matchesTaxType;
   });
 
@@ -35,8 +35,8 @@ export default function Expenses() {
   const totalTaxAmount = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.taxAmount || "0"), 0);
   const deductibleExpenses = filteredExpenses.filter(e => e.deductible).reduce((sum, expense) => sum + parseFloat(expense.total || "0"), 0);
 
-  const categories = [...new Set(expenses.map(e => e.category))];
-  const taxTypes = [...new Set(expenses.map(e => e.taxType))];
+  const categories = Array.from(new Set(expenses.map(e => e.category)));
+  const taxTypes = Array.from(new Set(expenses.map(e => e.taxType)));
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
@@ -51,7 +51,7 @@ export default function Expenses() {
   const exportToCSV = () => {
     const csvHeaders = ["Date", "Title", "Category", "Vendor", "Subtotal", "Tax Rate", "Tax Amount", "Total", "Tax Type", "Deductible", "Business Purpose"];
     const csvData = filteredExpenses.map(expense => [
-      format(new Date(expense.expenseDate), "yyyy-MM-dd"),
+      expense.expenseDate ? format(new Date(expense.expenseDate), "yyyy-MM-dd") : "",
       expense.title,
       expense.category,
       expense.vendor || "",
@@ -156,7 +156,7 @@ export default function Expenses() {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
@@ -169,7 +169,7 @@ export default function Expenses() {
             <SelectValue placeholder="All Tax Types" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Tax Types</SelectItem>
+            <SelectItem value="all">All Tax Types</SelectItem>
             {taxTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {type === "none" ? "No Tax" : type === "inclusive" ? "Tax Inclusive" : "Tax Exclusive"}
@@ -205,7 +205,7 @@ export default function Expenses() {
                           <p className="text-sm text-gray-500 mt-1"><span className="font-medium">Business Purpose:</span> {expense.businessPurpose}</p>
                         )}
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>{format(new Date(expense.expenseDate), "MMM d, yyyy")}</span>
+                          <span>{expense.expenseDate ? format(new Date(expense.expenseDate), "MMM d, yyyy") : "No date"}</span>
                           {expense.vendor && <span>• {expense.vendor}</span>}
                         </div>
                       </div>

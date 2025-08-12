@@ -250,14 +250,14 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Link to Inventory Item (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select inventory item" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No linked item</SelectItem>
+                    <SelectItem value="none">No linked item</SelectItem>
                     {inventory.map((item: any) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.title} - {item.sku}
@@ -276,14 +276,14 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Link to Sales Record (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select sales record" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No linked sale</SelectItem>
+                    <SelectItem value="none">No linked sale</SelectItem>
                     {sales.map((sale: any) => (
                       <SelectItem key={sale.id} value={sale.id}>
                         Sale ${sale.salePrice} - {format(new Date(sale.dateSold), "PPP")}

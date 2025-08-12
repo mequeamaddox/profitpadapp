@@ -179,14 +179,14 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Linked Inventory Item (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select inventory item or leave blank" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No linked item (Manual entry)</SelectItem>
+                    <SelectItem value="none">No linked item (Manual entry)</SelectItem>
                     {inventory.map((item: any) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.title} - {item.sku}
