@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -83,7 +83,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const taxType = form.watch("taxType");
   const taxRate = parseFloat(form.watch("taxRate") || "0");
   
-  React.useEffect(() => {
+  useEffect(() => {
     let subtotal = 0;
     let taxAmount = 0;
     let total = 0;
