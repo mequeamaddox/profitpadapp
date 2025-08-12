@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -27,34 +28,36 @@ export default function NotificationSettings() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      browserNotifications: settings?.browserNotifications ?? true,
-      emailNotifications: settings?.emailNotifications ?? false,
-      reminderLeadTime: settings?.reminderLeadTime ?? 60,
-      dailyDigest: settings?.dailyDigest ?? false,
-      weeklyReport: settings?.weeklyReport ?? true,
-      lowStockAlerts: settings?.lowStockAlerts ?? true,
-      profitGoalAlerts: settings?.profitGoalAlerts ?? true,
-      quietHoursStart: settings?.quietHoursStart ?? "22:00",
-      quietHoursEnd: settings?.quietHoursEnd ?? "08:00",
-      timezone: settings?.timezone ?? "UTC",
+      browserNotifications: true,
+      emailNotifications: false,
+      reminderLeadTime: 60,
+      dailyDigest: false,
+      weeklyReport: true,
+      lowStockAlerts: true,
+      profitGoalAlerts: true,
+      quietHoursStart: "22:00",
+      quietHoursEnd: "08:00",
+      timezone: "UTC",
     },
   });
 
   // Update form when settings data loads
-  if (settings && !form.formState.isDirty) {
-    form.reset({
-      browserNotifications: settings.browserNotifications,
-      emailNotifications: settings.emailNotifications,
-      reminderLeadTime: settings.reminderLeadTime,
-      dailyDigest: settings.dailyDigest,
-      weeklyReport: settings.weeklyReport,
-      lowStockAlerts: settings.lowStockAlerts,
-      profitGoalAlerts: settings.profitGoalAlerts,
-      quietHoursStart: settings.quietHoursStart,
-      quietHoursEnd: settings.quietHoursEnd,
-      timezone: settings.timezone,
-    });
-  }
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        browserNotifications: settings.browserNotifications,
+        emailNotifications: settings.emailNotifications,
+        reminderLeadTime: settings.reminderLeadTime,
+        dailyDigest: settings.dailyDigest,
+        weeklyReport: settings.weeklyReport,
+        lowStockAlerts: settings.lowStockAlerts,
+        profitGoalAlerts: settings.profitGoalAlerts,
+        quietHoursStart: settings.quietHoursStart,
+        quietHoursEnd: settings.quietHoursEnd,
+        timezone: settings.timezone,
+      });
+    }
+  }, [settings, form]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: FormData) => {
