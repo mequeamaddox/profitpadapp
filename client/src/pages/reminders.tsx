@@ -37,12 +37,12 @@ export default function Reminders() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: reminders = [], isLoading: remindersLoading } = useQuery({
+  const { data: reminders = [], isLoading: remindersLoading } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders"],
     enabled: isAuthenticated,
   });
 
-  const { data: overdueReminders = [] } = useQuery({
+  const { data: overdueReminders = [] } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders", { overdue: true }],
     enabled: isAuthenticated,
   });

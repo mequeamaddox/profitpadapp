@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Bell, Plus } from "lucide-react";
 import AddMenuModal from "@/components/modals/add-menu-modal";
+import { User, Reminder } from "@shared/schema";
 
 interface HeaderProps {
   title: string;
@@ -14,11 +15,11 @@ export default function Header({ title, subtitle }: HeaderProps) {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
-  const { data: overdueReminders = [] } = useQuery({
+  const { data: overdueReminders = [] } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders", { overdue: true }],
   });
 

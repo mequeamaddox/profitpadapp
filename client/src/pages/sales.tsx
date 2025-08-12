@@ -36,7 +36,7 @@ export default function Sales() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: sales = [], isLoading: salesLoading } = useQuery({
+  const { data: sales = [], isLoading: salesLoading } = useQuery<SalesRecord[]>({
     queryKey: ["/api/sales"],
     enabled: isAuthenticated,
   });

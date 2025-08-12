@@ -39,7 +39,7 @@ export default function Inventory() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: inventory = [], isLoading: inventoryLoading } = useQuery({
+  const { data: inventory = [], isLoading: inventoryLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory", { archived: showArchived, search: searchQuery }],
     enabled: isAuthenticated,
   });

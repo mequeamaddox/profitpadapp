@@ -4,15 +4,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle } from "lucide-react";
+import { User, Reminder } from "@shared/schema";
 
 export default function Sidebar() {
   const [location, setLocation] = useLocation();
   
-  const { data: overdueReminders = [] } = useQuery({
+  const { data: overdueReminders = [] } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders", { overdue: true }],
   });
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
