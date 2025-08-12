@@ -13,16 +13,16 @@ export interface SubscriptionLimits {
 }
 
 export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
-  starter: {
-    inventoryLimit: 50,
-    salesLimit: 100,
-    remindersLimit: 20,
+  trial: {
+    inventoryLimit: -1, // unlimited during trial
+    salesLimit: -1, // unlimited during trial
+    remindersLimit: -1, // unlimited during trial
     csvImport: true,
-    advancedAnalytics: false,
-    multiPlatform: false,
+    advancedAnalytics: true,
+    multiPlatform: true,
     teamAccess: false,
-    customReporting: false,
-    apiAccess: false,
+    customReporting: true,
+    apiAccess: true,
     prioritySupport: false,
   },
   professional: {
@@ -52,7 +52,7 @@ export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
 };
 
 export function getSubscriptionLimits(tier: string): SubscriptionLimits {
-  return SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.starter;
+  return SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.trial;
 }
 
 export function canPerformAction(

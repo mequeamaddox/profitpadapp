@@ -12,12 +12,12 @@ Updated pricing tiers to higher amounts:
 - Professional: $19.99/month (was $9.99/month)  
 - Enterprise: $49.99/month (was $29.99/month)
 
-Implemented subscription-based feature restrictions:
-- Starter (Free): Limited to 50 inventory items, 100 sales records, 20 reminders
+Implemented 3-day trial system replacing free tier:
+- Trial (3 days): Full access to all features - unlimited inventory, sales, reminders, and advanced analytics
 - Professional ($19.99/month): Unlimited inventory/sales/reminders, advanced analytics, multi-platform integration
 - Enterprise ($49.99/month): All Professional features plus team access, API integrations, dedicated support
 
-Feature blocking logic implemented in backend with upgrade prompts in frontend forms.
+Trial expiration system implemented with middleware checking and trial expired prompts in forms.
 
 # System Architecture
 

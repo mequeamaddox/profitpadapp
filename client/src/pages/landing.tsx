@@ -28,14 +28,14 @@ export default function Landing() {
           </h1>
           <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
             Track inventory, record sales, and analyze your business performance with powerful analytics. 
-            Make data-driven decisions to grow your profit margins.
+            Start your 3-day trial with full access to all features.
           </p>
           <Button 
             size="lg" 
             className="px-8 py-4 text-lg"
             onClick={() => window.location.href = "/api/login"}
           >
-            Get Started Free
+            Start 3-Day Trial
           </Button>
         </div>
 

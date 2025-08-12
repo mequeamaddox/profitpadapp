@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import UpgradePrompt from "@/components/upgrade-prompt";
+import TrialExpiredPrompt from "@/components/trial-expired-prompt";
 
 interface InventoryFormProps {
   item?: InventoryItem | null;
@@ -42,7 +42,8 @@ const conditions = [
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showTrialExpiredPrompt, setShowTrialExpiredPrompt] = useState(false);
+  const [trialEndedAt, setTrialEndedAt] = useState<string | null>(null);
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
@@ -91,9 +92,16 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
         }, 500);
         return;
       }
-      if (error.message.includes('Inventory limit reached')) {
-        setShowUpgradePrompt(true);
-        return;
+      if (error.message.includes('Trial expired')) {
+        try {
+          const errorData = JSON.parse(error.message.split(': ')[1]);
+          setTrialEndedAt(errorData.trialEndedAt);
+          setShowTrialExpiredPrompt(true);
+          return;
+        } catch {
+          setShowTrialExpiredPrompt(true);
+          return;
+        }
       }
       toast({
         title: "Error",
@@ -387,12 +395,10 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       </form>
     </Form>
 
-    <UpgradePrompt 
-      isOpen={showUpgradePrompt}
-      onClose={() => setShowUpgradePrompt(false)}
-      currentTier={user?.subscriptionTier || 'starter'}
-      feature="inventory items"
-      limit={50}
+    <TrialExpiredPrompt 
+      isOpen={showTrialExpiredPrompt}
+      onClose={() => setShowTrialExpiredPrompt(false)}
+      trialEndedAt={trialEndedAt || new Date().toISOString()}
     />
   </div>
   );
