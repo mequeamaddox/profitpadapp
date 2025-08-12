@@ -70,10 +70,10 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
       subtotal: expense?.subtotal || "0.00",
       total: expense?.total || "0.00",
       expenseDate: expense?.expenseDate ? new Date(expense.expenseDate) : new Date(),
-      vendor: expense?.vendor || "",
-      receiptUrl: expense?.receiptUrl || "",
-      businessPurpose: expense?.businessPurpose || "",
-      deductible: expense?.deductible ?? true,
+      vendor: expense?.vendor ?? "",
+      receiptUrl: expense?.receiptUrl ?? "",
+      businessPurpose: expense?.businessPurpose ?? "",
+      deductible: expense?.deductible ?? false,
       tags: expense?.tags || [],
     },
   });
@@ -134,17 +134,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
         }, 500);
         return;
       }
-      if (error.message.includes('Trial expired')) {
-        try {
-          const errorData = JSON.parse(error.message.split(': ')[1]);
-          setTrialEndedAt(errorData.trialEndedAt);
-          setShowTrialExpiredPrompt(true);
-          return;
-        } catch {
-          setShowTrialExpiredPrompt(true);
-          return;
-        }
-      }
+      // Trial checking removed per user request
       toast({
         title: "Error",
         description: "Failed to record expense",
@@ -189,7 +179,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const onSubmit = (data: InsertExpense) => {
     const formattedData = {
       ...data,
-      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
+      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
     };
 
     if (expense) {
@@ -201,8 +191,56 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  const handleReceiptCaptured = (imageUrl: string) => {
+  const handleReceiptCaptured = (imageUrl: string, receiptData?: any) => {
     form.setValue('receiptUrl', imageUrl);
+    
+    // Auto-fill form with OCR data if available
+    if (receiptData) {
+      if (receiptData.merchant) {
+        form.setValue('vendor', receiptData.merchant);
+      }
+      if (receiptData.date) {
+        form.setValue('expenseDate', new Date(receiptData.date));
+      }
+      if (receiptData.total) {
+        form.setValue('amount', receiptData.total.toString());
+      }
+      if (receiptData.category) {
+        form.setValue('category', receiptData.category);
+      }
+      if (receiptData.tax && receiptData.subtotal) {
+        // Calculate tax type based on amounts
+        const total = receiptData.total || 0;
+        const tax = receiptData.tax;
+        const subtotal = receiptData.subtotal;
+        
+        if (Math.abs(subtotal + tax - total) < 0.01) {
+          // Tax exclusive
+          form.setValue('taxType', 'exclusive');
+          form.setValue('subtotal', subtotal.toString());
+          form.setValue('taxAmount', tax.toString());
+          form.setValue('total', total.toString());
+        } else if (Math.abs(total - tax - subtotal) < 0.01) {
+          // Tax inclusive  
+          form.setValue('taxType', 'inclusive');
+          form.setValue('subtotal', subtotal.toString());
+          form.setValue('taxAmount', tax.toString());
+        }
+      }
+      if (receiptData.items && receiptData.items.length > 0) {
+        // Create a description from items
+        const itemDescriptions = receiptData.items.map((item: any) => item.description).join(', ');
+        form.setValue('description', itemDescriptions);
+      }
+      // Note: paymentMethod not in current schema, skipping for now
+      
+      // Generate business purpose suggestion
+      if (receiptData.merchant && receiptData.category) {
+        const businessPurpose = `${receiptData.category} expense from ${receiptData.merchant}`;
+        form.setValue('businessPurpose', businessPurpose);
+      }
+    }
+    
     setShowReceiptCapture(false);
   };
 

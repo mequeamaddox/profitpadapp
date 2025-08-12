@@ -698,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error accessing object:", error);
-      if (error.name === "ObjectNotFoundError") {
+      if (error instanceof Error && error.name === "ObjectNotFoundError") {
         return res.sendStatus(404);
       }
       return res.sendStatus(500);
@@ -735,6 +735,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error setting receipt image:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // OCR endpoint to analyze receipt images
+  app.post("/api/analyze-receipt", isAuthenticated, async (req: any, res) => {
+    if (!req.body.imageData) {
+      return res.status(400).json({ error: "imageData is required" });
+    }
+
+    try {
+      const { aiService } = await import("./aiService");
+      
+      // Remove data URL prefix if present (data:image/jpeg;base64,)
+      const base64Data = req.body.imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const receiptData = await aiService.analyzeReceiptImage(base64Data);
+      
+      res.json(receiptData);
+    } catch (error) {
+      console.error("Error analyzing receipt:", error);
+      res.status(500).json({ error: "Failed to analyze receipt" });
     }
   });
 

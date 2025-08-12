@@ -5,16 +5,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Camera, Upload, X, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface ReceiptData {
+  merchant?: string;
+  date?: string;
+  total?: number;
+  tax?: number;
+  subtotal?: number;
+  items?: Array<{
+    description: string;
+    amount: number;
+  }>;
+  category?: string;
+  paymentMethod?: string;
+  address?: string;
+}
+
 interface ReceiptCaptureProps {
   isOpen: boolean;
   onClose: () => void;
-  onCaptureSuccess: (imageUrl: string) => void;
+  onCaptureSuccess: (imageUrl: string, receiptData?: ReceiptData) => void;
 }
 
 export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: ReceiptCaptureProps) {
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const { toast } = useToast();
 
@@ -38,6 +54,34 @@ export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: Re
 
     setIsUploading(true);
     try {
+      // First, analyze the receipt with OCR
+      let receiptData: ReceiptData | undefined;
+      setIsAnalyzing(true);
+      try {
+        const ocrResponse = await fetch('/api/analyze-receipt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageData: capturedImage })
+        });
+
+        if (ocrResponse.ok) {
+          receiptData = await ocrResponse.json();
+          toast({
+            title: "Receipt Analyzed",
+            description: "Receipt information extracted successfully!",
+          });
+        }
+      } catch (ocrError) {
+        console.warn('OCR analysis failed, continuing with upload:', ocrError);
+        toast({
+          title: "Analysis Note", 
+          description: "Receipt saved, but automatic data extraction failed. You can fill in details manually.",
+          variant: "default",
+        });
+      } finally {
+        setIsAnalyzing(false);
+      }
+
       // Get upload URL from backend
       const uploadResponse = await fetch('/api/objects/upload', {
         method: 'POST',
@@ -80,11 +124,7 @@ export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: Re
 
       const { objectPath } = await aclResponse.json();
       
-      onCaptureSuccess(objectPath);
-      toast({
-        title: "Receipt Captured",
-        description: "Receipt image has been successfully saved.",
-      });
+      onCaptureSuccess(objectPath, receiptData);
       
       handleClose();
     } catch (error) {
@@ -208,10 +248,10 @@ export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: Re
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   onClick={uploadReceipt} 
-                  disabled={isUploading}
+                  disabled={isUploading || isAnalyzing}
                   className="flex-1"
                 >
-                  {isUploading ? "Saving..." : "Save Receipt"}
+                  {isAnalyzing ? "Reading Receipt..." : isUploading ? "Saving..." : "Save Receipt"}
                 </Button>
                 
                 <Button variant="outline" onClick={retake} disabled={isUploading}>
