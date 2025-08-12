@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import TrialExpiredPrompt from "@/components/trial-expired-prompt";
+
 import React, { useState } from "react";
 import { User } from "@shared/schema";
 
@@ -32,8 +32,7 @@ const platforms = [
 export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showTrialExpiredPrompt, setShowTrialExpiredPrompt] = useState(false);
-  const [trialEndedAt, setTrialEndedAt] = useState<string | null>(null);
+
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
@@ -87,17 +86,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
         }, 500);
         return;
       }
-      if (error.message.includes('Trial expired')) {
-        try {
-          const errorData = JSON.parse(error.message.split(': ')[1]);
-          setTrialEndedAt(errorData.trialEndedAt);
-          setShowTrialExpiredPrompt(true);
-          return;
-        } catch {
-          setShowTrialExpiredPrompt(true);
-          return;
-        }
-      }
+
       toast({
         title: "Error",
         description: "Failed to record sale",
@@ -461,11 +450,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
       </form>
     </Form>
 
-      <TrialExpiredPrompt 
-        isOpen={showTrialExpiredPrompt}
-        onClose={() => setShowTrialExpiredPrompt(false)}
-        trialEndedAt={trialEndedAt || new Date().toISOString()}
-      />
+
     </div>
   );
 }

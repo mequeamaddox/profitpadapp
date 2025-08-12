@@ -58,7 +58,7 @@ export default function MobileNav() {
   };
 
   return (
-    <div className="md:hidden">
+    <div className="block">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="sm" className="h-9 w-9 p-0">

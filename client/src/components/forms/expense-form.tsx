@@ -17,7 +17,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import TrialExpiredPrompt from "@/components/trial-expired-prompt";
+
 
 interface ExpenseFormProps {
   expense?: Expense | null;
@@ -49,8 +49,7 @@ const taxTypes = [
 export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showTrialExpiredPrompt, setShowTrialExpiredPrompt] = useState(false);
-  const [trialEndedAt, setTrialEndedAt] = useState<string | null>(null);
+
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
@@ -200,9 +199,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  if (showTrialExpiredPrompt) {
-    return <TrialExpiredPrompt trialEndedAt={trialEndedAt} />;
-  }
+
 
   return (
     <Form {...form}>

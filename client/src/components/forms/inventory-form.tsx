@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Scan } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import TrialExpiredPrompt from "@/components/trial-expired-prompt";
+
 import BarcodeScanner from "@/components/barcode-scanner";
 
 interface InventoryFormProps {
@@ -47,8 +47,7 @@ const statuses = [
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showTrialExpiredPrompt, setShowTrialExpiredPrompt] = useState(false);
-  const [trialEndedAt, setTrialEndedAt] = useState<string | null>(null);
+
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   const { data: user } = useQuery<User>({
@@ -102,17 +101,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
         }, 500);
         return;
       }
-      if (error.message.includes('Trial expired')) {
-        try {
-          const errorData = JSON.parse(error.message.split(': ')[1]);
-          setTrialEndedAt(errorData.trialEndedAt);
-          setShowTrialExpiredPrompt(true);
-          return;
-        } catch {
-          setShowTrialExpiredPrompt(true);
-          return;
-        }
-      }
+
       toast({
         title: "Error",
         description: "Failed to create inventory item",
@@ -518,11 +507,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       onScanSuccess={handleBarcodeScanned}
     />
 
-    <TrialExpiredPrompt 
-      isOpen={showTrialExpiredPrompt}
-      onClose={() => setShowTrialExpiredPrompt(false)}
-      trialEndedAt={trialEndedAt || new Date().toISOString()}
-    />
+
   </div>
   );
 }
