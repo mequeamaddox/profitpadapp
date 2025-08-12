@@ -61,10 +61,7 @@ export default function NotificationSettings() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest("/api/notification-settings", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("/api/notification-settings", "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notification-settings"] });
@@ -131,7 +128,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -155,7 +152,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -178,6 +175,7 @@ export default function NotificationSettings() {
                         min="5" 
                         max="1440"
                         {...field}
+                        value={field.value ?? 60}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
                       />
                     </FormControl>
@@ -210,7 +208,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -231,7 +229,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -260,7 +258,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -281,7 +279,7 @@ export default function NotificationSettings() {
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -308,7 +306,7 @@ export default function NotificationSettings() {
                     <FormItem>
                       <FormLabel>Start Time</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <Input type="time" {...field} value={field.value ?? "22:00"} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -322,7 +320,7 @@ export default function NotificationSettings() {
                     <FormItem>
                       <FormLabel>End Time</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <Input type="time" {...field} value={field.value ?? "08:00"} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -343,7 +341,7 @@ export default function NotificationSettings() {
                       <span>Timezone</span>
                     </FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value ?? "UTC"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select timezone" />
                         </SelectTrigger>
