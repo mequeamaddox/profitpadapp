@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText, Receipt, Calculator, Boxes } from "lucide-react";
+import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText, Receipt, Calculator } from "lucide-react";
 import { User, Reminder } from "@shared/schema";
 
 export default function Sidebar() {
@@ -30,7 +30,7 @@ export default function Sidebar() {
       badge: overdueReminders.length > 0 ? overdueReminders.length : null
     },
     { name: "Reports", href: "/reports", icon: FileText, current: location === "/reports" },
-    { name: "Pallets", href: "/pallets", icon: Boxes, current: location === "/pallets" },
+
     { name: "Profit Estimator", href: "/profit-estimator", icon: Calculator, current: location === "/profit-estimator" },
     { name: "Settings", href: "/settings", icon: Settings, current: location === "/settings" },
     { name: "Help Center", href: "/help", icon: HelpCircle, current: location === "/help" },
@@ -91,7 +91,7 @@ export default function Sidebar() {
           </div>
         </div>
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-          {user?.role === "premium" ? "Premium Plan" : "Standard Plan"}
+          {user?.subscriptionTier === "premium" ? "Premium Plan" : "Standard Plan"}
         </Badge>
       </div>
     </aside>

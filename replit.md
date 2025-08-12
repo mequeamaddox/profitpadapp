@@ -40,6 +40,14 @@ Implemented comprehensive Barcode Scanner system (January 2025):
 - Visual scanning overlay with targeting lines for improved UX
 - Error handling for camera permissions and scanning failures
 
+Reorganized Pallets module integration (January 2025):
+- Moved liquidation pallet COGS tracking from standalone page to inventory page tabs
+- Implemented tabbed interface with "Inventory Items" and "Liquidation Pallets" sections
+- Maintained full pallet functionality: creation, editing, deletion, cost allocation
+- Updated navigation to remove standalone Pallets menu item
+- Integrated pallet forms and management within inventory workflow
+- Streamlined user experience by grouping related inventory functions together
+
 # System Architecture
 
 ## Frontend Architecture
