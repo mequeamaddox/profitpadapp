@@ -273,6 +273,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reports routes
+  app.get('/api/reports/metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { dateRange, startDate, endDate, platform, category } = req.query;
+      
+      // Calculate date range
+      let fromDate: Date;
+      let toDate: Date = new Date();
+      
+      switch (dateRange) {
+        case '7d':
+          fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '30d':
+          fromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '3m':
+          fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          fromDate = new Date(new Date().getFullYear(), 0, 1);
+          break;
+        case 'month':
+          fromDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+          break;
+        default:
+          fromDate = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          toDate = endDate ? new Date(endDate as string) : new Date();
+      }
+
+      const userSales = await storage.getSalesByUserId(userId);
+      const userInventory = await storage.getInventoryByUserId(userId);
+      
+      // Filter sales by date range and other criteria
+      const filteredSales = userSales.filter(sale => {
+        const saleDate = new Date(sale.saleDate);
+        const dateInRange = saleDate >= fromDate && saleDate <= toDate;
+        const platformMatch = !platform || platform === 'all' || sale.platform === platform;
+        const categoryMatch = !category || category === 'all' || userInventory.find(item => item.title === sale.itemTitle)?.category === category;
+        return dateInRange && platformMatch && categoryMatch;
+      });
+
+      // Calculate metrics
+      const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.salePrice), 0);
+      const totalProfit = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.profit), 0);
+      const totalSales = filteredSales.length;
+      const averageProfit = totalSales > 0 ? totalProfit / totalSales : 0;
+      const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+      // Top selling items
+      const itemSales = new Map<string, { quantity: number, revenue: number, profit: number }>();
+      filteredSales.forEach(sale => {
+        const current = itemSales.get(sale.itemTitle) || { quantity: 0, revenue: 0, profit: 0 };
+        itemSales.set(sale.itemTitle, {
+          quantity: current.quantity + 1,
+          revenue: current.revenue + parseFloat(sale.salePrice),
+          profit: current.profit + parseFloat(sale.profit)
+        });
+      });
+
+      const topSellingItems = Array.from(itemSales.entries())
+        .map(([title, data]) => ({
+          title,
+          quantity: data.quantity,
+          revenue: data.revenue.toFixed(2),
+          profit: data.profit.toFixed(2)
+        }))
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 5);
+
+      // Sales by platform
+      const platformSales = new Map<string, { count: number, revenue: number }>();
+      filteredSales.forEach(sale => {
+        const current = platformSales.get(sale.platform) || { count: 0, revenue: 0 };
+        platformSales.set(sale.platform, {
+          count: current.count + 1,
+          revenue: current.revenue + parseFloat(sale.salePrice)
+        });
+      });
+
+      const salesByPlatform = Array.from(platformSales.entries())
+        .map(([platform, data]) => ({
+          platform,
+          count: data.count,
+          revenue: data.revenue.toFixed(2)
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Monthly trends (last 12 months)
+      const monthlyData = new Map<string, { sales: number, profit: number }>();
+      const last12Months = Array.from({ length: 12 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        return date;
+      }).reverse();
+
+      last12Months.forEach(month => {
+        const monthKey = month.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        const monthSales = filteredSales.filter(sale => {
+          const saleDate = new Date(sale.saleDate);
+          return saleDate.getMonth() === month.getMonth() && saleDate.getFullYear() === month.getFullYear();
+        });
+        
+        monthlyData.set(monthKey, {
+          sales: monthSales.length,
+          profit: monthSales.reduce((sum, sale) => sum + parseFloat(sale.profit), 0)
+        });
+      });
+
+      const monthlyTrends = Array.from(monthlyData.entries()).map(([month, data]) => ({
+        month,
+        sales: data.sales,
+        profit: data.profit.toFixed(2)
+      }));
+
+      const metrics = {
+        totalRevenue: totalRevenue.toFixed(2),
+        totalProfit: totalProfit.toFixed(2),
+        totalSales,
+        averageProfit: averageProfit.toFixed(2),
+        profitMargin: profitMargin.toFixed(1),
+        topSellingItems,
+        salesByPlatform,
+        monthlyTrends
+      };
+
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error generating report metrics:', error);
+      res.status(500).json({ message: 'Failed to generate report metrics' });
+    }
+  });
+
+  app.get('/api/reports/export', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { format } = req.query;
+      
+      if (format === 'csv') {
+        const userSales = await storage.getSalesByUserId(userId);
+        const csvHeader = 'Date,Item,Platform,Sale Price,Purchase Price,Profit,Buyer\n';
+        const csvRows = userSales.map(sale => 
+          `${sale.saleDate},${sale.itemTitle},${sale.platform},${sale.salePrice},${sale.purchasePrice || '0'},${sale.profit},${sale.buyerInfo || ''}`
+        ).join('\n');
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="sales-report.csv"');
+        res.send(csvHeader + csvRows);
+      } else {
+        res.status(400).json({ message: 'Unsupported export format' });
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      res.status(500).json({ message: 'Failed to export report' });
+    }
+  });
+
   // User settings routes
   app.put("/api/user/settings", isAuthenticated, async (req: any, res) => {
     try {

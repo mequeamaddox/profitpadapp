@@ -11,6 +11,7 @@ import Inventory from "@/pages/inventory";
 import Sales from "@/pages/sales";
 import Reminders from "@/pages/reminders";
 import Settings from "@/pages/settings";
+import Reports from "@/pages/reports";
 import Help from "@/pages/help";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/inventory" component={Inventory} />
           <Route path="/sales" component={Sales} />
           <Route path="/reminders" component={Reminders} />
+          <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />
           <Route path="/help" component={Help} />
         </>
