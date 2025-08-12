@@ -96,12 +96,18 @@ export default function Sidebar() {
             className="w-full justify-start text-xs p-2 h-auto"
             onClick={() => setLocation("/billing")}
           >
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 mr-2">
-              {user?.subscriptionTier === "professional" ? "Professional Plan" : 
-               user?.subscriptionTier === "enterprise" ? "Enterprise Plan" : 
-               user?.subscriptionTier === "starter" ? "Starter Plan" : 
-               user?.trialEndsAt ? "Trial Active" : "Starter Plan"}
-            </Badge>
+            {user?.isAdmin ? (
+              <Badge className="bg-purple-600 text-white mr-2">
+                Admin
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 mr-2">
+                {user?.subscriptionTier === "professional" ? "Professional Plan" : 
+                 user?.subscriptionTier === "enterprise" ? "Enterprise Plan" : 
+                 user?.subscriptionTier === "starter" ? "Starter Plan" : 
+                 user?.trialEndsAt ? "Trial Active" : "Starter Plan"}
+              </Badge>
+            )}
             <span className="text-xs text-slate-500">Manage Plan</span>
           </Button>
           <Button

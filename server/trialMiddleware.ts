@@ -15,6 +15,11 @@ export const checkTrialExpired = async (req: Request, res: Response, next: NextF
     return res.status(401).json({ message: "User not found" });
   }
 
+  // Admin users bypass all subscription checks
+  if (userData.isAdmin) {
+    return next();
+  }
+
   // Check if trial has expired
   if (userData.subscriptionTier === 'trial' && userData.trialEndsAt) {
     const now = new Date();

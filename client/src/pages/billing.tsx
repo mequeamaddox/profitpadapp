@@ -104,6 +104,7 @@ export default function Billing() {
 
   const trialStatus = getTrialStatus();
   const currentPlan = user?.subscriptionTier || "starter";
+  const isAdmin = user?.isAdmin;
 
   if (isLoading) {
     return (
@@ -136,24 +137,34 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-sm">
-                      {currentPlan === "professional" ? "Professional Plan" : 
-                       currentPlan === "enterprise" ? "Enterprise Plan" : 
-                       currentPlan === "starter" ? "Starter Plan" : "Starter Plan"}
-                    </Badge>
-                    {trialStatus?.active && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        Trial Active - {trialStatus.daysLeft} days left
+                    {isAdmin ? (
+                      <Badge className="bg-purple-600 text-white">
+                        Admin Account - Full Access
                       </Badge>
-                    )}
-                    {trialStatus?.expired && (
-                      <Badge variant="destructive">
-                        Trial Expired
-                      </Badge>
+                    ) : (
+                      <>
+                        <Badge variant="outline" className="text-sm">
+                          {currentPlan === "professional" ? "Professional Plan" : 
+                           currentPlan === "enterprise" ? "Enterprise Plan" : 
+                           currentPlan === "starter" ? "Starter Plan" : "Starter Plan"}
+                        </Badge>
+                        {trialStatus?.active && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            Trial Active - {trialStatus.daysLeft} days left
+                          </Badge>
+                        )}
+                        {trialStatus?.expired && (
+                          <Badge variant="destructive">
+                            Trial Expired
+                          </Badge>
+                        )}
+                      </>
                     )}
                   </div>
                   <p className="text-sm text-slate-600">
-                    {trialStatus?.active 
+                    {isAdmin 
+                      ? "Admin accounts have unlimited access to all features without subscription restrictions."
+                      : trialStatus?.active 
                       ? `Your trial ends on ${new Date(user?.trialEndsAt!).toLocaleDateString()}`
                       : trialStatus?.expired
                       ? "Your trial has expired. Please select a plan to continue using ProfitPad."

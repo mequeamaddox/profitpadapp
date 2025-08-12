@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   subscriptionTier: varchar("subscription_tier").default("trial"), // "trial", "professional", "enterprise"
   trialEndsAt: timestamp("trial_ends_at"),
   monthlyGoal: decimal("monthly_goal", { precision: 10, scale: 2 }).default("0.00"),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
