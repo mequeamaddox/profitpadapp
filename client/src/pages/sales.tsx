@@ -111,24 +111,24 @@ export default function Sales() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Sales" subtitle="Track and manage your sales transactions." />
         
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
           {/* Actions Bar */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center space-x-4">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Export CSV</span>
               </Button>
             </div>
             
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingSale(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Record Sale
+                <Button onClick={() => setEditingSale(null)} className="shrink-0">
+                  <Plus className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Record Sale</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingSale ? "Edit Sale" : "Record New Sale"}

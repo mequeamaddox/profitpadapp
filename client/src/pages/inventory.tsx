@@ -382,7 +382,7 @@ export default function Inventory() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Inventory" subtitle="Manage your products and track their performance." />
         
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
           <Tabs defaultValue="inventory" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="inventory">
@@ -397,20 +397,22 @@ export default function Inventory() {
 
             <TabsContent value="inventory" className="space-y-6">
               {/* Inventory Actions Bar */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <Input
                       placeholder="Search inventory..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 w-80"
+                      className="pl-10 w-full"
                     />
                   </div>
                   <Button
                     variant={showArchived ? "default" : "outline"}
                     onClick={() => setShowArchived(!showArchived)}
+                    size="sm"
+                    className="w-full sm:w-auto"
                   >
                     {showArchived ? "Show Archived" : "Show Active"}
                   </Button>
@@ -418,12 +420,12 @@ export default function Inventory() {
                 
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setEditingItem(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Item
+                    <Button onClick={() => setEditingItem(null)} className="shrink-0">
+                      <Plus className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Add Item</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editingItem ? "Edit Item" : "Add New Item"}

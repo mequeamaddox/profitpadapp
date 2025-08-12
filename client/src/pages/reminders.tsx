@@ -148,32 +148,35 @@ export default function Reminders() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Reminders" subtitle="Stay on top of your tasks and deadlines." />
         
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
           <Tabs defaultValue="reminders" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="reminders">My Reminders</TabsTrigger>
-              <TabsTrigger value="notifications" className="relative">
-                <Bell className="h-4 w-4 mr-2" />
-                Notifications
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              <TabsTrigger value="reminders" className="text-xs md:text-sm">
+                <span className="hidden sm:inline">My </span>Reminders
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="relative text-xs md:text-sm">
+                <Bell className="h-4 w-4 md:mr-2" />
+                <span className="hidden sm:inline">Notifications</span>
                 {overdueReminders.length > 0 && (
-                  <Badge variant="destructive" className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
+                  <Badge variant="destructive" className="ml-1 md:ml-2 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 text-xs">
                     {overdueReminders.length}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+              <TabsTrigger value="settings" className="text-xs md:text-sm">
+                <Settings className="h-4 w-4 md:mr-2" />
+                <span className="hidden sm:inline">Settings</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="reminders" className="space-y-6">
               {/* Actions Bar */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
                   <Button
                     variant={showCompleted ? "default" : "outline"}
                     onClick={() => setShowCompleted(!showCompleted)}
+                    size="sm"
                   >
                     {showCompleted ? "Hide Completed" : "Show Completed"}
                   </Button>
@@ -181,12 +184,12 @@ export default function Reminders() {
                 
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setEditingReminder(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Reminder
+                    <Button onClick={() => setEditingReminder(null)} className="shrink-0">
+                      <Plus className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Create Reminder</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editingReminder ? "Edit Reminder" : "Create New Reminder"}

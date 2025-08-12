@@ -114,21 +114,21 @@ export default function Expenses() {
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Business Expenses" subtitle="Track and manage all your business expenses with comprehensive tax calculations" />
-        <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" style={{ paddingBottom: '150px' }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="hidden">
           <h1 className="text-3xl font-bold">Business Expenses</h1>
           <p className="text-gray-600">Track and manage all your business expenses with tax calculations</p>
         </div>
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Expense
+            <Button className="shrink-0">
+              <Plus className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Add Expense</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
             <DialogHeader>
               <DialogTitle>{editingExpense ? "Edit Expense" : "Add New Expense"}</DialogTitle>
             </DialogHeader>

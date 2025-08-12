@@ -56,7 +56,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
         <DialogHeader>
           <DialogTitle>
             {selectedAction ? (
