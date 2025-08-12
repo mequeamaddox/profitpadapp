@@ -204,17 +204,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(inventoryItems.createdAt));
   }
 
-  async searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]> {
-    return await db
-      .select()
-      .from(inventoryItems)
-      .where(
-        and(
-          eq(inventoryItems.userId, userId),
-          eq(inventoryItems.barcode, barcode)
-        )
-      );
-  }
+
 
   async getSalesRecords(userId: string): Promise<SalesRecord[]> {
     return await db
@@ -362,7 +352,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(expenses)
       .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getDashboardMetrics(userId: string): Promise<{
@@ -567,7 +557,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(pallets)
       .where(and(eq(pallets.id, id), eq(pallets.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Advanced reminder operations
@@ -609,7 +599,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)))
       .returning();
     
-    return result[0];
+    return result;
   }
 
   async searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]> {
