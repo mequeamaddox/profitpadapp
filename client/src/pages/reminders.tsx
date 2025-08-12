@@ -148,7 +148,7 @@ export default function Reminders() {
       <main className="flex-1 overflow-hidden">
         <Header title="Reminders" subtitle="Stay on top of your tasks and deadlines." />
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 pb-20">
           <Tabs defaultValue="reminders" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="reminders">My Reminders</TabsTrigger>

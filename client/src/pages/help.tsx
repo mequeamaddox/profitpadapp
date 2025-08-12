@@ -187,7 +187,7 @@ export default function Help() {
       <main className="flex-1 overflow-hidden">
         <Header title="Help Center" subtitle="Get help and learn how to make the most of ProfitPad." />
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 pb-20">
           {/* Search Bar */}
           <div className="relative mb-6">
             <Input

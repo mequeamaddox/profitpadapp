@@ -211,7 +211,23 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId))
-      .orderBy(desc(salesRecords.dateSold));
+      .orderBy(desc(salesRecords.saleDate));
+  }
+
+  async getSalesByUserId(userId: string): Promise<SalesRecord[]> {
+    return await db
+      .select()
+      .from(salesRecords)
+      .where(eq(salesRecords.userId, userId))
+      .orderBy(desc(salesRecords.saleDate));
+  }
+
+  async getInventoryByUserId(userId: string): Promise<InventoryItem[]> {
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.userId, userId))
+      .orderBy(desc(inventoryItems.createdAt));
   }
 
   async getSalesRecord(id: string, userId: string): Promise<SalesRecord | undefined> {
