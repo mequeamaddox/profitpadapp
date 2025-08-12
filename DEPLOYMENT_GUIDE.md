@@ -86,5 +86,39 @@ When ready to add Stripe:
 2. Add to environment variables
 3. Billing page will automatically enable real payments
 
+## 🔄 Updating Your Deployed App
+
+**Easy Updates:**
+1. Make changes in your Replit workspace
+2. Click **Deploy** button again
+3. Select your existing Reserved VM deployment
+4. Click **Deploy** to update
+
+**What happens during updates:**
+- Creates new snapshot of your app
+- Replaces running instance with updated version
+- Database and user data remain intact
+- Minimal downtime (usually under 30 seconds)
+
+**Best Practices:**
+- Test changes in development first
+- Deploy during low-traffic hours
+- Keep backup of working version
+
+## 📱 Mobile Access
+
+Your app is already mobile-optimized as a Progressive Web App (PWA):
+
+**Add to Home Screen:**
+- **iPhone**: Safari → Share → "Add to Home Screen"
+- **Android**: Chrome → Menu → "Add to Home Screen"
+
+**Mobile Features:**
+- Responsive design for all screen sizes
+- Touch-friendly interface
+- Camera access for barcode scanning
+- Works offline for basic features
+- Fast loading on mobile networks
+
 ## 📞 Support
 For deployment issues, contact Replit support or reference their deployment documentation.
