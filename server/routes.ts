@@ -43,13 +43,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { archived, search } = req.query;
+      const { archived, search, limit } = req.query;
       
       let items;
       if (search) {
         items = await storage.searchInventoryItems(userId, search as string);
       } else {
         items = await storage.getInventoryItems(userId, archived === "true");
+      }
+      
+      // Apply limit if specified
+      if (limit && !isNaN(parseInt(limit as string))) {
+        const limitNum = parseInt(limit as string);
+        items = items.slice(0, limitNum);
       }
       
       res.json(items);
