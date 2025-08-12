@@ -90,20 +90,28 @@ export default function Sidebar() {
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-            {user?.subscriptionTier === "professional" ? "Professional Plan" : 
-             user?.subscriptionTier === "enterprise" ? "Enterprise Plan" : 
-             user?.subscriptionTier === "starter" ? "Starter Plan" : 
-             user?.trialEndsAt ? "Trial Active" : "Starter Plan"}
-          </Badge>
+        <div className="space-y-2">
+          <Button
+            variant="ghost" 
+            className="w-full justify-start text-xs p-2 h-auto"
+            onClick={() => setLocation("/billing")}
+          >
+            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 mr-2">
+              {user?.subscriptionTier === "professional" ? "Professional Plan" : 
+               user?.subscriptionTier === "enterprise" ? "Enterprise Plan" : 
+               user?.subscriptionTier === "starter" ? "Starter Plan" : 
+               user?.trialEndsAt ? "Trial Active" : "Starter Plan"}
+            </Badge>
+            <span className="text-xs text-slate-500">Manage Plan</span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/logout")}
-            className="text-slate-500 hover:text-slate-700"
+            className="w-full justify-start text-slate-500 hover:text-slate-700"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 mr-2" />
+            <span className="text-sm">Sign Out</span>
           </Button>
         </div>
       </div>
