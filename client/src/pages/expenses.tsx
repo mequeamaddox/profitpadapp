@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Download, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,16 +12,35 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { format } from "date-fns";
 import { type Expense } from "@shared/schema";
 import ExpenseForm from "@/components/forms/expense-form";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 
 export default function Expenses() {
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTaxType, setSelectedTaxType] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  const { data: expenses = [], isLoading } = useQuery<Expense[]>({
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  const { data: expenses = [], isLoading: expensesLoading } = useQuery<Expense[]>({
     queryKey: ["/api/expenses"],
+    enabled: isAuthenticated,
   });
 
   const filteredExpenses = expenses.filter((expense) => {
@@ -77,11 +98,23 @@ export default function Expenses() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading expenses...</div>;
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-pulse text-slate-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      <main className="flex-1 overflow-hidden">
+        <Header title="Business Expenses" subtitle="Track and manage all your business expenses with comprehensive tax calculations" />
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -237,6 +270,8 @@ export default function Expenses() {
           ))
         )}
       </div>
+        </div>
+      </main>
     </div>
   );
 }
