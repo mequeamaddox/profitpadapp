@@ -43,7 +43,7 @@ export default function Reminders() {
   });
 
   const { data: overdueReminders = [] } = useQuery<Reminder[]>({
-    queryKey: ["/api/reminders", { overdue: true }],
+    queryKey: ["/api/reminders?overdue=true"],
     enabled: isAuthenticated,
   });
 

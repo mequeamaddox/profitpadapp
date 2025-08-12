@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Plus } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Search, Bell, Plus, LogOut, User as UserIcon } from "lucide-react";
 import AddMenuModal from "@/components/modals/add-menu-modal";
 import { User, Reminder } from "@shared/schema";
 
@@ -20,7 +22,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
   });
 
   const { data: overdueReminders = [] } = useQuery<Reminder[]>({
-    queryKey: ["/api/reminders", { overdue: true }],
+    queryKey: ["/api/reminders?overdue=true"],
   });
 
   return (
@@ -66,6 +68,41 @@ export default function Header({ title, subtitle }: HeaderProps) {
               <Plus className="h-4 w-4 mr-2" />
               Add New
             </Button>
+
+            {/* User Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.profileImageUrl} alt={user?.firstName || "User"} />
+                    <AvatarFallback>
+                      {user?.firstName ? user.firstName.charAt(0).toUpperCase() : <UserIcon className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    {user?.firstName && (
+                      <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    )}
+                    {user?.email && (
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <a href="/api/logout" className="w-full cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

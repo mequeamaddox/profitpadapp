@@ -10,7 +10,7 @@ export default function Sidebar() {
   const [location, setLocation] = useLocation();
   
   const { data: overdueReminders = [] } = useQuery<Reminder[]>({
-    queryKey: ["/api/reminders/overdue"],
+    queryKey: ["/api/reminders?overdue=true"],
   });
 
   const { data: user } = useQuery<User>({
