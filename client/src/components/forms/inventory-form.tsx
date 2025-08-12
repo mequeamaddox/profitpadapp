@@ -39,6 +39,10 @@ const conditions = [
   "New", "Like New", "Good", "Fair", "Poor"
 ];
 
+const statuses = [
+  "unlisted", "listed", "sold", "returned"
+];
+
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,6 +58,9 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
     defaultValues: {
       title: item?.title || "",
       sku: item?.sku || "",
+      upc: item?.upc || "",
+      quantity: item?.quantity || 1,
+      status: item?.status || "unlisted",
       platform: item?.platform || "",
       category: item?.category || "",
       purchasePrice: item?.purchasePrice || "",
@@ -187,6 +194,65 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <FormControl>
                   <Input placeholder="Enter SKU" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="upc"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>UPC (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="UPC barcode" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantity</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    placeholder="1" 
+                    {...field} 
+                    onChange={e => field.onChange(parseInt(e.target.value) || 1)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {statuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

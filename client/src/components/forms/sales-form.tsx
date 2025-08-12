@@ -16,7 +16,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import TrialExpiredPrompt from "@/components/trial-expired-prompt";
-import { useState } from "react";
+import React, { useState } from "react";
 import { User } from "@shared/schema";
 
 interface SalesFormProps {
@@ -47,10 +47,14 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
     resolver: zodResolver(insertSalesRecordSchema),
     defaultValues: {
       inventoryItemId: sale?.inventoryItemId || "",
+      itemTitle: sale?.itemTitle || "",
+      purchasePrice: sale?.purchasePrice || "0.00",
       salePrice: sale?.salePrice || "",
-      platformFee: sale?.platformFee || "",
-      shippingCost: sale?.shippingCost || "",
-      dateSold: sale?.dateSold ? new Date(sale.dateSold) : new Date(),
+      platformFee: sale?.platformFee || "0.00",
+      shippingCost: sale?.shippingCost || "0.00", 
+      otherFees: sale?.otherFees || "0.00",
+      profit: sale?.profit || "0.00",
+      saleDate: sale?.saleDate ? new Date(sale.saleDate) : new Date(),
       platform: sale?.platform || "",
       buyerInfo: sale?.buyerInfo || "",
       notes: sale?.notes || "",
@@ -135,11 +139,24 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
     },
   });
 
+  // Calculate profit automatically
+  const salePrice = parseFloat(form.watch("salePrice") || "0");
+  const purchasePrice = parseFloat(form.watch("purchasePrice") || "0");
+  const platformFee = parseFloat(form.watch("platformFee") || "0");
+  const shippingCost = parseFloat(form.watch("shippingCost") || "0");
+  const otherFees = parseFloat(form.watch("otherFees") || "0");
+  
+  // Auto-update profit when costs change
+  React.useEffect(() => {
+    const profit = salePrice - purchasePrice - platformFee - shippingCost - otherFees;
+    form.setValue("profit", profit.toFixed(2));
+  }, [salePrice, purchasePrice, platformFee, shippingCost, otherFees, form]);
+
   const onSubmit = (data: InsertSalesRecord) => {
     const formattedData = {
       ...data,
       inventoryItemId: data.inventoryItemId || null,
-      tags: typeof data.tags === "string" ? data.tags.split(",").map(tag => tag.trim()).filter(Boolean) : data.tags,
+      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
     };
 
     if (sale) {
@@ -266,7 +283,80 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
 
           <FormField
             control={form.control}
-            name="dateSold"
+            name="itemTitle"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Item Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter item title" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="purchasePrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Purchase Price ($)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="otherFees"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Other Fees ($)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="profit"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Profit (Auto-calculated)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    readOnly
+                    className="bg-gray-50"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="saleDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date Sold</FormLabel>

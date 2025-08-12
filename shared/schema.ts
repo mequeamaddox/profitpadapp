@@ -45,11 +45,17 @@ export const inventoryItems = pgTable("inventory_items", {
   userId: varchar("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   sku: varchar("sku").notNull(),
+  upc: varchar("upc"), // Added UPC support
+  quantity: integer("quantity").default(1), // Added quantity tracking
   platform: varchar("platform"),
   category: varchar("category"),
   purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }).notNull(),
   listedPrice: decimal("listed_price", { precision: 10, scale: 2 }).notNull(),
+  soldPrice: decimal("sold_price", { precision: 10, scale: 2 }), // Added sold price tracking
+  status: varchar("status").default("unlisted"), // "unlisted", "listed", "sold", "returned"
   dateAcquired: timestamp("date_acquired").notNull(),
+  dateListed: timestamp("date_listed"),
+  dateSold: timestamp("date_sold"),
   condition: varchar("condition"),
   notes: text("notes"),
   tags: text("tags").array(),
@@ -64,10 +70,14 @@ export const salesRecords = pgTable("sales_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   inventoryItemId: varchar("inventory_item_id").references(() => inventoryItems.id),
+  itemTitle: text("item_title").notNull(), // Denormalized for reporting
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }).default("0.00"), // For profit calculation
   salePrice: decimal("sale_price", { precision: 10, scale: 2 }).notNull(),
   platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).default("0.00"),
   shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
-  dateSold: timestamp("date_sold").notNull(),
+  otherFees: decimal("other_fees", { precision: 10, scale: 2 }).default("0.00"), // Additional fees
+  profit: decimal("profit", { precision: 10, scale: 2 }).notNull(), // Auto-calculated profit
+  saleDate: timestamp("sale_date").notNull(),
   platform: varchar("platform"),
   buyerInfo: text("buyer_info"),
   notes: text("notes"),
