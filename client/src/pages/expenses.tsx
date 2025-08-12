@@ -204,7 +204,7 @@ export default function Expenses() {
           <SelectContent>
             <SelectItem value="all">All Tax Types</SelectItem>
             {taxTypes.map((type) => (
-              <SelectItem key={type} value={type}>
+              <SelectItem key={type} value={type || "none"}>
                 {type === "none" ? "No Tax" : type === "inclusive" ? "Tax Inclusive" : "Tax Exclusive"}
               </SelectItem>
             ))}
