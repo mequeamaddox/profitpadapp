@@ -144,6 +144,44 @@ export const remindersRelations = relations(reminders, ({ one }) => ({
   }),
 }));
 
+// Expense tracking table for business expenses beyond item costs
+export const expenses = pgTable("expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  category: varchar("category").notNull(), // shipping, packaging, storage, marketing, fees, equipment, etc.
+  taxType: varchar("tax_type").default("exclusive"), // inclusive, exclusive, none
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0.00"), // percentage
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"), // calculated tax
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(), // amount before tax
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(), // final amount including tax
+  expenseDate: timestamp("expense_date").defaultNow(),
+  vendor: varchar("vendor"), // who was paid
+  receiptUrl: varchar("receipt_url"), // photo of receipt
+  businessPurpose: text("business_purpose"), // for tax deduction documentation
+  deductible: boolean("deductible").default(true),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  user: one(users, {
+    fields: [expenses.userId],
+    references: [users.id],
+  }),
+}));
+
+// Update users relations to include expenses
+export const updatedUsersRelations = relations(users, ({ many }) => ({
+  inventoryItems: many(inventoryItems),
+  salesRecords: many(salesRecords),
+  reminders: many(reminders),
+  expenses: many(expenses),
+}));
+
 // Insert schemas
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
   id: true,
@@ -166,6 +204,13 @@ export const insertReminderSchema = createInsertSchema(reminders).omit({
   updatedAt: true,
 });
 
+export const insertExpenseSchema = createInsertSchema(expenses).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
@@ -180,6 +225,8 @@ export type InsertSalesRecord = z.infer<typeof insertSalesRecordSchema>;
 export type SalesRecord = typeof salesRecords.$inferSelect;
 export type InsertReminder = z.infer<typeof insertReminderSchema>;
 export type Reminder = typeof reminders.$inferSelect;
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type Expense = typeof expenses.$inferSelect;
 
 // Dashboard metrics types
 export interface DashboardMetrics {

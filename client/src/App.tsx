@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
 import Sales from "@/pages/sales";
+import Expenses from "@/pages/expenses";
 import Reminders from "@/pages/reminders";
 import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/sales" component={Sales} />
+          <Route path="/expenses" component={Expenses} />
           <Route path="/reminders" component={Reminders} />
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />

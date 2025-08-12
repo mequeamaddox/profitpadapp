@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText } from "lucide-react";
+import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText, Receipt } from "lucide-react";
 import { User, Reminder } from "@shared/schema";
 
 export default function Sidebar() {
@@ -21,6 +21,7 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/", icon: Home, current: location === "/" },
     { name: "Inventory", href: "/inventory", icon: Package, current: location === "/inventory" },
     { name: "Sales", href: "/sales", icon: DollarSign, current: location === "/sales" },
+    { name: "Expenses", href: "/expenses", icon: Receipt, current: location === "/expenses" },
     { 
       name: "Reminders", 
       href: "/reminders", 

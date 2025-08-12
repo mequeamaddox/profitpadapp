@@ -3,6 +3,7 @@ import {
   inventoryItems,
   salesRecords,
   reminders,
+  expenses,
   type User,
   type UpsertUser,
   type InventoryItem,
@@ -11,6 +12,8 @@ import {
   type InsertSalesRecord,
   type Reminder,
   type InsertReminder,
+  type Expense,
+  type InsertExpense,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
@@ -42,6 +45,13 @@ export interface IStorage {
   updateReminder(id: string, userId: string, reminder: Partial<InsertReminder>): Promise<Reminder | undefined>;
   deleteReminder(id: string, userId: string): Promise<boolean>;
   getOverdueReminders(userId: string): Promise<Reminder[]>;
+
+  // Expense operations
+  getExpenses(userId: string): Promise<Expense[]>;
+  getExpense(id: string, userId: string): Promise<Expense | undefined>;
+  createExpense(expense: InsertExpense & { userId: string }): Promise<Expense>;
+  updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
+  deleteExpense(id: string, userId: string): Promise<boolean>;
 
   // Analytics operations
   getDashboardMetrics(userId: string): Promise<{
@@ -264,6 +274,44 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(reminders.dueDate));
   }
 
+  // Expense operations
+  async getExpenses(userId: string): Promise<Expense[]> {
+    return await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.userId, userId))
+      .orderBy(desc(expenses.expenseDate));
+  }
+
+  async getExpense(id: string, userId: string): Promise<Expense | undefined> {
+    const [expense] = await db
+      .select()
+      .from(expenses)
+      .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+    return expense;
+  }
+
+  async createExpense(expense: InsertExpense & { userId: string }): Promise<Expense> {
+    const [created] = await db.insert(expenses).values(expense).returning();
+    return created;
+  }
+
+  async updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined> {
+    const [updated] = await db
+      .update(expenses)
+      .set(expense)
+      .where(and(eq(expenses.id, id), eq(expenses.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async deleteExpense(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(expenses)
+      .where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
+    return result.rowCount > 0;
+  }
+
   async getDashboardMetrics(userId: string): Promise<{
     totalSales: string;
     totalProfit: string;
@@ -322,8 +370,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(salesRecords.userId, userId),
-          gte(salesRecords.dateSold, monthStart),
-          lte(salesRecords.dateSold, monthEnd)
+          gte(salesRecords.saleDate, monthStart),
+          lte(salesRecords.saleDate, monthEnd)
         )
       );
 
@@ -337,7 +385,7 @@ export class DatabaseStorage implements IStorage {
         id: salesRecords.id,
         salePrice: salesRecords.salePrice,
         platform: salesRecords.platform,
-        dateSold: salesRecords.dateSold,
+        saleDate: salesRecords.saleDate,
         itemTitle: inventoryItems.title,
         itemSku: inventoryItems.sku,
         itemImages: inventoryItems.images,
@@ -345,7 +393,7 @@ export class DatabaseStorage implements IStorage {
       .from(salesRecords)
       .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
       .where(eq(salesRecords.userId, userId))
-      .orderBy(desc(salesRecords.dateSold))
+      .orderBy(desc(salesRecords.saleDate))
       .limit(5);
 
     // Revenue data for the last 12 months
@@ -360,8 +408,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(salesRecords.userId, userId),
-            gte(salesRecords.dateSold, date),
-            lte(salesRecords.dateSold, nextDate)
+            gte(salesRecords.saleDate, date),
+            lte(salesRecords.saleDate, nextDate)
           )
         );
 
