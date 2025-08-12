@@ -184,10 +184,10 @@ export default function Help() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Help Center" subtitle="Get help and learn how to make the most of ProfitPad." />
         
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '120px' }}>
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
           {/* Search Bar */}
           <div className="relative mb-6">
             <Input

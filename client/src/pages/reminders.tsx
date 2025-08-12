@@ -145,10 +145,10 @@ export default function Reminders() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden">
         <Header title="Reminders" subtitle="Stay on top of your tasks and deadlines." />
         
-        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '120px' }}>
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: '150px' }}>
           <Tabs defaultValue="reminders" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="reminders">My Reminders</TabsTrigger>
