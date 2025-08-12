@@ -5,6 +5,7 @@ import {
   reminders,
   expenses,
   notificationSettings,
+  pallets,
   type User,
   type UpsertUser,
   type InventoryItem,
@@ -17,6 +18,8 @@ import {
   type InsertExpense,
   type NotificationSettings,
   type InsertNotificationSettings,
+  type Pallet,
+  type InsertPallet,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
@@ -59,6 +62,13 @@ export interface IStorage {
   // Notification settings operations
   getNotificationSettings(userId: string): Promise<NotificationSettings | undefined>;
   upsertNotificationSettings(settings: InsertNotificationSettings & { userId: string }): Promise<NotificationSettings>;
+
+  // Pallet operations
+  getPallets(userId: string): Promise<Pallet[]>;
+  getPallet(id: string, userId: string): Promise<Pallet | undefined>;
+  createPallet(pallet: InsertPallet & { userId: string }): Promise<Pallet>;
+  updatePallet(id: string, userId: string, pallet: Partial<InsertPallet>): Promise<Pallet | undefined>;
+  deletePallet(id: string, userId: string): Promise<boolean>;
 
   // Advanced reminder operations
   getDueReminders(userId: string, leadTimeMinutes?: number): Promise<Reminder[]>;
@@ -517,6 +527,47 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result;
+  }
+
+  // Pallet operations
+  async getPallets(userId: string): Promise<Pallet[]> {
+    return await db
+      .select()
+      .from(pallets)
+      .where(eq(pallets.userId, userId))
+      .orderBy(desc(pallets.createdAt));
+  }
+
+  async getPallet(id: string, userId: string): Promise<Pallet | undefined> {
+    const [pallet] = await db
+      .select()
+      .from(pallets)
+      .where(and(eq(pallets.id, id), eq(pallets.userId, userId)));
+    return pallet;
+  }
+
+  async createPallet(pallet: InsertPallet & { userId: string }): Promise<Pallet> {
+    const [result] = await db
+      .insert(pallets)
+      .values(pallet)
+      .returning();
+    return result;
+  }
+
+  async updatePallet(id: string, userId: string, pallet: Partial<InsertPallet>): Promise<Pallet | undefined> {
+    const [result] = await db
+      .update(pallets)
+      .set({ ...pallet, updatedAt: new Date() })
+      .where(and(eq(pallets.id, id), eq(pallets.userId, userId)))
+      .returning();
+    return result;
+  }
+
+  async deletePallet(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(pallets)
+      .where(and(eq(pallets.id, id), eq(pallets.userId, userId)));
+    return result.rowCount > 0;
   }
 
   // Advanced reminder operations

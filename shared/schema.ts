@@ -43,6 +43,7 @@ export const users = pgTable("users", {
 export const inventoryItems = pgTable("inventory_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
+  palletId: varchar("pallet_id").references(() => pallets.id), // Link to pallet for cost allocation
   title: text("title").notNull(),
   sku: varchar("sku").notNull(),
   upc: varchar("upc"), // Added UPC support
@@ -211,12 +212,27 @@ export const notificationSettingsRelations = relations(notificationSettings, ({ 
   }),
 }));
 
-// Update users relations to include expenses
+// Update inventory items relations to include pallet
+export const updatedInventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
+  user: one(users, {
+    fields: [inventoryItems.userId],
+    references: [users.id],
+  }),
+  pallet: one(pallets, {
+    fields: [inventoryItems.palletId],
+    references: [pallets.id],
+  }),
+  salesRecords: many(salesRecords),
+  reminders: many(reminders),
+}));
+
+// Update users relations to include expenses and pallets
 export const updatedUsersRelations = relations(users, ({ many }) => ({
   inventoryItems: many(inventoryItems),
   salesRecords: many(salesRecords),
   reminders: many(reminders),
   expenses: many(expenses),
+  pallets: many(pallets),
 }));
 
 // Insert schemas
@@ -255,6 +271,31 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
   updatedAt: true,
 });
 
+// Pallets table for liquidation pallet tracking
+export const pallets = pgTable("pallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  supplier: varchar("supplier"),
+  purchaseDate: timestamp("purchase_date").defaultNow(),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
+  totalItems: integer("total_items").notNull(),
+  workingItems: integer("working_items"),
+  damagedItems: integer("damaged_items"),
+  status: varchar("status").notNull().default("active"), // active, depleted, archived
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPalletSchema = createInsertSchema(pallets).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
@@ -263,6 +304,18 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export const palletsRelations = relations(pallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [pallets.userId],
+    references: [users.id],
+  }),
+  inventoryItems: many(inventoryItems),
+}));
+
+export type Pallet = typeof pallets.$inferSelect;
+export type InsertPallet = typeof pallets.$inferInsert;
+export type InsertPalletForm = z.infer<typeof insertPalletSchema>;
 export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertSalesRecord = z.infer<typeof insertSalesRecordSchema>;

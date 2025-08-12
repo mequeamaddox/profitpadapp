@@ -8,6 +8,7 @@ import {
   insertSalesRecordSchema,
   insertReminderSchema,
   insertExpenseSchema,
+  insertPalletSchema,
   insertNotificationSettingsSchema,
 } from "@shared/schema";
 import { z } from "zod";
@@ -592,6 +593,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user settings:", error);
       res.status(500).json({ message: "Failed to update user settings" });
+    }
+  });
+
+
+
+  // Pallets routes
+  app.get("/api/pallets", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const pallets = await storage.getPallets(userId);
+      res.json(pallets);
+    } catch (error) {
+      console.error("Error fetching pallets:", error);
+      res.status(500).json({ message: "Failed to fetch pallets" });
+    }
+  });
+
+  app.get("/api/pallets/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const pallet = await storage.getPallet(id, userId);
+      
+      if (!pallet) {
+        return res.status(404).json({ message: "Pallet not found" });
+      }
+      
+      res.json(pallet);
+    } catch (error) {
+      console.error("Error fetching pallet:", error);
+      res.status(500).json({ message: "Failed to fetch pallet" });
+    }
+  });
+
+  app.post("/api/pallets", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const palletData = insertPalletSchema.parse(req.body);
+      
+      const pallet = await storage.createPallet({
+        ...palletData,
+        userId,
+      });
+      
+      res.status(201).json(pallet);
+    } catch (error) {
+      console.error("Error creating pallet:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid pallet data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create pallet" });
+    }
+  });
+
+  app.put("/api/pallets/:id", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const palletData = insertPalletSchema.partial().parse(req.body);
+      
+      const pallet = await storage.updatePallet(id, userId, palletData);
+      
+      if (!pallet) {
+        return res.status(404).json({ message: "Pallet not found" });
+      }
+      
+      res.json(pallet);
+    } catch (error) {
+      console.error("Error updating pallet:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid pallet data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update pallet" });
+    }
+  });
+
+  app.delete("/api/pallets/:id", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      const deleted = await storage.deletePallet(id, userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Pallet not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting pallet:", error);
+      res.status(500).json({ message: "Failed to delete pallet" });
     }
   });
 
