@@ -179,7 +179,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const onSubmit = (data: InsertExpense) => {
     const formattedData = {
       ...data,
-      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
+      tags: Array.isArray(data.tags) ? data.tags : (data.tags ? String(data.tags).split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
     };
 
     if (expense) {
@@ -364,6 +364,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                       step="0.01"
                       placeholder="0.00"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />

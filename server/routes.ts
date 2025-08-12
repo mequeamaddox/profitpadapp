@@ -489,8 +489,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Sales by platform
       const platformSales = new Map<string, { count: number, revenue: number }>();
       filteredSales.forEach(sale => {
-        const current = platformSales.get(sale.platform) || { count: 0, revenue: 0 };
-        platformSales.set(sale.platform, {
+        const platform = sale.platform || "Unknown";
+        const current = platformSales.get(platform) || { count: 0, revenue: 0 };
+        platformSales.set(platform, {
           count: current.count + 1,
           revenue: current.revenue + parseFloat(sale.salePrice)
         });
