@@ -689,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object storage routes for receipt uploads
   app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+    const userId = req.user?.claims?.sub || "";
     const { ObjectStorageService } = await import("./objectStorage");
     const objectStorageService = new ObjectStorageService();
     
@@ -755,7 +755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(receiptData);
     } catch (error) {
       console.error("Error analyzing receipt:", error);
-      res.status(500).json({ error: "Failed to analyze receipt" });
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to analyze receipt" });
     }
   });
 

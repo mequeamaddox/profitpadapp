@@ -271,7 +271,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -302,6 +302,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                     step="0.01"
                     placeholder="0.00"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -316,7 +317,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
               <FormItem>
                 <FormLabel>Vendor/Payee</FormLabel>
                 <FormControl>
-                  <Input placeholder="Who was paid?" {...field} />
+                  <Input placeholder="Who was paid?" {...field} value={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -331,7 +332,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tax Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select tax type" />
@@ -399,7 +400,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value}
+                      selected={field.value || undefined}
                       onSelect={field.onChange}
                       disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
@@ -443,6 +444,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                   placeholder="Describe how this expense relates to your business..."
                   className="resize-none"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -462,6 +464,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                     placeholder="Additional details..."
                     className="resize-none"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -482,7 +485,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                 </div>
                 <FormControl>
                   <Switch
-                    checked={field.value}
+                    checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -501,7 +504,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                 <Input
                   placeholder="tax-prep, monthly, office..."
                   {...field}
-                  value={Array.isArray(field.value) ? field.value.join(", ") : field.value}
+                  value={Array.isArray(field.value) ? field.value.join(", ") : field.value || ""}
                   onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
@@ -524,7 +527,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(field.value, '_blank')}
+                      onClick={() => field.value && window.open(field.value, '_blank')}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View Receipt
