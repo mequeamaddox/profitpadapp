@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Camera, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import ReceiptCapture from "@/components/receipt-capture";
 
 
 interface ExpenseFormProps {
@@ -49,6 +50,7 @@ const taxTypes = [
 export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showReceiptCapture, setShowReceiptCapture] = useState(false);
 
 
   const { data: user } = useQuery<User>({
@@ -199,11 +201,17 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
+  const handleReceiptCaptured = (imageUrl: string) => {
+    form.setValue('receiptUrl', imageUrl);
+    setShowReceiptCapture(false);
+  };
+
 
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -464,10 +472,61 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
           )}
         />
 
+        {/* Receipt Management Section */}
+        <FormField
+          control={form.control}
+          name="receiptUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Receipt</FormLabel>
+              <div className="space-y-2">
+                {field.value ? (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(field.value, '_blank')}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Receipt
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => field.onChange("")}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowReceiptCapture(true)}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Capture Receipt
+                  </Button>
+                )}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Saving..." : expense ? "Update Expense" : "Record Expense"}
         </Button>
-      </form>
-    </Form>
+        </form>
+      </Form>
+
+      <ReceiptCapture
+        isOpen={showReceiptCapture}
+        onClose={() => setShowReceiptCapture(false)}
+        onCaptureSuccess={handleReceiptCaptured}
+      />
+    </div>
   );
 }
