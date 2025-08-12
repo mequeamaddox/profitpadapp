@@ -114,26 +114,27 @@ export default function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Free Tier */}
+            {/* Starter Tier */}
             <Card className="relative">
               <CardHeader>
                 <CardTitle className="text-2xl">Starter</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">Free</div>
+                <div className="text-4xl font-bold text-slate-900">$9.99<span className="text-base font-normal text-slate-500">/month</span></div>
                 <CardDescription>Perfect for getting started</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Up to 50 inventory items</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Basic sales tracking</li>
+                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Up to 100 inventory items</li>
+                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Complete sales tracking</li>
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Essential analytics dashboard</li>
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Task reminders</li>
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>CSV import/export</li>
+                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>3-day free trial</li>
                 </ul>
                 <Button 
                   className="w-full mt-6"
                   onClick={() => window.location.href = "/api/login"}
                 >
-                  Get Started Free
+                  Start Free Trial
                 </Button>
               </CardContent>
             </Card>
@@ -209,7 +210,7 @@ export default function Landing() {
             className="px-8 py-4 text-lg"
             onClick={() => window.location.href = "/api/login"}
           >
-            Start Your Free Trial
+            Start Your 3-Day Trial
           </Button>
         </div>
       </main>

@@ -8,14 +8,14 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-Updated pricing tiers to higher amounts:
-- Professional: $19.99/month (was $9.99/month)  
-- Enterprise: $49.99/month (was $29.99/month)
+Updated pricing model from free tier to paid plans with trial:
+- Starter: $9.99/month - Up to 100 inventory items, complete sales tracking, essential analytics, task reminders, CSV import/export
+- Professional: $19.99/month - Unlimited inventory/sales/reminders, advanced analytics, multi-platform integration  
+- Enterprise: $49.99/month - All Professional features plus team access, API integrations, dedicated support
 
-Implemented 3-day trial system replacing free tier:
-- Trial (3 days): Full access to all features - unlimited inventory, sales, reminders, and advanced analytics
-- Professional ($19.99/month): Unlimited inventory/sales/reminders, advanced analytics, multi-platform integration
-- Enterprise ($49.99/month): All Professional features plus team access, API integrations, dedicated support
+Implemented 3-day trial system for all plans:
+- Trial (3 days): Full access to all features before requiring subscription
+- No free tier - all plans require subscription after trial period
 
 Trial expiration system implemented with middleware checking and trial expired prompts in forms.
 
