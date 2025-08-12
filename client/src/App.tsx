@@ -14,6 +14,7 @@ import Reminders from "@/pages/reminders";
 import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
 import Help from "@/pages/help";
+import ProfitEstimatorPage from "@/pages/profit-estimator";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/expenses" component={Expenses} />
           <Route path="/reminders" component={Reminders} />
           <Route path="/reports" component={Reports} />
+          <Route path="/profit-estimator" component={ProfitEstimatorPage} />
           <Route path="/settings" component={Settings} />
           <Route path="/help" component={Help} />
         </>
