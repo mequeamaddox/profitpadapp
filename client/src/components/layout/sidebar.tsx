@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText, Receipt, Calculator } from "lucide-react";
+import { BarChart3, Home, Package, DollarSign, Bell, Settings, HelpCircle, FileText, Receipt, Calculator, LogOut } from "lucide-react";
 import { User, Reminder } from "@shared/schema";
 
 export default function Sidebar() {
@@ -90,9 +90,22 @@ export default function Sidebar() {
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-          {user?.subscriptionTier === "premium" ? "Premium Plan" : "Standard Plan"}
-        </Badge>
+        <div className="flex items-center justify-between">
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+            {user?.subscriptionTier === "professional" ? "Professional Plan" : 
+             user?.subscriptionTier === "enterprise" ? "Enterprise Plan" : 
+             user?.subscriptionTier === "starter" ? "Starter Plan" : 
+             user?.trialEndsAt ? "Trial Active" : "Starter Plan"}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/logout")}
+            className="text-slate-500 hover:text-slate-700"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </aside>
   );

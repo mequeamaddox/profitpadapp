@@ -15,6 +15,7 @@ import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
 import Help from "@/pages/help";
 import ProfitEstimatorPage from "@/pages/profit-estimator";
+import Logout from "@/pages/logout";
 
 
 function Router() {
@@ -36,7 +37,7 @@ function Router() {
           <Route path="/reminders" component={Reminders} />
           <Route path="/reports" component={Reports} />
           <Route path="/profit-estimator" component={ProfitEstimatorPage} />
-  
+          <Route path="/logout" component={Logout} />
           <Route path="/settings" component={Settings} />
           <Route path="/help" component={Help} />
         </>
