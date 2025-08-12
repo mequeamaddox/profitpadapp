@@ -67,6 +67,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Barcode search endpoint
+  app.get("/api/inventory/search", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { barcode } = req.query;
+      
+      if (!barcode) {
+        return res.status(400).json({ message: "Barcode parameter is required" });
+      }
+      
+      const items = await storage.searchInventoryByBarcode(userId, barcode as string);
+      res.json(items);
+    } catch (error) {
+      console.error("Error searching inventory by barcode:", error);
+      res.status(500).json({ message: "Failed to search inventory by barcode" });
+    }
+  });
+
   app.get("/api/inventory/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

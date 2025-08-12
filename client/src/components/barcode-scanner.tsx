@@ -83,7 +83,7 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
           context.drawImage(videoElement, 0, 0);
 
           const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const result = await codeReader.current.decodeFromImageData(imageData);
+          const result = await codeReader.current.decodeFromCanvas(canvas);
           
           if (result) {
             setScannedCode(result.getText());
