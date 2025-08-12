@@ -45,19 +45,19 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const form = useForm<InsertSalesRecord>({
     resolver: zodResolver(insertSalesRecordSchema),
     defaultValues: {
-      inventoryItemId: sale?.inventoryItemId || "",
-      itemTitle: sale?.itemTitle || "",
-      purchasePrice: sale?.purchasePrice || "0.00",
-      salePrice: sale?.salePrice || "",
-      platformFee: sale?.platformFee || "0.00",
-      shippingCost: sale?.shippingCost || "0.00", 
-      otherFees: sale?.otherFees || "0.00",
-      profit: sale?.profit || "0.00",
+      inventoryItemId: sale?.inventoryItemId ?? "",
+      itemTitle: sale?.itemTitle ?? "",
+      purchasePrice: sale?.purchasePrice ?? "0.00",
+      salePrice: sale?.salePrice ?? "",
+      platformFee: sale?.platformFee ?? "0.00",
+      shippingCost: sale?.shippingCost ?? "0.00", 
+      otherFees: sale?.otherFees ?? "0.00",
+      profit: sale?.profit ?? "0.00",
       saleDate: sale?.saleDate ? new Date(sale.saleDate) : new Date(),
-      platform: sale?.platform || "",
-      buyerInfo: sale?.buyerInfo || "",
-      notes: sale?.notes || "",
-      tags: sale?.tags || [],
+      platform: sale?.platform ?? "",
+      buyerInfo: sale?.buyerInfo ?? "",
+      notes: sale?.notes ?? "",
+      tags: sale?.tags ?? [],
     },
   });
 
@@ -145,7 +145,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
     const formattedData = {
       ...data,
       inventoryItemId: data.inventoryItemId || null,
-      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
+      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
     };
 
     if (sale) {
@@ -168,7 +168,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Linked Inventory Item (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select inventory item or leave blank" />
@@ -176,7 +176,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="none">No linked item (Manual entry)</SelectItem>
-                    {inventory.map((item: any) => (
+                    {(inventory as any[]).map((item: any) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.title} - {item.sku}
                       </SelectItem>
@@ -194,7 +194,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Platform</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select platform" />
@@ -244,6 +244,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                     step="0.01"
                     placeholder="0.00"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -263,6 +264,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                     step="0.01"
                     placeholder="0.00"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -296,6 +298,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                     step="0.01"
                     placeholder="0.00"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -315,6 +318,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                     step="0.01"
                     placeholder="0.00"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -396,6 +400,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                 <Input
                   placeholder="Enter buyer information"
                   {...field}
+                  value={field.value ?? ""}
                 />
               </FormControl>
               <FormMessage />
@@ -414,6 +419,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                   placeholder="Enter any additional notes about this sale"
                   className="resize-none"
                   {...field}
+                  value={field.value ?? ""}
                 />
               </FormControl>
               <FormMessage />
@@ -430,7 +436,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
               <FormControl>
                 <Input
                   placeholder="Enter tags separated by commas"
-                  value={Array.isArray(field.value) ? field.value.join(", ") : field.value}
+                  value={Array.isArray(field.value) ? field.value.join(", ") : (field.value ?? "")}
                   onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
