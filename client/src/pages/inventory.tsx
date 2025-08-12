@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User } from "lucide-react";
+import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload } from "lucide-react";
 import type { InventoryItem, Pallet } from "@shared/schema";
 
 // Pallet form schema
@@ -354,6 +354,76 @@ export default function Inventory() {
     setEditingItem(null);
   };
 
+  const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast({
+          title: "Error",
+          description: "CSV file must contain header row and at least one data row",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const data = lines.slice(1);
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const line of data) {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        
+        try {
+          const item = {
+            title: values[headers.indexOf('title')] || values[headers.indexOf('item')] || values[headers.indexOf('name')] || 'Imported Item',
+            sku: values[headers.indexOf('sku')] || '',
+            purchasePrice: values[headers.indexOf('purchase_price')] || values[headers.indexOf('cost')] || '0',
+            listedPrice: values[headers.indexOf('listed_price')] || values[headers.indexOf('price')] || '0',
+            platform: values[headers.indexOf('platform')] || '',
+            condition: values[headers.indexOf('condition')] || 'Good',
+            category: values[headers.indexOf('category')] || '',
+            quantity: parseInt(values[headers.indexOf('quantity')] || '1'),
+            notes: values[headers.indexOf('notes')] || values[headers.indexOf('description')] || '',
+            dateAcquired: new Date(),
+            status: 'unlisted',
+            archived: false,
+            tags: [],
+            images: []
+          };
+
+          await apiRequest("POST", "/api/inventory", item);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      
+      toast({
+        title: "CSV Import Complete",
+        description: `Successfully imported ${successCount} items. ${errorCount > 0 ? `${errorCount} items failed.` : ''}`,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Import Error",
+        description: "Failed to process CSV file. Please check the format.",
+        variant: "destructive",
+      });
+    }
+
+    // Reset the input
+    event.target.value = '';
+  };
+
   const handlePalletEdit = (pallet: Pallet) => {
     setEditingPallet(pallet);
     setIsPalletFormOpen(true);
@@ -416,6 +486,22 @@ export default function Inventory() {
                   >
                     {showArchived ? "Show Archived" : "Show Active"}
                   </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => document.getElementById('csv-upload')?.click()}
+                  >
+                    Import CSV
+                  </Button>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    style={{ display: 'none' }}
+                    onChange={handleCSVImport}
+                  />
                 </div>
                 
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
