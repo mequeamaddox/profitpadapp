@@ -649,8 +649,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { monthlyGoal, salesTaxRate, taxInclusiveSales } = req.body;
       
+      console.log("Settings update request:", {
+        userId,
+        monthlyGoal,
+        salesTaxRate,
+        taxInclusiveSales
+      });
+      
       const user = await storage.getUser(userId);
       if (!user) {
+        console.log("User not found:", userId);
         return res.status(404).json({ message: "User not found" });
       }
 
@@ -659,7 +667,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (salesTaxRate !== undefined) updateData.salesTaxRate = salesTaxRate?.toString();
       if (taxInclusiveSales !== undefined) updateData.taxInclusiveSales = taxInclusiveSales;
 
+      console.log("Update data:", updateData);
+
       const updatedUser = await storage.upsertUser(updateData);
+      
+      console.log("Updated user result:", updatedUser);
 
       res.json(updatedUser);
     } catch (error) {

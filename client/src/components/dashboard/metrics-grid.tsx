@@ -44,7 +44,7 @@ export default function MetricsGrid() {
     {
       title: "Monthly Goal",
       value: `${metrics?.monthlyGoalProgress || 0}%`,
-      change: `$${parseFloat(metrics?.totalProfit || "0").toLocaleString()} progress`,
+      change: `Goal: $${parseFloat(metrics?.monthlyGoal || "0").toLocaleString()}`,
       changeType: "neutral",
       icon: Target,
       iconBg: "bg-amber-100",

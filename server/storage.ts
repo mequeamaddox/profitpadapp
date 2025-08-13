@@ -565,6 +565,7 @@ export class DatabaseStorage implements IStorage {
       totalProfit: totalProfit.toFixed(2),
       itemsSold: itemsSoldResult?.count || 0,
       monthlyGoalProgress: monthlyProgress,
+      monthlyGoal: monthlyGoal.toFixed(2),
       recentSales: recentSales as any[],
       revenueData,
       inventoryStats: {

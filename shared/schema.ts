@@ -336,6 +336,7 @@ export interface DashboardMetrics {
   totalProfit: string;
   itemsSold: number;
   monthlyGoalProgress: number;
+  monthlyGoal: string;
   recentSales: SalesRecord[];
   revenueData: Array<{ month: string; revenue: number }>;
   inventoryStats: {
