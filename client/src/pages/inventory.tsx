@@ -54,8 +54,8 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
       purchaseDate: pallet?.purchaseDate ? new Date(pallet.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       totalCost: pallet?.totalCost || "",
       totalItems: pallet?.totalItems || 1,
-      workingItems: pallet?.workingItems || undefined,
-      damagedItems: pallet?.damagedItems || undefined,
+      workingItems: pallet?.workingItems || 0,
+      damagedItems: pallet?.damagedItems || 0,
       notes: pallet?.notes || "",
     },
   });
@@ -64,7 +64,15 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
     mutationFn: async (data: PalletFormData) => {
       const endpoint = pallet ? `/api/pallets/${pallet.id}` : "/api/pallets";
       const method = pallet ? "PUT" : "POST";
-      return await apiRequest(method, endpoint, data);
+      
+      // Transform the data to match the backend schema
+      const transformedData = {
+        ...data,
+        purchaseDate: new Date(data.purchaseDate).toISOString(),
+        totalCost: data.totalCost.toString(),
+      };
+      
+      return await apiRequest(method, endpoint, transformedData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pallets"] });
