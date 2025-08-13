@@ -56,7 +56,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl mx-4 md:mx-auto flex flex-col h-[90vh] md:h-auto md:max-h-[95vh] overflow-hidden mobile-modal-scroll">
+      <DialogContent className="max-w-2xl mx-4 md:mx-auto flex flex-col md:h-auto md:max-h-[95vh] overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {selectedAction ? (
@@ -79,7 +79,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 mobile-modal-content" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
+        <div className="flex-1 overflow-y-auto min-h-0 mobile-modal-content android-scroll">
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
