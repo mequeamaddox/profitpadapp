@@ -334,7 +334,13 @@ export interface DashboardMetrics {
   inventoryStats: {
     totalItems: number;
     activeListings: number;
-    lowStockItems: number;
+    lowStock: number;
+  };
+  inventoryValue: {
+    totalInvestment: string;
+    potentialRevenue: string;
+    potentialProfit: string;
+    itemCount: number;
   };
   salesChange?: string;
   profitChange?: string;

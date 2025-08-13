@@ -20,6 +20,7 @@ import {
   type InsertNotificationSettings,
   type Pallet,
   type InsertPallet,
+  type DashboardMetrics,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
@@ -355,15 +356,7 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getDashboardMetrics(userId: string): Promise<{
-    totalSales: string;
-    totalProfit: string;
-    itemsSold: number;
-    monthlyGoalProgress: number;
-    recentSales: any[];
-    revenueData: any[];
-    inventoryStats: any;
-  }> {
+  async getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
     // Get current month start/end and previous month for comparison
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -377,24 +370,14 @@ export class DatabaseStorage implements IStorage {
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId));
 
-    // Total profit calculation (sale price - purchase price - fees - shipping)
-    const salesWithItems = await db
-      .select({
-        salePrice: salesRecords.salePrice,
-        platformFee: salesRecords.platformFee,
-        shippingCost: salesRecords.shippingCost,
-        purchasePrice: inventoryItems.purchasePrice,
-      })
+    // Total profit calculation - use stored profit values (same as reports)
+    const allSales = await db
+      .select({ profit: salesRecords.profit })
       .from(salesRecords)
-      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
       .where(eq(salesRecords.userId, userId));
 
-    const totalProfit = salesWithItems.reduce((acc, sale) => {
-      const profit = parseFloat(sale.salePrice || "0") - 
-                    parseFloat(sale.purchasePrice || "0") - 
-                    parseFloat(sale.platformFee || "0") - 
-                    parseFloat(sale.shippingCost || "0");
-      return acc + profit;
+    const totalProfit = allSales.reduce((acc, sale) => {
+      return acc + parseFloat(sale.profit || "0");
     }, 0);
 
     // Items sold count
@@ -415,15 +398,9 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const prevMonthSalesWithItems = await db
-      .select({
-        salePrice: salesRecords.salePrice,
-        platformFee: salesRecords.platformFee,
-        shippingCost: salesRecords.shippingCost,
-        purchasePrice: inventoryItems.purchasePrice,
-      })
+    const prevMonthSales = await db
+      .select({ profit: salesRecords.profit })
       .from(salesRecords)
-      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
       .where(
         and(
           eq(salesRecords.userId, userId),
@@ -432,12 +409,8 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const prevMonthProfit = prevMonthSalesWithItems.reduce((acc, sale) => {
-      const profit = parseFloat(sale.salePrice || "0") - 
-                    parseFloat(sale.purchasePrice || "0") - 
-                    parseFloat(sale.platformFee || "0") - 
-                    parseFloat(sale.shippingCost || "0");
-      return acc + profit;
+    const prevMonthProfit = prevMonthSales.reduce((acc, sale) => {
+      return acc + parseFloat(sale.profit || "0");
     }, 0);
 
     const [prevMonthItemsSoldResult] = await db
@@ -547,6 +520,37 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
+    // Calculate inventory resell value potential
+    const activeInventory = await db
+      .select({
+        purchasePrice: inventoryItems.purchasePrice,
+        listedPrice: inventoryItems.listedPrice,
+        quantity: inventoryItems.quantity,
+      })
+      .from(inventoryItems)
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          eq(inventoryItems.archived, false),
+          sql`${salesRecords.id} IS NULL` // Not sold yet
+        )
+      )
+      .leftJoin(salesRecords, eq(inventoryItems.id, salesRecords.inventoryItemId));
+
+    const inventoryValue = activeInventory.reduce((acc, item) => {
+      const purchasePrice = parseFloat(item.purchasePrice || "0");
+      const quantity = item.quantity || 1;
+      return acc + (purchasePrice * quantity);
+    }, 0);
+
+    const potentialRevenue = activeInventory.reduce((acc, item) => {
+      const listedPrice = parseFloat(item.listedPrice || "0");
+      const quantity = item.quantity || 1;
+      return acc + (listedPrice * quantity);
+    }, 0);
+
+    const potentialProfit = potentialRevenue - inventoryValue;
+
     return {
       totalSales: totalSalesResult?.total || "0",
       totalProfit: totalProfit.toFixed(2),
@@ -558,6 +562,12 @@ export class DatabaseStorage implements IStorage {
         totalItems: totalItemsResult?.count || 0,
         activeListings: activeListingsResult?.count || 0,
         lowStock: 0, // Could be calculated based on quantity if we add that field
+      },
+      inventoryValue: {
+        totalInvestment: inventoryValue.toFixed(2),
+        potentialRevenue: potentialRevenue.toFixed(2),
+        potentialProfit: potentialProfit.toFixed(2),
+        itemCount: activeInventory.length,
       },
       salesChange,
       profitChange,

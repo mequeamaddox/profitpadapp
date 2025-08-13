@@ -8,6 +8,7 @@ import RevenueChart from "@/components/dashboard/revenue-chart";
 import RecentSales from "@/components/dashboard/recent-sales";
 import QuickActions from "@/components/dashboard/quick-actions";
 import InventoryOverview from "@/components/dashboard/inventory-overview";
+import InventoryValue from "@/components/dashboard/inventory-value";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Dashboard() {
@@ -57,13 +58,17 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
             <div className="order-2 lg:order-1">
               <QuickActions />
             </div>
             <div className="lg:col-span-2 order-1 lg:order-2">
               <InventoryOverview />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <InventoryValue />
           </div>
         </div>
       </main>
