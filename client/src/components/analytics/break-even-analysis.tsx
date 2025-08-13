@@ -76,34 +76,26 @@ export default function BreakEvenAnalysis() {
     );
   }
 
-  // Separate pallet-linked vs individual inventory for overall analysis
+  // Calculate cumulative pallet overview for overall analysis
   const palletLinkedItems = inventory.filter(item => item.palletId);
-  const individualItems = inventory.filter(item => !item.palletId);
-
+  
   // Calculate total pallet investment (sum of all pallet costs)
   const totalPalletInvestment = pallets.reduce((sum, pallet) => sum + parseFloat(pallet.totalCost || "0"), 0);
   
-  // Calculate total individual inventory investment (items not linked to pallets)
-  const totalIndividualInvestment = individualItems.reduce((sum, item) => sum + parseFloat(item.purchasePrice || "0"), 0);
-  
-  // For overall analysis, use ONLY individual inventory + profit from individual sales
-  // This excludes pallet-based inventory which should be tracked separately
-  const individualSoldItems = individualItems.filter(item => item.status === 'sold');
-  const individualCurrentProfit = individualSoldItems.reduce((sum, item) => {
+  // Calculate total profit from pallet-linked inventory sales
+  const palletSoldItems = palletLinkedItems.filter(item => item.status === 'sold');
+  const palletCurrentProfit = palletSoldItems.reduce((sum, item) => {
     return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
   }, 0);
 
-  console.log(`Overall Analysis: Individual investment = $${totalIndividualInvestment}, Individual profit = $${individualCurrentProfit}`);
-  console.log(`Pallet investment = $${totalPalletInvestment} (tracked separately by pallet)`);
-
-  // Use individual investment and profit for overall break-even calculation
-  const totalInvestment = totalIndividualInvestment;
-  const currentProfit = individualCurrentProfit;
+  // Use cumulative pallet investment and profit for overall break-even calculation
+  const totalInvestment = totalPalletInvestment;
+  const currentProfit = palletCurrentProfit;
   const remainingToBreakEven = Math.max(0, totalInvestment - currentProfit);
   const breakEvenPercentage = totalInvestment > 0 ? (currentProfit / totalInvestment) * 100 : 0;
   
-  // Estimate break-even timeline based on individual item sales only (not including pallet sales)
-  const averageDailyProfit = individualCurrentProfit / 30; // Simple estimation
+  // Estimate break-even timeline based on pallet sales trend
+  const averageDailyProfit = palletCurrentProfit / 30; // Simple estimation
   const projectedBreakEvenDays = averageDailyProfit > 0 ? Math.ceil(remainingToBreakEven / averageDailyProfit) : 0;
 
   const breakEvenData: BreakEvenData = {
@@ -124,8 +116,6 @@ export default function BreakEvenAnalysis() {
     // Get ONLY items that are explicitly linked to this pallet via palletId
     const palletItems = inventory.filter(item => item.palletId === pallet.id);
     
-    console.log(`Pallet ${pallet.name}: Found ${palletItems.length} linked items out of ${inventory.length} total inventory items`);
-    
     // Use pallet's total items (from pallet creation) and linked items for sold count
     const totalItems = pallet.totalItems || 0;
     const soldItems = palletItems.filter(item => item.status === 'sold');
@@ -133,16 +123,12 @@ export default function BreakEvenAnalysis() {
     
     // Calculate actual profit ONLY from sold items that are linked to this specific pallet
     const actualProfit = soldItems.reduce((sum, item) => {
-      const profit = parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0");
-      console.log(`  Item ${item.name}: Profit = ${profit} (sold: ${item.soldPrice}, cost: ${item.purchasePrice})`);
-      return sum + profit;
+      return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
     }, 0);
     
     const totalCost = parseFloat(pallet.totalCost || "0");
     const remainingToBreakEven = Math.max(0, totalCost - actualProfit);
     const breakEvenPercentage = totalCost > 0 ? (actualProfit / totalCost) * 100 : 0;
-
-    console.log(`Pallet ${pallet.name} Break-even: ${actualProfit}/${totalCost} = ${breakEvenPercentage.toFixed(1)}%`);
 
     return {
       pallet,

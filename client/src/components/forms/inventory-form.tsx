@@ -155,7 +155,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       upc: data.upc?.trim() || null,
       barcode: data.barcode?.trim() || null,
       notes: data.notes?.trim() || null,
-      palletId: data.palletId?.trim() || null,
+      palletId: (data.palletId?.trim() === "none" || !data.palletId?.trim()) ? null : data.palletId.trim(),
       sku: data.sku?.trim() || `SKU-${Date.now()}`,
       dateListed: data.dateListed || null,
       dateSold: data.dateSold || null,
@@ -371,14 +371,14 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source Pallet (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Leave blank for individual purchases" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Individual purchase (not from pallet)</SelectItem>
+                    <SelectItem value="none">Individual purchase (not from pallet)</SelectItem>
                     {pallets.map((pallet) => (
                       <SelectItem key={pallet.id} value={pallet.id}>
                         {pallet.name} - ${pallet.totalCost}
