@@ -63,3 +63,4 @@ export const getQueryFn: <T>(options: {
   };
 
 // Note: QueryClient is created in App.tsx to avoid duplicate instances
+// No queryClient export here - use useQueryClient() hook instead
