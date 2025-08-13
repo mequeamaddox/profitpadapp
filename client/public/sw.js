@@ -1,4 +1,4 @@
-const CACHE_NAME = 'profitpad-v1';
+const CACHE_NAME = 'profitpad-debug-v2';
 const urlsToCache = [
   '/',
   '/src/main.tsx',
@@ -16,15 +16,13 @@ self.addEventListener('install', event => {
   );
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - DISABLED FOR DEBUGGING - always fetch from network
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+    fetch(event.request).catch(() => {
+      // Only use cache as absolute fallback
+      return caches.match(event.request);
+    })
   );
 });
 
