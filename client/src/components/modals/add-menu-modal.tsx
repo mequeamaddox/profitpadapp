@@ -79,7 +79,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 mobile-scroll-container">
+        <div className="flex-1 overflow-y-auto min-h-0 force-scroll">
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
@@ -110,6 +110,13 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
               {selectedAction === "reminder" && (
                 <ReminderForm onSuccess={handleClose} />
               )}
+              {/* Add test content to force scrolling */}
+              <div className="mt-8 p-4 bg-gray-100 rounded">
+                <p>Test scroll area - this content should force scrolling on mobile</p>
+                {Array.from({ length: 20 }, (_, i) => (
+                  <p key={i} className="py-2">Test line {i + 1} - scroll test content</p>
+                ))}
+              </div>
             </div>
           )}
         </div>
