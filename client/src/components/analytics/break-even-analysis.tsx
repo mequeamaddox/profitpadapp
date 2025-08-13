@@ -116,7 +116,8 @@ export default function BreakEvenAnalysis() {
     // Get ONLY items that are explicitly linked to this pallet via palletId
     const palletItems = inventory.filter(item => item.palletId === pallet.id);
     
-    // Use pallet's total items (from pallet creation) and linked items for sold count
+    // Use pallet's working items (not total items) since broken items can't be sold
+    const workingItems = pallet.workingItems || pallet.totalItems || 0;
     const totalItems = pallet.totalItems || 0;
     const soldItems = palletItems.filter(item => item.status === 'sold');
     const itemsSold = soldItems.length;
@@ -134,7 +135,7 @@ export default function BreakEvenAnalysis() {
       pallet,
       totalCost,
       itemsSold,
-      totalItems,
+      totalItems: workingItems, // Use working items for break-even calculation
       currentProfit: actualProfit,
       remainingToBreakEven,
       breakEvenPercentage: Math.min(100, breakEvenPercentage),
