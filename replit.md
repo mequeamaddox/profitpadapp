@@ -40,6 +40,15 @@ Implemented comprehensive Barcode Scanner system (January 2025):
 - Visual scanning overlay with targeting lines for improved UX
 - Error handling for camera permissions and scanning failures
 
+Fixed Mobile Navigation Modal Scrolling Issues (January 2025):
+- Resolved Android scrolling problems with navigation "Add New" button modal
+- Implemented flexbox layout with proper container structure for mobile
+- Added Business Expense form option to the add menu modal
+- Fixed reminder form date validation errors causing crashes
+- Removed test percentage data from dashboard metrics display
+- Enhanced z-index handling to prevent mobile overlay conflicts
+- Optimized mobile scrolling with webkit-overflow-scrolling and touch-action properties
+
 Reorganized Pallets module integration (January 2025):
 - Moved liquidation pallet COGS tracking from standalone page to inventory page tabs
 - Implemented tabbed interface with "Inventory Items" and "Liquidation Pallets" sections
