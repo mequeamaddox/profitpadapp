@@ -408,7 +408,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
 
     const [monthlyProfitResult] = await db
-      .select({ total: sum(salesRecords.salePrice) })
+      .select({ total: sum(salesRecords.profit) })
       .from(salesRecords)
       .where(
         and(
@@ -420,7 +420,7 @@ export class DatabaseStorage implements IStorage {
 
     const monthlyGoal = parseFloat(userResult?.monthlyGoal || "0");
     const monthlyProgress = monthlyGoal > 0 ? 
-      Math.round((parseFloat(monthlyProfitResult?.total || "0") / monthlyGoal) * 100) : 0;
+      Math.min(100, Math.round((parseFloat(monthlyProfitResult?.total || "0") / monthlyGoal) * 100)) : 0;
 
     // Recent sales with inventory details
     const recentSales = await db

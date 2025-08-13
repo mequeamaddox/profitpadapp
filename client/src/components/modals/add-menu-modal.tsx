@@ -56,8 +56,8 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[95vh] mx-4 md:mx-auto flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {selectedAction ? (
               <div className="flex items-center">
@@ -79,38 +79,40 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        {!selectedAction ? (
-          <div className="space-y-3">
-            {actions.map((action) => (
-              <Button
-                key={action.id}
-                variant="outline"
-                className="w-full justify-start p-4 h-auto"
-                onClick={() => handleActionSelect(action.id)}
-              >
-                <div className={`w-10 h-10 ${action.iconBg} rounded-lg flex items-center justify-center mr-3`}>
-                  <action.icon className={action.iconColor} size={20} />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-slate-900">{action.title}</p>
-                  <p className="text-sm text-slate-500">{action.description}</p>
-                </div>
-              </Button>
-            ))}
-          </div>
-        ) : (
-          <div>
-            {selectedAction === "inventory" && (
-              <InventoryForm onSuccess={handleClose} />
-            )}
-            {selectedAction === "sales" && (
-              <SalesForm onSuccess={handleClose} />
-            )}
-            {selectedAction === "reminder" && (
-              <ReminderForm onSuccess={handleClose} />
-            )}
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {!selectedAction ? (
+            <div className="space-y-3">
+              {actions.map((action) => (
+                <Button
+                  key={action.id}
+                  variant="outline"
+                  className="w-full justify-start p-4 h-auto"
+                  onClick={() => handleActionSelect(action.id)}
+                >
+                  <div className={`w-10 h-10 ${action.iconBg} rounded-lg flex items-center justify-center mr-3`}>
+                    <action.icon className={action.iconColor} size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-slate-900">{action.title}</p>
+                    <p className="text-sm text-slate-500">{action.description}</p>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="pb-4">
+              {selectedAction === "inventory" && (
+                <InventoryForm onSuccess={handleClose} />
+              )}
+              {selectedAction === "sales" && (
+                <SalesForm onSuccess={handleClose} />
+              )}
+              {selectedAction === "reminder" && (
+                <ReminderForm onSuccess={handleClose} />
+              )}
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
