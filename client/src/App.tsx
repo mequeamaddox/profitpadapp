@@ -69,8 +69,9 @@ function App() {
       queries: {
         queryFn: getQueryFn({ on401: "returnNull" }),
         refetchInterval: false,
-        refetchOnWindowFocus: false,
-        staleTime: 0, // Don't cache auth queries
+        refetchOnWindowFocus: true, // Refetch on window focus to catch auth changes
+        staleTime: 0, // Always fresh queries
+        gcTime: 0, // Don't cache any queries 
         retry: false,
       },
       mutations: {

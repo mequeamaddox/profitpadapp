@@ -6,7 +6,9 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: 0, // Always refetch to get latest auth state
+    gcTime: 0, // Don't cache auth results
     refetchOnMount: true,
+    refetchOnWindowFocus: true, // Check auth when user returns to tab
   });
 
   // Enhanced debugging for auth state

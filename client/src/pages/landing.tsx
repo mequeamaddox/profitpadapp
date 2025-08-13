@@ -21,11 +21,15 @@ export default function Landing() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => refetch()}
+              onClick={() => {
+                refetch();
+                // Also refresh the page to clear any cached state
+                setTimeout(() => window.location.reload(), 500);
+              }}
               disabled={isLoading}
             >
               <RefreshCw className="h-4 w-4 mr-1" />
-              Check Auth
+              Refresh Auth
             </Button>
             <Button onClick={() => window.location.href = "/api/login"}>
               Sign In
