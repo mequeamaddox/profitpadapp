@@ -59,7 +59,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
     if (!open) return null;
     
     return (
-      <div className="fixed inset-0 z-50 bg-white">
+      <div className="fixed inset-0 z-[9999] bg-white">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-center">
@@ -127,13 +127,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
               {selectedAction === "reminder" && (
                 <ReminderForm onSuccess={handleClose} />
               )}
-              {/* Test content */}
-              <div className="mt-8 p-4 bg-gray-100 rounded">
-                <p>Test scroll area - this content should force scrolling on mobile</p>
-                {Array.from({ length: 20 }, (_, i) => (
-                  <p key={i} className="py-2">Test line {i + 1} - scroll test content</p>
-                ))}
-              </div>
+
             </div>
           )}
         </div>
