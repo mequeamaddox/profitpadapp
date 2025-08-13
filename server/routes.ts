@@ -221,14 +221,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      console.log("Sales update request:", {
+        saleId: req.params.id,
+        userId,
+        body: req.body
+      });
+      
+      // Convert saleDate string to Date object if needed
+      if (req.body.saleDate && typeof req.body.saleDate === 'string') {
+        req.body.saleDate = new Date(req.body.saleDate);
+      }
+      
       const validatedData = insertSalesRecordSchema.partial().parse(req.body);
+      console.log("Validated data:", validatedData);
+      
       const sale = await storage.updateSalesRecord(req.params.id, userId, validatedData);
       if (!sale) {
+        console.log("Sale not found for update:", req.params.id);
         return res.status(404).json({ message: "Sale not found" });
       }
+      
+      console.log("Sale updated successfully:", sale);
       res.json(sale);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Sales update validation error:", JSON.stringify(error.errors, null, 2));
+        console.error("Request body:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error updating sale:", error);

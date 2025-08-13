@@ -251,6 +251,10 @@ export const insertSalesRecordSchema = createInsertSchema(salesRecords).omit({
   userId: true,
   createdAt: true,
   updatedAt: true,
+}).partial({
+  salesTaxRate: true,
+  salesTaxAmount: true,
+  taxIncluded: true,
 });
 
 export const insertReminderSchema = createInsertSchema(reminders).omit({
