@@ -106,6 +106,10 @@ export default function BreakEvenAnalysis() {
 
   const isBreakEvenReached = currentProfit >= totalInvestment;
 
+  // Separate inventory into pallet-based and individual purchases
+  const palletLinkedItems = inventory.filter(item => item.palletId);
+  const individualItems = inventory.filter(item => !item.palletId);
+
   // Calculate pallet-specific break-even data
   const palletBreakEvens: PalletBreakEven[] = pallets.map(pallet => {
     // Get items linked to this pallet
@@ -260,6 +264,24 @@ export default function BreakEvenAnalysis() {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Summary of inventory mix */}
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium text-slate-900 mb-2">Inventory Overview</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600">Pallet Items:</span>
+                      <span className="font-medium ml-2">{palletLinkedItems.length} items</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Individual Purchases:</span>
+                      <span className="font-medium ml-2">{individualItems.length} items</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Pallet analysis shows only items tagged to specific pallets. Individual purchases are tracked in overall analysis.
+                  </p>
+                </div>
+                
                 {palletBreakEvens.map((palletData) => {
                   const isPalletBreakEven = palletData.currentProfit >= palletData.totalCost;
                   
@@ -335,7 +357,7 @@ export default function BreakEvenAnalysis() {
                               {palletData.totalItems - palletData.itemsSold} items remaining to sell
                               {palletData.items.length === 0 && palletData.totalItems > 0 && (
                                 <span className="block text-xs text-orange-600 mt-1">
-                                  💡 Link inventory items to this pallet to track individual sales
+                                  Tip: Tag individual inventory items to this pallet to track specific sales
                                 </span>
                               )}
                             </p>

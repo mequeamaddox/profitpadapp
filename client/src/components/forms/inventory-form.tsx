@@ -374,11 +374,11 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select pallet (if from liquidation pallet)" />
+                      <SelectValue placeholder="Leave blank for individual purchases" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No pallet (individual purchase)</SelectItem>
+                    <SelectItem value="">Individual purchase (not from pallet)</SelectItem>
                     {pallets.map((pallet) => (
                       <SelectItem key={pallet.id} value={pallet.id}>
                         {pallet.name} - ${pallet.totalCost}
@@ -386,6 +386,9 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Only select a pallet if this item came from a liquidation pallet purchase. Most individual items, parts, and standalone purchases should be left blank.
+                </p>
                 <FormMessage />
               </FormItem>
             )}
