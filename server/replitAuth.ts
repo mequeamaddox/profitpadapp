@@ -38,8 +38,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
+      sameSite: 'lax',
     },
   });
 }
@@ -112,12 +113,38 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
+    console.log("Callback received:", req.url);
+    console.log("Query params:", req.query);
+    console.log("Headers:", req.headers);
+    
     // Handle localhost development by using the first configured domain
     const hostname = req.hostname === 'localhost' ? 
       process.env.REPLIT_DOMAINS!.split(",")[0] : req.hostname;
-    passport.authenticate(`replitauth:${hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    
+    console.log("Using hostname for auth:", hostname);
+    
+    passport.authenticate(`replitauth:${hostname}`, (err, user, info) => {
+      console.log("Auth callback result:", { err, user, info });
+      
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.redirect("/api/login");
+      }
+      
+      if (!user) {
+        console.log("No user returned from authentication");
+        return res.redirect("/api/login");
+      }
+      
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return res.redirect("/api/login");
+        }
+        
+        console.log("Authentication successful, redirecting to /");
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
