@@ -67,10 +67,10 @@ function App() {
   const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
       queries: {
-        queryFn: getQueryFn({ on401: "throw" }),
+        queryFn: getQueryFn({ on401: "returnNull" }),
         refetchInterval: false,
         refetchOnWindowFocus: false,
-        staleTime: Infinity,
+        staleTime: 0, // Don't cache auth queries
         retry: false,
       },
       mutations: {

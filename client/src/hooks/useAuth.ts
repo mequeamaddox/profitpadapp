@@ -6,16 +6,17 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: 0, // Always refetch to get latest auth state
+    refetchOnMount: true,
   });
 
   // Log to both console and DOM for debugging
   if (typeof window !== 'undefined') {
-    console.log("🔍 useAuth Debug:", { user, isLoading, error: error?.message });
+    console.log("🔍 useAuth Debug:", { user, isLoading, error: error?.message, isAuthenticated: !!user });
   }
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user && user.id,
+    isAuthenticated: !!user,
   };
 }
