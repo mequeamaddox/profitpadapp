@@ -60,9 +60,9 @@ export default function Header({ title, subtitle }: HeaderProps) {
             {/* Notifications */}
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="h-5 w-5 text-slate-400 hover:text-slate-600" />
-              {overdueReminders.length > 0 && (
+              {(overdueReminders?.length || 0) > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {overdueReminders.length}
+                  {overdueReminders?.length}
                 </span>
               )}
             </Button>

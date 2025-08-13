@@ -27,7 +27,7 @@ export default function Sidebar() {
       href: "/reminders", 
       icon: Bell, 
       current: location === "/reminders",
-      badge: overdueReminders.length > 0 ? overdueReminders.length : null
+      badge: overdueReminders?.length > 0 ? overdueReminders.length : null
     },
     { name: "Reports", href: "/reports", icon: FileText, current: location === "/reports" },
     { name: "Research", href: "/research", icon: Search, current: location === "/research" },

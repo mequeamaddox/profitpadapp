@@ -459,8 +459,17 @@ export class DatabaseStorage implements IStorage {
       );
 
     const monthlyGoal = parseFloat(userResult?.monthlyGoal || "0");
+    const currentMonthProfit = parseFloat(monthlyProfitResult?.total || "0");
     const monthlyProgress = monthlyGoal > 0 ? 
-      Math.min(100, Math.round((parseFloat(monthlyProfitResult?.total || "0") / monthlyGoal) * 100)) : 0;
+      Math.min(100, Math.round((currentMonthProfit / monthlyGoal) * 100)) : 0;
+      
+    console.log("Monthly Goal Debug:", {
+      userResult: userResult?.monthlyGoal,
+      monthlyGoal,
+      currentMonthProfit,
+      monthlyProgress,
+      userId
+    });
 
     // Recent sales with inventory details
     const recentSales = await db
