@@ -108,12 +108,15 @@ export default function BreakEvenAnalysis() {
 
   // Calculate pallet-specific break-even data
   const palletBreakEvens: PalletBreakEven[] = pallets.map(pallet => {
+    // Get items linked to this pallet
     const palletItems = inventory.filter(item => item.palletId === pallet.id);
-    const totalItems = palletItems.length;
+    
+    // Use pallet's total items (from pallet creation) and linked items for sold count
+    const totalItems = pallet.totalItems || 0;
     const soldItems = palletItems.filter(item => item.status === 'sold');
     const itemsSold = soldItems.length;
     
-    // Calculate actual profit from sold items
+    // Calculate actual profit from sold items that are linked to this pallet
     const actualProfit = soldItems.reduce((sum, item) => {
       return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
     }, 0);
@@ -330,6 +333,11 @@ export default function BreakEvenAnalysis() {
                             </div>
                             <p className="text-sm text-orange-700 mt-1">
                               {palletData.totalItems - palletData.itemsSold} items remaining to sell
+                              {palletData.items.length === 0 && palletData.totalItems > 0 && (
+                                <span className="block text-xs text-orange-600 mt-1">
+                                  💡 Link inventory items to this pallet to track individual sales
+                                </span>
+                              )}
                             </p>
                           </div>
                         )}
