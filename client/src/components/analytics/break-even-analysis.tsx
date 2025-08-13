@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, TrendingUp, AlertTriangle, Target } from "lucide-react";
+import { Calculator, TrendingUp, AlertTriangle, Target, Package } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import type { DashboardMetrics } from "@shared/schema";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { DashboardMetrics, Pallet, InventoryItem } from "@shared/schema";
 
 interface BreakEvenData {
   totalInvestment: number;
@@ -13,9 +14,28 @@ interface BreakEvenData {
   averageDailyProfit: number;
 }
 
+interface PalletBreakEven {
+  pallet: Pallet;
+  totalCost: number;
+  itemsSold: number;
+  totalItems: number;
+  currentProfit: number;
+  remainingToBreakEven: number;
+  breakEvenPercentage: number;
+  items: InventoryItem[];
+}
+
 export default function BreakEvenAnalysis() {
   const { data: metrics, isLoading } = useQuery<DashboardMetrics>({
     queryKey: ["/api/dashboard/metrics"],
+  });
+
+  const { data: pallets = [] } = useQuery<Pallet[]>({
+    queryKey: ["/api/pallets"],
+  });
+
+  const { data: inventory = [] } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/inventory"],
   });
 
   if (isLoading) {
@@ -86,6 +106,34 @@ export default function BreakEvenAnalysis() {
 
   const isBreakEvenReached = currentProfit >= totalInvestment;
 
+  // Calculate pallet-specific break-even data
+  const palletBreakEvens: PalletBreakEven[] = pallets.map(pallet => {
+    const palletItems = inventory.filter(item => item.palletId === pallet.id);
+    const totalItems = palletItems.length;
+    const soldItems = palletItems.filter(item => item.status === 'sold');
+    const itemsSold = soldItems.length;
+    
+    // Calculate actual profit from sold items
+    const actualProfit = soldItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
+    }, 0);
+    
+    const totalCost = parseFloat(pallet.totalCost || "0");
+    const remainingToBreakEven = Math.max(0, totalCost - actualProfit);
+    const breakEvenPercentage = totalCost > 0 ? (actualProfit / totalCost) * 100 : 0;
+
+    return {
+      pallet,
+      totalCost,
+      itemsSold,
+      totalItems,
+      currentProfit: actualProfit,
+      remainingToBreakEven,
+      breakEvenPercentage: Math.min(100, breakEvenPercentage),
+      items: palletItems,
+    };
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -98,23 +146,30 @@ export default function BreakEvenAnalysis() {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Break-Even Progress</span>
-            <span className={`font-semibold ${isBreakEvenReached ? 'text-green-600' : 'text-blue-600'}`}>
-              {breakEvenData.breakEvenPercentage.toFixed(1)}%
-            </span>
-          </div>
-          <Progress 
-            value={breakEvenData.breakEvenPercentage} 
-            className="h-3"
-          />
-          <div className="flex justify-between text-xs text-slate-500">
-            <span>$0</span>
-            <span>${totalInvestment.toFixed(2)} (Break-Even)</span>
-          </div>
-        </div>
+        <Tabs defaultValue="overall" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overall">Overall Analysis</TabsTrigger>
+            <TabsTrigger value="pallets">By Pallet</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overall" className="space-y-6">
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Break-Even Progress</span>
+                <span className={`font-semibold ${isBreakEvenReached ? 'text-green-600' : 'text-blue-600'}`}>
+                  {breakEvenData.breakEvenPercentage.toFixed(1)}%
+                </span>
+              </div>
+              <Progress 
+                value={breakEvenData.breakEvenPercentage} 
+                className="h-3"
+              />
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>$0</span>
+                <span>${totalInvestment.toFixed(2)} (Break-Even)</span>
+              </div>
+            </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -192,6 +247,100 @@ export default function BreakEvenAnalysis() {
             )}
           </div>
         )}
+          </TabsContent>
+          
+          <TabsContent value="pallets" className="space-y-4">
+            {palletBreakEvens.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Package className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                <p>No pallets found. Create a pallet to track its break-even analysis.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {palletBreakEvens.map((palletData) => {
+                  const isPalletBreakEven = palletData.currentProfit >= palletData.totalCost;
+                  
+                  return (
+                    <Card key={palletData.pallet.id} className="border border-slate-200">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{palletData.pallet.name}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                              isPalletBreakEven 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {palletData.breakEvenPercentage.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        {palletData.pallet.description && (
+                          <p className="text-sm text-slate-600">{palletData.pallet.description}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Pallet Progress */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-600">Break-Even Progress</span>
+                            <span className={`font-semibold ${isPalletBreakEven ? 'text-green-600' : 'text-blue-600'}`}>
+                              ${palletData.currentProfit.toFixed(2)} / ${palletData.totalCost.toFixed(2)}
+                            </span>
+                          </div>
+                          <Progress value={palletData.breakEvenPercentage} className="h-2" />
+                        </div>
+
+                        {/* Pallet Stats */}
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <div className="text-2xl font-bold text-slate-900">{palletData.totalItems}</div>
+                            <div className="text-xs text-slate-500">Total Items</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-green-600">{palletData.itemsSold}</div>
+                            <div className="text-xs text-slate-500">Items Sold</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-blue-600">
+                              {palletData.totalItems - palletData.itemsSold}
+                            </div>
+                            <div className="text-xs text-slate-500">Remaining</div>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        {isPalletBreakEven ? (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="font-semibold text-green-900">Pallet Break-Even Achieved!</span>
+                            </div>
+                            <p className="text-sm text-green-700 mt-1">
+                              Excess profit: ${(palletData.currentProfit - palletData.totalCost).toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-orange-600" />
+                              <span className="font-semibold text-orange-900">
+                                ${palletData.remainingToBreakEven.toFixed(2)} to break-even
+                              </span>
+                            </div>
+                            <p className="text-sm text-orange-700 mt-1">
+                              {palletData.totalItems - palletData.itemsSold} items remaining to sell
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
-import { insertInventoryItemSchema, type InventoryItem, type InsertInventoryItem, type User } from "@shared/schema";
+import { insertInventoryItemSchema, type InventoryItem, type InsertInventoryItem, type User, type Pallet } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +54,10 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
     queryKey: ["/api/auth/user"],
   });
 
+  const { data: pallets = [] } = useQuery<Pallet[]>({
+    queryKey: ["/api/pallets"],
+  });
+
   const form = useForm<InsertInventoryItem>({
     resolver: zodResolver(insertInventoryItemSchema),
     defaultValues: {
@@ -72,6 +76,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       tags: item?.tags || [],
       images: item?.images || [],
       barcode: item?.barcode || "",
+      palletId: item?.palletId || "",
       archived: item?.archived || false,
     },
   });
@@ -157,8 +162,8 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       soldPrice: data.soldPrice || null,
       // Handle tags properly
       tags: typeof data.tags === "string" ? 
-        (data.tags.trim() ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
-        data.tags,
+        (data.tags.trim() ? data.tags.trim().split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
+        (data.tags || null),
     };
 
     if (item) {
@@ -351,6 +356,32 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="palletId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source Pallet (Optional)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select pallet (if from liquidation pallet)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">No pallet (individual purchase)</SelectItem>
+                    {pallets.map((pallet) => (
+                      <SelectItem key={pallet.id} value={pallet.id}>
+                        {pallet.name} - ${pallet.totalCost}
                       </SelectItem>
                     ))}
                   </SelectContent>
