@@ -276,7 +276,7 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
                     <SelectItem value="none">No linked sale</SelectItem>
                     {sales.map((sale: any) => (
                       <SelectItem key={sale.id} value={sale.id}>
-                        Sale ${sale.salePrice} - {format(new Date(sale.dateSold), "PPP")}
+                        Sale ${sale.salePrice} - {sale.dateSold ? format(new Date(sale.dateSold), "PPP") : "No date"}
                       </SelectItem>
                     ))}
                   </SelectContent>
