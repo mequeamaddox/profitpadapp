@@ -155,7 +155,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       upc: data.upc?.trim() || null,
       barcode: data.barcode?.trim() || null,
       notes: data.notes?.trim() || null,
-      palletId: (data.palletId?.trim() === "none" || !data.palletId?.trim()) ? null : data.palletId.trim(),
+      palletId: (data.palletId === "none" || !data.palletId) ? null : data.palletId,
       sku: data.sku?.trim() || `SKU-${Date.now()}`,
       dateListed: data.dateListed || null,
       dateSold: data.dateSold || null,

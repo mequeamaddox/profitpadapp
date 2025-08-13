@@ -275,7 +275,7 @@ export default function BreakEvenAnalysis() {
                     </div>
                     <div>
                       <span className="text-slate-600">Individual Purchases:</span>
-                      <span className="font-medium ml-2">{individualItems.length} items</span>
+                      <span className="font-medium ml-2">{inventory.filter(item => !item.palletId).length} items</span>
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
