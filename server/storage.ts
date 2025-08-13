@@ -364,10 +364,12 @@ export class DatabaseStorage implements IStorage {
     revenueData: any[];
     inventoryStats: any;
   }> {
-    // Get current month start/end
+    // Get current month start/end and previous month for comparison
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
     // Total sales amount
     const [totalSalesResult] = await db
@@ -400,6 +402,71 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId));
+
+    // Previous month calculations for comparison
+    const [prevMonthSalesResult] = await db
+      .select({ total: sum(salesRecords.salePrice) })
+      .from(salesRecords)
+      .where(
+        and(
+          eq(salesRecords.userId, userId),
+          gte(salesRecords.saleDate, prevMonthStart),
+          lte(salesRecords.saleDate, prevMonthEnd)
+        )
+      );
+
+    const prevMonthSalesWithItems = await db
+      .select({
+        salePrice: salesRecords.salePrice,
+        platformFee: salesRecords.platformFee,
+        shippingCost: salesRecords.shippingCost,
+        purchasePrice: inventoryItems.purchasePrice,
+      })
+      .from(salesRecords)
+      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
+      .where(
+        and(
+          eq(salesRecords.userId, userId),
+          gte(salesRecords.saleDate, prevMonthStart),
+          lte(salesRecords.saleDate, prevMonthEnd)
+        )
+      );
+
+    const prevMonthProfit = prevMonthSalesWithItems.reduce((acc, sale) => {
+      const profit = parseFloat(sale.salePrice || "0") - 
+                    parseFloat(sale.purchasePrice || "0") - 
+                    parseFloat(sale.platformFee || "0") - 
+                    parseFloat(sale.shippingCost || "0");
+      return acc + profit;
+    }, 0);
+
+    const [prevMonthItemsSoldResult] = await db
+      .select({ count: count() })
+      .from(salesRecords)
+      .where(
+        and(
+          eq(salesRecords.userId, userId),
+          gte(salesRecords.saleDate, prevMonthStart),
+          lte(salesRecords.saleDate, prevMonthEnd)
+        )
+      );
+
+    // Calculate percentage changes
+    const calculateChange = (current: number, previous: number): string => {
+      if (previous === 0) return current > 0 ? "+100%" : "";
+      const change = ((current - previous) / previous) * 100;
+      return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+    };
+
+    const currentSales = parseFloat(totalSalesResult?.total || "0");
+    const prevSales = parseFloat(prevMonthSalesResult?.total || "0");
+    const salesChange = calculateChange(currentSales, prevSales);
+
+    const profitChange = calculateChange(totalProfit, prevMonthProfit);
+
+    const currentItemsSold = itemsSoldResult?.count || 0;
+    const prevItemsSold = prevMonthItemsSoldResult?.count || 0;
+    const itemsSoldChange = calculateChange(currentItemsSold, prevItemsSold);
 
     // Monthly goal progress
     const [userResult] = await db
@@ -492,6 +559,9 @@ export class DatabaseStorage implements IStorage {
         activeListings: activeListingsResult?.count || 0,
         lowStock: 0, // Could be calculated based on quantity if we add that field
       },
+      salesChange,
+      profitChange,
+      itemsSoldChange,
     };
   }
 

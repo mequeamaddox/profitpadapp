@@ -8,12 +8,17 @@ export default function MetricsGrid() {
     queryKey: ["/api/dashboard/metrics"],
   });
 
+  const getChangeType = (change?: string) => {
+    if (!change) return "neutral";
+    return change.startsWith("+") ? "positive" : "negative";
+  };
+
   const metricCards = [
     {
       title: "Total Sales",
       value: `$${parseFloat(metrics?.totalSales || "0").toLocaleString()}`,
-      change: "", // No change data available
-      changeType: "neutral",
+      change: metrics?.salesChange || "",
+      changeType: getChangeType(metrics?.salesChange),
       icon: DollarSign,
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
@@ -21,8 +26,8 @@ export default function MetricsGrid() {
     {
       title: "Total Profit",
       value: `$${parseFloat(metrics?.totalProfit || "0").toLocaleString()}`,
-      change: "", // No change data available
-      changeType: "neutral",
+      change: metrics?.profitChange || "",
+      changeType: getChangeType(metrics?.profitChange),
       icon: TrendingUp,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
@@ -30,8 +35,8 @@ export default function MetricsGrid() {
     {
       title: "Items Sold",
       value: metrics?.itemsSold?.toLocaleString() || "0",
-      change: "", // No change data available
-      changeType: "neutral",
+      change: metrics?.itemsSoldChange || "",
+      changeType: getChangeType(metrics?.itemsSoldChange),
       icon: Package,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
@@ -71,18 +76,20 @@ export default function MetricsGrid() {
               <div>
                 <p className="text-sm font-medium text-slate-600">{metric.title}</p>
                 <p className="text-2xl font-bold text-slate-900 mt-2">{metric.value}</p>
-                <p className={`text-sm mt-1 ${
-                  metric.changeType === "positive" 
-                    ? "text-emerald-600" 
-                    : metric.changeType === "negative"
-                    ? "text-red-600"
-                    : "text-slate-600"
-                }`}>
-                  {metric.changeType === "positive" && (
-                    <TrendingUp className="inline w-4 h-4 mr-1" />
-                  )}
-                  {metric.change}
-                </p>
+                {metric.change && (
+                  <p className={`text-sm mt-1 ${
+                    metric.changeType === "positive" 
+                      ? "text-emerald-600" 
+                      : metric.changeType === "negative"
+                      ? "text-red-600"
+                      : "text-slate-600"
+                  }`}>
+                    {metric.changeType === "positive" && (
+                      <TrendingUp className="inline w-4 h-4 mr-1" />
+                    )}
+                    {metric.change}
+                  </p>
+                )}
               </div>
               <div className={`w-12 h-12 ${metric.iconBg} rounded-lg flex items-center justify-center`}>
                 <metric.icon className={`${metric.iconColor} text-lg`} size={20} />

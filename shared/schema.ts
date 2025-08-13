@@ -341,4 +341,7 @@ export interface DashboardMetrics {
     activeListings: number;
     lowStockItems: number;
   };
+  salesChange?: string;
+  profitChange?: string;
+  itemsSoldChange?: string;
 }
