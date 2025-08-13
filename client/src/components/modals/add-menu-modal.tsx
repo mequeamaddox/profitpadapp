@@ -79,7 +79,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 mobile-modal-content android-scroll">
+        <div className="flex-1 overflow-y-auto min-h-0 mobile-scroll-container">
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (

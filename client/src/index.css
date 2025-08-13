@@ -51,37 +51,37 @@
   --spacing: 0.25rem;
 }
 
-/* Android mobile modal fixes */
-@media (max-width: 768px) and (pointer: coarse) {
+/* Mobile modal fixes - Direct approach */
+@media (max-width: 768px) {
   [data-radix-dialog-content] {
     position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    right: 10px !important;
-    bottom: 10px !important;
-    width: calc(100vw - 20px) !important;
-    height: calc(100vh - 20px) !important;
+    top: 5px !important;
+    left: 5px !important;
+    right: 5px !important;
+    bottom: 5px !important;
+    width: calc(100vw - 10px) !important;
+    height: calc(100vh - 10px) !important;
     max-width: none !important;
     max-height: none !important;
     transform: none !important;
     margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    padding: 16px !important;
   }
   
-  .mobile-modal-content {
-    flex: 1 !important;
-    overflow-y: auto !important;
+  .mobile-scroll-container {
+    flex: 1 1 0% !important;
+    overflow-y: scroll !important;
     overflow-x: hidden !important;
-    padding: 0 4px 24px 4px !important;
-    margin: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding-bottom: 20px !important;
   }
   
-  /* Force scroll for Android */
-  .android-scroll {
-    overflow: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
+  /* Ensure scrolling works on mobile */
+  .mobile-scroll-container > * {
+    touch-action: pan-y !important;
   }
 }
 
