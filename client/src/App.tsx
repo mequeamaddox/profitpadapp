@@ -2,7 +2,7 @@ import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
-import { Toaster } from "@/components/ui/toaster";
+
 
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
@@ -82,7 +82,6 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster />
       <AuthenticatedRouter />
     </QueryClientProvider>
   );
