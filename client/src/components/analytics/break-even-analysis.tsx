@@ -110,24 +110,30 @@ export default function BreakEvenAnalysis() {
   const palletLinkedItems = inventory.filter(item => item.palletId);
   const individualItems = inventory.filter(item => !item.palletId);
 
-  // Calculate pallet-specific break-even data
+  // Calculate pallet-specific break-even data - ONLY use pallet-linked inventory
   const palletBreakEvens: PalletBreakEven[] = pallets.map(pallet => {
-    // Get items linked to this pallet
+    // Get ONLY items that are explicitly linked to this pallet via palletId
     const palletItems = inventory.filter(item => item.palletId === pallet.id);
+    
+    console.log(`Pallet ${pallet.name}: Found ${palletItems.length} linked items out of ${inventory.length} total inventory items`);
     
     // Use pallet's total items (from pallet creation) and linked items for sold count
     const totalItems = pallet.totalItems || 0;
     const soldItems = palletItems.filter(item => item.status === 'sold');
     const itemsSold = soldItems.length;
     
-    // Calculate actual profit from sold items that are linked to this pallet
+    // Calculate actual profit ONLY from sold items that are linked to this specific pallet
     const actualProfit = soldItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
+      const profit = parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0");
+      console.log(`  Item ${item.name}: Profit = ${profit} (sold: ${item.soldPrice}, cost: ${item.purchasePrice})`);
+      return sum + profit;
     }, 0);
     
     const totalCost = parseFloat(pallet.totalCost || "0");
     const remainingToBreakEven = Math.max(0, totalCost - actualProfit);
     const breakEvenPercentage = totalCost > 0 ? (actualProfit / totalCost) * 100 : 0;
+
+    console.log(`Pallet ${pallet.name} Break-even: ${actualProfit}/${totalCost} = ${breakEvenPercentage.toFixed(1)}%`);
 
     return {
       pallet,
@@ -137,7 +143,7 @@ export default function BreakEvenAnalysis() {
       currentProfit: actualProfit,
       remainingToBreakEven,
       breakEvenPercentage: Math.min(100, breakEvenPercentage),
-      items: palletItems,
+      items: palletItems, // Only pallet-linked items
     };
   });
 
