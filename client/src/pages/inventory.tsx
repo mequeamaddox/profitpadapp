@@ -23,29 +23,8 @@ import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload, GripVertical } from "lucide-react";
+import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload } from "lucide-react";
 import type { InventoryItem, Pallet } from "@shared/schema";
-
-// DnD Kit imports
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 // Pallet form schema
 const palletFormSchema = z.object({
@@ -246,83 +225,7 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
   );
 }
 
-// Sortable Inventory Item Component
-function SortableInventoryItem({ item }: { item: InventoryItem }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({id: item.id});
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 1,
-  };
-
-  return (
-    <TableRow 
-      ref={setNodeRef} 
-      style={style} 
-      className={`${isDragging ? 'shadow-2xl bg-white border-2 border-blue-200 rounded-lg' : ''} transition-all duration-200 hover:bg-slate-50`}
-    >
-      <TableCell className="w-8">
-        <div 
-          {...attributes} 
-          {...listeners}
-          className="cursor-grab hover:cursor-grabbing p-1 hover:bg-slate-200 rounded transition-colors duration-200"
-          style={{ touchAction: 'none' }}
-        >
-          <GripVertical className="h-4 w-4 text-slate-400 hover:text-slate-600" />
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="font-medium">{item.title}</div>
-        <div className="text-sm text-slate-500">{item.sku}</div>
-      </TableCell>
-      <TableCell>
-        <Badge variant={item.status === 'sold' ? 'default' : item.status === 'listed' ? 'secondary' : 'outline'}>
-          {item.status || 'unlisted'}
-        </Badge>
-      </TableCell>
-      <TableCell>${item.purchasePrice || "0.00"}</TableCell>
-      <TableCell>${item.listedPrice || "0.00"}</TableCell>
-      <TableCell>{item.quantity || 1}</TableCell>
-      <TableCell>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEditItem(item)}
-            className="hover:scale-105 transition-transform duration-200"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => archiveMutation.mutate({ id: item.id, archived: !item.archived })}
-            className="hover:scale-105 transition-transform duration-200"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => deleteMutation.mutate(item.id)}
-            className="hover:scale-105 transition-transform duration-200"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
 
 export default function Inventory() {
   const { toast } = useToast();
@@ -335,20 +238,7 @@ export default function Inventory() {
   const [isPalletFormOpen, setIsPalletFormOpen] = useState(false);
   const [editingPallet, setEditingPallet] = useState<Pallet | null>(null);
   
-  // State for sortable inventory
-  const [sortedInventory, setSortedInventory] = useState<InventoryItem[]>([]);
-  
-  // DnD sensors for drag and drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+
 
   // Check for edit parameter in URL
   useEffect(() => {
@@ -378,35 +268,14 @@ export default function Inventory() {
     enabled: isAuthenticated,
   });
 
-  // Update sorted inventory when data changes
-  useEffect(() => {
-    setSortedInventory(inventory);
-  }, [inventory]);
+
 
   const { data: pallets = [], isLoading: palletsLoading } = useQuery<Pallet[]>({
     queryKey: ["/api/pallets"],
     enabled: isAuthenticated,
   });
 
-  // Handle drag end for reordering
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      const oldIndex = sortedInventory.findIndex((item) => item.id === active.id);
-      const newIndex = sortedInventory.findIndex((item) => item.id === over.id);
-      
-      const newOrder = arrayMove(sortedInventory, oldIndex, newIndex);
-      setSortedInventory(newOrder);
-      
-      // Show playful animation feedback
-      toast({
-        title: "✨ Reordered!",
-        description: `Moved "${sortedInventory[oldIndex].title}" to new position`,
-        duration: 2000,
-      });
-    }
-  };
 
   // Handle URL edit parameter
   useEffect(() => {
@@ -701,51 +570,95 @@ export default function Inventory() {
             </Dialog>
           </div>
 
-          {/* Drag-and-Drop Inventory Table */}
+          {/* Enhanced Inventory Table */}
           <Card>
             <CardHeader>
               <CardTitle>Inventory Items</CardTitle>
               <CardDescription>
-                {sortedInventory.length} items found • Drag and drop to reorder
+                {inventory.length} items found • Enhanced with editing capabilities
               </CardDescription>
             </CardHeader>
             <CardContent>
               {inventoryLoading ? (
                 <div className="text-center py-8">Loading inventory...</div>
-              ) : sortedInventory.length === 0 ? (
+              ) : inventory.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   {searchQuery ? "No items match your search." : "No inventory items found. Add your first item to get started."}
                 </div>
               ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8"></TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Purchase Price</TableHead>
-                        <TableHead>Listed Price</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Actions</TableHead>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Purchase Price</TableHead>
+                      <TableHead>Listed Price</TableHead>
+                      <TableHead>Condition</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {inventory.map((item: InventoryItem) => (
+                      <TableRow key={item.id} className="hover:bg-slate-50 transition-colors duration-200">
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{item.title}</div>
+                            <div className="text-sm text-slate-500">
+                              Added {new Date(item.dateAcquired).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{item.sku}</TableCell>
+                        <TableCell>{item.platform || "-"}</TableCell>
+                        <TableCell>${item.purchasePrice}</TableCell>
+                        <TableCell>${item.listedPrice}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.condition || "Not specified"}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={item.archived ? "secondary" : "default"}>
+                            {item.archived ? "Archived" : "Active"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditItem(item)}
+                              className="hover:scale-105 transition-transform duration-200"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => 
+                                archiveMutation.mutate({ 
+                                  id: item.id, 
+                                  archived: !item.archived 
+                                })
+                              }
+                              className="hover:scale-105 transition-transform duration-200"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteMutation.mutate(item.id)}
+                              className="hover:scale-105 transition-transform duration-200"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <SortableContext
-                        items={sortedInventory.map(item => item.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {sortedInventory.map((item: InventoryItem) => (
-                          <SortableInventoryItem key={item.id} item={item} />
-                        ))}
-                      </SortableContext>
-                    </TableBody>
-                  </Table>
-                </DndContext>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
