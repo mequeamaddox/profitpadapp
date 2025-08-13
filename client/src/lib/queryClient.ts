@@ -62,7 +62,17 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
-// Note: QueryClient is created in App.tsx to avoid duplicate instances
-// No queryClient export here - use useQueryClient() hook instead
-
-// Note: No queryClient export - use useQueryClient() hook in components
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: getQueryFn({ on401: "throw" }),
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+      retry: false,
+    },
+    mutations: {
+      retry: false,
+    },
+  },
+});

@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,21 +21,11 @@ import Billing from "@/pages/billing";
 
 
 function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  // Debug logging
-  console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
-
-  // Show loading state
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-lg">Loading...</div>
-    </div>;
-  }
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
-      {!isAuthenticated ? (
+      {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/:rest*" component={Landing} />
@@ -62,23 +51,23 @@ function AuthenticatedRouter() {
   );
 }
 
-function App() {
-  // Create QueryClient instance with useMemo to prevent recreation
-  const queryClient = useMemo(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        queryFn: getQueryFn({ on401: "returnNull" }),
-        refetchInterval: false,
-        refetchOnWindowFocus: false,
-        staleTime: 0, // Don't cache auth queries
-        retry: false,
-      },
-      mutations: {
-        retry: false,
-      },
+// Create a fresh QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: getQueryFn({ on401: "throw" }),
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+      retry: false,
     },
-  }), []);
+    mutations: {
+      retry: false,
+    },
+  },
+});
 
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

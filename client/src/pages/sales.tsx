@@ -234,7 +234,7 @@ export default function Sales() {
                     {sales.map((sale: SalesRecord) => (
                       <TableRow key={sale.id}>
                         <TableCell>
-                          {sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : 'N/A'}
+                          {new Date(sale.dateSold).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">

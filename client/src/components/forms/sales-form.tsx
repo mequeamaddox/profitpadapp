@@ -146,7 +146,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
       ...data,
       inventoryItemId: data.inventoryItemId || null,
       saleDate: data.saleDate instanceof Date ? data.saleDate : new Date(data.saleDate),
-      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : null),
+      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : []),
     };
 
     if (sale) {

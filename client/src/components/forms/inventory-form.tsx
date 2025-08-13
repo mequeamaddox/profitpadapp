@@ -163,7 +163,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       // Handle tags properly
       tags: typeof data.tags === "string" ? 
         (data.tags.trim() ? data.tags.trim().split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
-        (Array.isArray(data.tags) ? data.tags : null),
+        (data.tags || null),
     };
 
     if (item) {

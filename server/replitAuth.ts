@@ -38,9 +38,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Always false for development to ensure compatibility
+      secure: true,
       maxAge: sessionTtl,
-      sameSite: 'lax',
     },
   });
 }
@@ -116,33 +115,9 @@ export async function setupAuth(app: Express) {
     // Handle localhost development by using the first configured domain
     const hostname = req.hostname === 'localhost' ? 
       process.env.REPLIT_DOMAINS!.split(",")[0] : req.hostname;
-    
-    passport.authenticate(`replitauth:${hostname}`, (err: any, user: any, info: any) => {
-      if (err) {
-        console.error("Authentication error:", err);
-        return res.redirect("/api/login");
-      }
-      
-      if (!user) {
-        console.log("No user returned from authentication");
-        return res.redirect("/api/login");
-      }
-      
-      req.logIn(user, (loginErr) => {
-        if (loginErr) {
-          console.error("Login error:", loginErr);
-          return res.redirect("/api/login");
-        }
-        
-        console.log("User logged in successfully:", user.claims?.sub);
-        // Force session save before redirect
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error("Session save error:", saveErr);
-          }
-          return res.redirect("/");
-        });
-      });
+    passport.authenticate(`replitauth:${hostname}`, {
+      successReturnToOrRedirect: "/",
+      failureRedirect: "/api/login",
     })(req, res, next);
   });
 
@@ -161,7 +136,7 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user || !user.expires_at) {
+  if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
