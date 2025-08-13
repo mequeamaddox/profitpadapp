@@ -135,7 +135,13 @@ export async function setupAuth(app: Express) {
         }
         
         console.log("User logged in successfully:", user.claims?.sub);
-        return res.redirect("/");
+        // Force session save before redirect
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+          }
+          return res.redirect("/");
+        });
       });
     })(req, res, next);
   });
