@@ -9,6 +9,7 @@ import RecentSales from "@/components/dashboard/recent-sales";
 import QuickActions from "@/components/dashboard/quick-actions";
 import InventoryOverview from "@/components/dashboard/inventory-overview";
 import InventoryValue from "@/components/dashboard/inventory-value";
+import BreakEvenAnalysis from "@/components/analytics/break-even-analysis";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Dashboard() {
@@ -69,6 +70,7 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <InventoryValue />
+            <BreakEvenAnalysis />
           </div>
         </div>
       </main>

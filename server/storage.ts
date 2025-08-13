@@ -599,6 +599,58 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  // Stale inventory analysis
+  async getStaleInventoryAnalysis(userId: string): Promise<any[]> {
+    const activeItems = await db
+      .select()
+      .from(inventoryItems)
+      .where(
+        and(
+          eq(inventoryItems.userId, userId),
+          eq(inventoryItems.archived, false)
+        )
+      )
+      .leftJoin(salesRecords, eq(inventoryItems.id, salesRecords.inventoryItemId));
+
+    // Filter items that haven't been sold and calculate staleness
+    const staleItems = activeItems
+      .filter(item => !item.sales_records) // Not sold
+      .map(item => {
+        const listingDate = item.inventory_items.dateListed || item.inventory_items.dateAcquired;
+        const daysListed = Math.floor((Date.now() - new Date(listingDate).getTime()) / (1000 * 60 * 60 * 24));
+        
+        let staleness: "Warning" | "Stale" | "Critical";
+        let suggestedAction: string;
+        
+        if (daysListed >= 90) {
+          staleness = "Critical";
+          suggestedAction = "Consider 30% price reduction or bundle with other items";
+        } else if (daysListed >= 60) {
+          staleness = "Stale";
+          suggestedAction = "Reduce price by 15-20% or try different platform";
+        } else if (daysListed >= 30) {
+          staleness = "Warning";
+          suggestedAction = "Monitor closely, consider minor price adjustment";
+        } else {
+          return null; // Not stale yet
+        }
+
+        const potentialLoss = parseFloat(item.inventory_items.purchasePrice || "0");
+
+        return {
+          ...item.inventory_items,
+          daysListed,
+          staleness,
+          suggestedAction,
+          potentialLoss
+        };
+      })
+      .filter(Boolean) // Remove null entries
+      .sort((a, b) => b.daysListed - a.daysListed); // Sort by most stale first
+
+    return staleItems;
+  }
+
   // Pallet operations
   async getPallets(userId: string): Promise<Pallet[]> {
     return await db

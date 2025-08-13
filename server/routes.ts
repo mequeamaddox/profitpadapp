@@ -820,6 +820,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Barcode lookup endpoint
+  app.post("/api/barcode-lookup", isAuthenticated, async (req, res) => {
+    try {
+      const { upc } = req.body;
+      
+      if (!upc) {
+        return res.status(400).json({ error: "UPC is required" });
+      }
+
+      // Simulate product lookup with realistic data
+      // In production, this would integrate with APIs like:
+      // - UPC Database API
+      // - eBay Completed Listings API
+      // - Amazon Product Advertising API
+      // - Google Shopping API
+      
+      const mockProductData = {
+        title: "Apple AirPods Pro (2nd Generation)",
+        brand: "Apple",
+        category: "Electronics > Audio > Headphones",
+        upc: upc,
+        estimatedValue: {
+          low: 180.00,
+          average: 220.00,
+          high: 250.00
+        },
+        demandLevel: "High" as const,
+        salesVelocity: 150, // sales per month
+        competitorCount: 45,
+        lastSaleDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        marketTrend: "Stable" as const,
+        suggestedListPrice: 225.00,
+        profitPotential: "High" as const,
+        notes: [
+          "High demand item with consistent sales",
+          "Best selling season: November-December",
+          "Consider competitive pricing due to high seller count",
+          "Authentic items command premium prices"
+        ]
+      };
+
+      res.json(mockProductData);
+    } catch (error) {
+      console.error("Error in barcode lookup:", error);
+      res.status(500).json({ error: "Failed to lookup product" });
+    }
+  });
+
+  // Stale inventory analysis endpoint
+  app.get("/api/inventory/stale-analysis", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const staleItems = await storage.getStaleInventoryAnalysis(userId);
+      res.json(staleItems);
+    } catch (error) {
+      console.error("Error fetching stale inventory:", error);
+      res.status(500).json({ error: "Failed to analyze stale inventory" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -13,6 +13,7 @@ import Expenses from "@/pages/expenses";
 import Reminders from "@/pages/reminders";
 import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
+import Research from "@/pages/research";
 import Help from "@/pages/help";
 import ProfitEstimatorPage from "@/pages/profit-estimator";
 import Logout from "@/pages/logout";
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/expenses" component={Expenses} />
           <Route path="/reminders" component={Reminders} />
           <Route path="/reports" component={Reports} />
+          <Route path="/research" component={Research} />
           <Route path="/profit-estimator" component={ProfitEstimatorPage} />
           <Route path="/logout" component={Logout} />
           <Route path="/billing" component={Billing} />
