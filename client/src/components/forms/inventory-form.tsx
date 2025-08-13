@@ -146,7 +146,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const onSubmit = (data: InsertInventoryItem) => {
     const formattedData = {
       ...data,
-      tags: typeof data.tags === "string" ? data.tags.split(",").map(tag => tag.trim()).filter(Boolean) : data.tags,
+      tags: typeof data.tags === "string" ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : data.tags,
     };
 
     if (item) {
@@ -222,7 +222,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
               <FormItem>
                 <FormLabel>UPC (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="UPC barcode" {...field} />
+                  <Input placeholder="UPC barcode" {...field} value={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -237,7 +237,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <FormLabel>Barcode</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="Scan or enter barcode" {...field} />
+                    <Input placeholder="Scan or enter barcode" {...field} value={field.value || ""} />
                   </FormControl>
                   <Button 
                     type="button" 
@@ -264,7 +264,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     type="number" 
                     min="1" 
                     placeholder="1" 
-                    {...field} 
+                    value={field.value || ""} 
                     onChange={e => field.onChange(parseInt(e.target.value) || 1)}
                   />
                 </FormControl>
@@ -279,7 +279,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -304,7 +304,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Platform</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select platform" />
@@ -329,7 +329,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -434,7 +434,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select condition" />
@@ -465,6 +465,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                   placeholder="Enter any additional notes about this item"
                   className="resize-none"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -481,7 +482,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
               <FormControl>
                 <Input
                   placeholder="Enter tags separated by commas"
-                  value={Array.isArray(field.value) ? field.value.join(", ") : field.value}
+                  value={Array.isArray(field.value) ? field.value.join(", ") : (field.value || "")}
                   onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
