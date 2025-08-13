@@ -671,7 +671,7 @@ export default function Inventory() {
                   </DialogTitle>
                 </DialogHeader>
                 <PalletForm
-                  pallet={editingPallet}
+                  pallet={editingPallet || undefined}
                   onSuccess={handlePalletFormClose}
                 />
               </DialogContent>
@@ -699,7 +699,7 @@ export default function Inventory() {
                       <DialogTitle>Add New Pallet</DialogTitle>
                     </DialogHeader>
                     <PalletForm
-                      pallet={editingPallet}
+                      pallet={editingPallet || undefined}
                       onSuccess={handlePalletFormClose}
                     />
                   </DialogContent>
@@ -772,7 +772,7 @@ export default function Inventory() {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-slate-500">Purchase Date</span>
                             <span className="font-medium">
-                              {new Date(pallet.purchaseDate).toLocaleDateString()}
+                              {pallet.purchaseDate ? new Date(pallet.purchaseDate).toLocaleDateString() : "N/A"}
                             </span>
                           </div>
                         </div>
