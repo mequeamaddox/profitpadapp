@@ -153,26 +153,19 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  console.log("Auth check - isAuthenticated:", req.isAuthenticated());
-  console.log("Auth check - session:", req.session);
-  console.log("Auth check - user:", req.user);
-  
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {
-    console.log("Auth failed: not authenticated or no user/expires_at");
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
-    console.log("Token still valid, proceeding");
     return next();
   }
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    console.log("No refresh token available");
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -181,10 +174,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
-    console.log("Token refreshed successfully");
     return next();
   } catch (error) {
-    console.error("Token refresh failed:", error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
