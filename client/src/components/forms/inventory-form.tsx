@@ -146,7 +146,18 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const onSubmit = (data: InsertInventoryItem) => {
     const formattedData = {
       ...data,
-      tags: typeof data.tags === "string" ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : data.tags,
+      // Convert empty strings to null for optional fields
+      upc: data.upc?.trim() || null,
+      barcode: data.barcode?.trim() || null,
+      notes: data.notes?.trim() || null,
+      palletId: data.palletId?.trim() || null,
+      dateListed: data.dateListed || null,
+      dateSold: data.dateSold || null,
+      soldPrice: data.soldPrice || null,
+      // Handle tags properly
+      tags: typeof data.tags === "string" ? 
+        (data.tags.trim() ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
+        data.tags,
     };
 
     if (item) {
