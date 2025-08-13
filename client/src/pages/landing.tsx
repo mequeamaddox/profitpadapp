@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, RefreshCw } from "lucide-react";
-// import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
-  // Temporarily disable useAuth to test React hook issues
-  const refetch = () => {};
-  const isLoading = false;
+  const { refetch, isLoading } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
