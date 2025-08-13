@@ -57,29 +57,30 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl mx-4 md:mx-auto flex flex-col md:h-auto md:max-h-[95vh] overflow-hidden">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>
-            {selectedAction ? (
-              <div className="flex items-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBack}
-                  className="mr-2 p-0 h-auto"
-                >
-                  ← Back
-                </Button>
-                {selectedAction === "inventory" && "Add New Inventory Item"}
-                {selectedAction === "sales" && "Record New Sale"}
-                {selectedAction === "reminder" && "Create New Reminder"}
-              </div>
-            ) : (
-              "Add New"
-            )}
-          </DialogTitle>
-        </DialogHeader>
+        <div className="android-modal-wrapper">
+          <DialogHeader className="flex-shrink-0 mb-4">
+            <DialogTitle>
+              {selectedAction ? (
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="mr-2 p-0 h-auto"
+                  >
+                    ← Back
+                  </Button>
+                  {selectedAction === "inventory" && "Add New Inventory Item"}
+                  {selectedAction === "sales" && "Record New Sale"}
+                  {selectedAction === "reminder" && "Create New Reminder"}
+                </div>
+              ) : (
+                "Add New"
+              )}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 force-scroll">
+          <div className="android-scroll-area">
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
@@ -119,6 +120,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
               </div>
             </div>
           )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
