@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { checkTrialExpired } from "./trialMiddleware";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+import { salesRecords, inventoryItems } from "@shared/schema";
 import {
   insertInventoryItemSchema,
   insertSalesRecordSchema,
@@ -494,15 +497,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           toDate = endDate ? new Date(endDate as string) : new Date();
       }
 
-      const userSales = await storage.getSalesByUserId(userId);
-      const userInventory = await storage.getInventoryByUserId(userId);
-      
+      // Get sales with inventory data joined (same as dashboard)
+      const salesWithItems = await db
+        .select({
+          id: salesRecords.id,
+          salePrice: salesRecords.salePrice,
+          platformFee: salesRecords.platformFee,
+          shippingCost: salesRecords.shippingCost,
+          saleDate: salesRecords.saleDate,
+          platform: salesRecords.platform,
+          itemTitle: salesRecords.itemTitle,
+          buyerDetails: salesRecords.buyerDetails,
+          purchasePrice: inventoryItems.purchasePrice,
+          category: inventoryItems.category,
+        })
+        .from(salesRecords)
+        .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
+        .where(eq(salesRecords.userId, userId));
+
       // Filter sales by date range and other criteria
-      const filteredSales = userSales.filter(sale => {
+      const filteredSales = salesWithItems.filter(sale => {
         const saleDate = new Date(sale.saleDate);
         const dateInRange = saleDate >= fromDate && saleDate <= toDate;
         const platformMatch = !platform || platform === 'all' || sale.platform === platform;
-        const categoryMatch = !category || category === 'all' || userInventory.find(item => item.title === sale.itemTitle)?.category === category;
+        const categoryMatch = !category || category === 'all' || sale.category === category;
         return dateInRange && platformMatch && categoryMatch;
       });
 
