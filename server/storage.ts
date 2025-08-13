@@ -377,21 +377,18 @@ export class DatabaseStorage implements IStorage {
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId));
 
-    // Total profit calculation (sale price - purchase price - fees - shipping)
-    const salesWithItems = await db
+    // Total profit calculation (sale price - fees - shipping, matching reports page)
+    const allSales = await db
       .select({
         salePrice: salesRecords.salePrice,
         platformFee: salesRecords.platformFee,
         shippingCost: salesRecords.shippingCost,
-        purchasePrice: inventoryItems.purchasePrice,
       })
       .from(salesRecords)
-      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
       .where(eq(salesRecords.userId, userId));
 
-    const totalProfit = salesWithItems.reduce((acc, sale) => {
+    const totalProfit = allSales.reduce((acc, sale) => {
       const profit = parseFloat(sale.salePrice || "0") - 
-                    parseFloat(sale.purchasePrice || "0") - 
                     parseFloat(sale.platformFee || "0") - 
                     parseFloat(sale.shippingCost || "0");
       return acc + profit;
@@ -415,15 +412,13 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const prevMonthSalesWithItems = await db
+    const prevMonthSales = await db
       .select({
         salePrice: salesRecords.salePrice,
         platformFee: salesRecords.platformFee,
         shippingCost: salesRecords.shippingCost,
-        purchasePrice: inventoryItems.purchasePrice,
       })
       .from(salesRecords)
-      .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
       .where(
         and(
           eq(salesRecords.userId, userId),
@@ -432,9 +427,8 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const prevMonthProfit = prevMonthSalesWithItems.reduce((acc, sale) => {
+    const prevMonthProfit = prevMonthSales.reduce((acc, sale) => {
       const profit = parseFloat(sale.salePrice || "0") - 
-                    parseFloat(sale.purchasePrice || "0") - 
                     parseFloat(sale.platformFee || "0") - 
                     parseFloat(sale.shippingCost || "0");
       return acc + profit;

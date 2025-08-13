@@ -497,40 +497,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           toDate = endDate ? new Date(endDate as string) : new Date();
       }
 
-      // Get sales with inventory data joined (same as dashboard)
-      const salesWithItems = await db
-        .select({
-          id: salesRecords.id,
-          salePrice: salesRecords.salePrice,
-          platformFee: salesRecords.platformFee,
-          shippingCost: salesRecords.shippingCost,
-          saleDate: salesRecords.saleDate,
-          platform: salesRecords.platform,
-          itemTitle: salesRecords.itemTitle,
-          buyerDetails: salesRecords.buyerDetails,
-          purchasePrice: inventoryItems.purchasePrice,
-          category: inventoryItems.category,
-        })
-        .from(salesRecords)
-        .leftJoin(inventoryItems, eq(salesRecords.inventoryItemId, inventoryItems.id))
-        .where(eq(salesRecords.userId, userId));
-
+      const userSales = await storage.getSalesByUserId(userId);
+      const userInventory = await storage.getInventoryByUserId(userId);
+      
       // Filter sales by date range and other criteria
-      const filteredSales = salesWithItems.filter(sale => {
+      const filteredSales = userSales.filter(sale => {
         const saleDate = new Date(sale.saleDate);
         const dateInRange = saleDate >= fromDate && saleDate <= toDate;
         const platformMatch = !platform || platform === 'all' || sale.platform === platform;
-        const categoryMatch = !category || category === 'all' || sale.category === category;
+        const categoryMatch = !category || category === 'all' || userInventory.find(item => item.title === sale.itemTitle)?.category === category;
         return dateInRange && platformMatch && categoryMatch;
       });
 
       // Calculate metrics
       const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.salePrice), 0);
       
-      // Calculate profit dynamically using the same method as dashboard
+      // Calculate profit using sales data directly (working method)
       const totalProfit = filteredSales.reduce((sum, sale) => {
         const profit = parseFloat(sale.salePrice || "0") - 
-                      parseFloat(sale.purchasePrice || "0") - 
                       parseFloat(sale.platformFee || "0") - 
                       parseFloat(sale.shippingCost || "0");
         return sum + profit;
@@ -544,7 +528,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       filteredSales.forEach(sale => {
         const current = itemSales.get(sale.itemTitle) || { quantity: 0, revenue: 0, profit: 0 };
         const profit = parseFloat(sale.salePrice || "0") - 
-                      parseFloat(sale.purchasePrice || "0") - 
                       parseFloat(sale.platformFee || "0") - 
                       parseFloat(sale.shippingCost || "0");
         itemSales.set(sale.itemTitle, {
