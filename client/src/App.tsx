@@ -22,11 +22,21 @@ import Billing from "@/pages/billing";
 
 
 function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Debug logging
+  console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
+
+  // Show loading state
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-lg">Loading...</div>
+    </div>;
+  }
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/:rest*" component={Landing} />

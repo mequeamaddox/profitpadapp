@@ -5,15 +5,17 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     retry: false,
+    staleTime: 0, // Always refetch to get latest auth state
   });
 
-  console.log("useAuth - user:", user);
-  console.log("useAuth - isLoading:", isLoading);
-  console.log("useAuth - error:", error);
+  // Log to both console and DOM for debugging
+  if (typeof window !== 'undefined') {
+    console.log("🔍 useAuth Debug:", { user, isLoading, error: error?.message });
+  }
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && user.id,
   };
 }
