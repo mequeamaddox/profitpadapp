@@ -88,7 +88,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           <Button
             variant="ghost"
             size="sm"
-            onClick={onOpenChange}
+            onClick={() => onOpenChange(false)}
             className="p-1"
           >
             ✕
@@ -96,7 +96,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto h-[calc(100vh-73px)] p-4">
+        <div className="overflow-y-scroll h-[calc(100vh-73px)] p-4" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
