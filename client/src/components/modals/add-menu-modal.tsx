@@ -56,7 +56,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[95vh] mx-4 md:mx-auto flex flex-col">
+      <DialogContent className="max-w-2xl mx-4 md:mx-auto flex flex-col h-[90vh] md:h-auto md:max-h-[95vh] overflow-hidden mobile-modal-scroll">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {selectedAction ? (
@@ -79,7 +79,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth mobile-modal-content" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
