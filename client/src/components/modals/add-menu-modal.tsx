@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Package, DollarSign, Bell } from "lucide-react";
+import { Package, DollarSign, Bell, Receipt } from "lucide-react";
 import InventoryForm from "@/components/forms/inventory-form";
 import SalesForm from "@/components/forms/sales-form";
 import ReminderForm from "@/components/forms/reminder-form";
+import ExpenseForm from "@/components/forms/expense-form";
 
 interface AddMenuModalProps {
   open: boolean;
@@ -45,6 +46,14 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
       iconColor: "text-emerald-600",
     },
     {
+      id: "expense",
+      title: "Business Expense",
+      description: "Track a business expense",
+      icon: Receipt,
+      iconBg: "bg-red-100",
+      iconColor: "text-red-600",
+    },
+    {
       id: "reminder",
       title: "Reminder",
       description: "Set up a new reminder or task",
@@ -78,6 +87,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
                 <>
                   {selectedAction === "inventory" && "Add New Inventory Item"}
                   {selectedAction === "sales" && "Record New Sale"}
+                  {selectedAction === "expense" && "Add Business Expense"}
                   {selectedAction === "reminder" && "Create New Reminder"}
                 </>
               ) : (
@@ -124,10 +134,12 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
               {selectedAction === "sales" && (
                 <SalesForm onSuccess={handleClose} />
               )}
+              {selectedAction === "expense" && (
+                <ExpenseForm onSuccess={handleClose} />
+              )}
               {selectedAction === "reminder" && (
                 <ReminderForm onSuccess={handleClose} />
               )}
-
             </div>
           )}
         </div>
@@ -153,6 +165,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
                 </Button>
                 {selectedAction === "inventory" && "Add New Inventory Item"}
                 {selectedAction === "sales" && "Record New Sale"}
+                {selectedAction === "expense" && "Add Business Expense"}
                 {selectedAction === "reminder" && "Create New Reminder"}
               </div>
             ) : (
@@ -188,6 +201,9 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
               )}
               {selectedAction === "sales" && (
                 <SalesForm onSuccess={handleClose} />
+              )}
+              {selectedAction === "expense" && (
+                <ExpenseForm onSuccess={handleClose} />
               )}
               {selectedAction === "reminder" && (
                 <ReminderForm onSuccess={handleClose} />

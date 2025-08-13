@@ -33,11 +33,11 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
     queryKey: ["/api/auth/user"],
   });
 
-  const { data: inventory = [] } = useQuery({
+  const { data: inventory = [] } = useQuery<any[]>({
     queryKey: ["/api/inventory"],
   });
 
-  const { data: sales = [] } = useQuery({
+  const { data: sales = [] } = useQuery<any[]>({
     queryKey: ["/api/sales"],
   });
 
@@ -164,6 +164,7 @@ export default function ReminderForm({ reminder, onSuccess }: ReminderFormProps)
                   placeholder="Enter reminder description"
                   className="resize-none"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
