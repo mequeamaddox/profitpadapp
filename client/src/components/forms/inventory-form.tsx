@@ -151,6 +151,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       barcode: data.barcode?.trim() || null,
       notes: data.notes?.trim() || null,
       palletId: data.palletId?.trim() || null,
+      sku: data.sku?.trim() || null,
       dateListed: data.dateListed || null,
       dateSold: data.dateSold || null,
       soldPrice: data.soldPrice || null,

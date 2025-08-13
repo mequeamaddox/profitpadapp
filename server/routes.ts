@@ -102,6 +102,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/inventory", isAuthenticated, checkTrialExpired, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Convert date strings to Date objects if needed
+      if (req.body.dateAcquired && typeof req.body.dateAcquired === 'string') {
+        req.body.dateAcquired = new Date(req.body.dateAcquired);
+      }
+      if (req.body.dateListed && typeof req.body.dateListed === 'string') {
+        req.body.dateListed = new Date(req.body.dateListed);
+      }
+      if (req.body.dateSold && typeof req.body.dateSold === 'string') {
+        req.body.dateSold = new Date(req.body.dateSold);
+      }
+      
       const validatedData = insertInventoryItemSchema.parse(req.body);
       const item = await storage.createInventoryItem({ ...validatedData, userId });
       res.status(201).json(item);
