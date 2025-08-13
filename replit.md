@@ -82,6 +82,8 @@ Enhanced Pallet-Inventory Integration with Break-Even Analysis (January 2025):
 - Created intelligent pallet break-even calculations using pallet totalItems and linked inventory
 - Added user guidance tooltips for linking inventory items to pallets for sales tracking
 - Fixed pallet data integration to show correct item counts and break-even progress
+- Corrected break-even analysis to properly separate pallet vs individual inventory tracking
+- Fixed SelectItem form errors and JavaScript runtime errors for stable operation
 
 Converted to Progressive Web App (PWA) for private distribution (January 2025):
 - Full PWA implementation with manifest.json and service worker for offline functionality
