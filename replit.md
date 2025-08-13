@@ -8,15 +8,6 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-Implemented Drag-and-Drop Inventory Reordering with Playful Animations (January 2025):
-- Added @dnd-kit library for smooth drag-and-drop functionality in inventory management
-- Created SortableInventoryItem component with visual feedback during dragging
-- Implemented grip handles, shadow effects, and opacity changes for enhanced user experience
-- Added playful toast notifications with sparkle emojis when reordering items
-- Enhanced edit functionality on both sales and inventory pages with hover animations
-- Preserved tax calculations in reports while removing tax fields from sales forms
-- Fixed duplicate function issues in sales page and ensured proper form handling
-
 Implemented Comprehensive Animated Dashboard Loading States (January 2025):
 - Enhanced dashboard user experience with smooth loading animations and playful micro-interactions
 - Added custom CSS keyframe animations including shimmer effects, fadeInUp transitions, and bounceIn animations

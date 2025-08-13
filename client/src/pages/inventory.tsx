@@ -225,8 +225,6 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
   );
 }
 
-
-
 export default function Inventory() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
@@ -237,8 +235,6 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isPalletFormOpen, setIsPalletFormOpen] = useState(false);
   const [editingPallet, setEditingPallet] = useState<Pallet | null>(null);
-  
-
 
   // Check for edit parameter in URL
   useEffect(() => {
@@ -268,14 +264,10 @@ export default function Inventory() {
     enabled: isAuthenticated,
   });
 
-
-
   const { data: pallets = [], isLoading: palletsLoading } = useQuery<Pallet[]>({
     queryKey: ["/api/pallets"],
     enabled: isAuthenticated,
   });
-
-
 
   // Handle URL edit parameter
   useEffect(() => {
@@ -386,7 +378,7 @@ export default function Inventory() {
     },
   });
 
-  const handleEditItem = (item: InventoryItem) => {
+  const handleEdit = (item: InventoryItem) => {
     setEditingItem(item);
     setIsFormOpen(true);
   };
@@ -570,12 +562,12 @@ export default function Inventory() {
             </Dialog>
           </div>
 
-          {/* Enhanced Inventory Table */}
+          {/* Inventory Table */}
           <Card>
             <CardHeader>
               <CardTitle>Inventory Items</CardTitle>
               <CardDescription>
-                {inventory.length} items found • Enhanced with editing capabilities
+                {inventory.length} items found
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -601,7 +593,7 @@ export default function Inventory() {
                   </TableHeader>
                   <TableBody>
                     {inventory.map((item: InventoryItem) => (
-                      <TableRow key={item.id} className="hover:bg-slate-50 transition-colors duration-200">
+                      <TableRow key={item.id}>
                         <TableCell>
                           <div>
                             <div className="font-medium">{item.title}</div>
@@ -627,8 +619,7 @@ export default function Inventory() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEditItem(item)}
-                              className="hover:scale-105 transition-transform duration-200"
+                              onClick={() => handleEdit(item)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -641,7 +632,6 @@ export default function Inventory() {
                                   archived: !item.archived 
                                 })
                               }
-                              className="hover:scale-105 transition-transform duration-200"
                             >
                               <Archive className="h-4 w-4" />
                             </Button>
@@ -649,7 +639,6 @@ export default function Inventory() {
                               variant="ghost"
                               size="sm"
                               onClick={() => deleteMutation.mutate(item.id)}
-                              className="hover:scale-105 transition-transform duration-200"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
