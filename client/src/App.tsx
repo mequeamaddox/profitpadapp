@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -20,8 +20,12 @@ import ProfitEstimatorPage from "@/pages/profit-estimator";
 import Logout from "@/pages/logout";
 import Billing from "@/pages/billing";
 
+
 function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Debug logging
+  console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
 
   // Show loading state
   if (isLoading) {
@@ -65,9 +69,9 @@ function App() {
       queries: {
         queryFn: getQueryFn({ on401: "returnNull" }),
         refetchInterval: false,
-        refetchOnWindowFocus: true,
-        staleTime: 0,
-        gcTime: 0,
+        refetchOnWindowFocus: true, // Refetch on window focus to catch auth changes
+        staleTime: 0, // Always fresh queries
+        gcTime: 0, // Don't cache any queries 
         retry: false,
       },
       mutations: {
@@ -78,8 +82,10 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster />
-      <AuthenticatedRouter />
+      <TooltipProvider>
+        <Toaster />
+        <AuthenticatedRouter />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
