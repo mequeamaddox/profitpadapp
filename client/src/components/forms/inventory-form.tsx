@@ -296,7 +296,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -321,7 +321,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Platform</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select platform" />
@@ -346,7 +346,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -371,7 +371,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source Pallet (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                <Select onValueChange={field.onChange} value={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Leave blank for individual purchases" />
@@ -480,7 +480,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select condition" />
