@@ -15,6 +15,7 @@ import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, Package, 
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { SalesRecord, InventoryItem, User, Expense } from "@shared/schema";
+import TaxReports from "@/components/reports/tax-reports";
 
 interface ReportMetrics {
   totalRevenue: string;
@@ -297,7 +298,7 @@ export default function Reports() {
           <TabsTrigger value="inventory">Inventory Report</TabsTrigger>
           <TabsTrigger value="platforms">Platform Performance</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="taxes">Tax Reports</TabsTrigger>
+          <TabsTrigger value="taxes">Sales Tax</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -441,95 +442,7 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="taxes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tax Deductible Expenses</CardTitle>
-              <CardDescription>Business expenses eligible for tax deductions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {expenses.filter(expense => expense.deductible).map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-4 border rounded">
-                    <div>
-                      <p className="font-medium">{expense.title}</p>
-                      <p className="text-sm text-muted-foreground">{expense.category}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {expense.expenseDate ? format(new Date(expense.expenseDate), "MMM dd, yyyy") : "No date"}
-                      </p>
-                      {expense.businessPurpose && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Purpose: {expense.businessPurpose}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${expense.amount}</p>
-                      <Badge variant="default" className="bg-green-100 text-green-800">Deductible</Badge>
-                    </div>
-                  </div>
-                )) || []}
-                {expenses.filter(expense => expense.deductible).length === 0 && (
-                  <p className="text-muted-foreground text-center py-4">No tax deductible expenses found</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tax Summary</CardTitle>
-                <CardDescription>Annual tax deduction summary</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Total Deductible Expenses:</span>
-                    <span className="font-medium">
-                      ${expenses.filter(expense => expense.deductible).reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Non-Deductible Expenses:</span>
-                    <span className="font-medium">
-                      ${expenses.filter(expense => !expense.deductible).reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <span className="font-medium">Total Business Expenses:</span>
-                    <span className="font-medium">
-                      ${expenses.reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Expenses by Category</CardTitle>
-                <CardDescription>Tax deductible expenses breakdown</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Array.from(new Set(expenses.filter(expense => expense.deductible).map(expense => expense.category)))
-                    .map(category => {
-                      const categoryExpenses = expenses.filter(expense => expense.deductible && expense.category === category);
-                      const categoryTotal = categoryExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0);
-                      return (
-                        <div key={category} className="flex justify-between">
-                          <span>{category}:</span>
-                          <span className="font-medium">${categoryTotal.toFixed(2)}</span>
-                        </div>
-                      );
-                    })}
-                  {expenses.filter(expense => expense.deductible).length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">No deductible expenses by category</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <TaxReports />
         </TabsContent>
       </Tabs>
         </div>

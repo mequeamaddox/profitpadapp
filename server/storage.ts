@@ -556,7 +556,7 @@ export class DatabaseStorage implements IStorage {
       totalProfit: totalProfit.toFixed(2),
       itemsSold: itemsSoldResult?.count || 0,
       monthlyGoalProgress: monthlyProgress,
-      recentSales,
+      recentSales: recentSales as any[],
       revenueData,
       inventoryStats: {
         totalItems: totalItemsResult?.count || 0,
@@ -646,7 +646,7 @@ export class DatabaseStorage implements IStorage {
         };
       })
       .filter(Boolean) // Remove null entries
-      .sort((a, b) => b.daysListed - a.daysListed); // Sort by most stale first
+      .sort((a, b) => (b?.daysListed || 0) - (a?.daysListed || 0)); // Sort by most stale first
 
     return staleItems;
   }

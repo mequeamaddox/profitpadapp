@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   trialEndsAt: timestamp("trial_ends_at"),
   monthlyGoal: decimal("monthly_goal", { precision: 10, scale: 2 }).default("0.00"),
   isAdmin: boolean("is_admin").default(false),
+  // Sales tax settings
+  salesTaxRate: decimal("sales_tax_rate", { precision: 5, scale: 4 }).default("0.0000"), // e.g., 0.0825 for 8.25%
+  taxInclusiveSales: boolean("tax_inclusive_sales").default(true), // true = tax included in sale price, false = tax added on top
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -85,6 +88,10 @@ export const salesRecords = pgTable("sales_records", {
   buyerInfo: text("buyer_info"),
   notes: text("notes"),
   tags: text("tags").array(),
+  // Sales tax tracking
+  salesTaxRate: decimal("sales_tax_rate", { precision: 5, scale: 4 }), // Tax rate used for this sale
+  salesTaxAmount: decimal("sales_tax_amount", { precision: 10, scale: 2 }), // Actual tax amount for this sale
+  taxIncluded: boolean("tax_included").default(true), // Whether tax was included in sale price
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

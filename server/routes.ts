@@ -647,17 +647,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/user/settings", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { monthlyGoal } = req.body;
+      const { monthlyGoal, salesTaxRate, taxInclusiveSales } = req.body;
       
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const updatedUser = await storage.upsertUser({
-        ...user,
-        monthlyGoal: monthlyGoal?.toString(),
-      });
+      const updateData: any = { ...user };
+      if (monthlyGoal !== undefined) updateData.monthlyGoal = monthlyGoal?.toString();
+      if (salesTaxRate !== undefined) updateData.salesTaxRate = salesTaxRate?.toString();
+      if (taxInclusiveSales !== undefined) updateData.taxInclusiveSales = taxInclusiveSales;
+
+      const updatedUser = await storage.upsertUser(updateData);
 
       res.json(updatedUser);
     } catch (error) {

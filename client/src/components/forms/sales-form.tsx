@@ -53,6 +53,9 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
       shippingCost: sale?.shippingCost ?? "0.00", 
       otherFees: sale?.otherFees ?? "0.00",
       profit: sale?.profit ?? "0.00",
+      salesTaxRate: sale?.salesTaxRate ?? user?.salesTaxRate ?? "0.0000",
+      salesTaxAmount: sale?.salesTaxAmount ?? "0.00",
+      taxIncluded: sale?.taxIncluded ?? user?.taxInclusiveSales ?? true,
       saleDate: sale?.saleDate ? new Date(sale.saleDate) : new Date(),
       platform: sale?.platform ?? "",
       buyerInfo: sale?.buyerInfo ?? "",
@@ -128,12 +131,31 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
     },
   });
 
-  // Calculate profit automatically
+  // Calculate profit and tax automatically
   const salePrice = parseFloat(form.watch("salePrice") || "0");
   const purchasePrice = parseFloat(form.watch("purchasePrice") || "0");
   const platformFee = parseFloat(form.watch("platformFee") || "0");
   const shippingCost = parseFloat(form.watch("shippingCost") || "0");
   const otherFees = parseFloat(form.watch("otherFees") || "0");
+  const salesTaxRate = parseFloat(form.watch("salesTaxRate") || "0");
+  const taxIncluded = form.watch("taxIncluded") ?? true;
+  
+  // Auto-update tax amount when rate or sale price changes
+  React.useEffect(() => {
+    if (salesTaxRate > 0) {
+      let taxAmount = 0;
+      if (taxIncluded) {
+        // Tax-inclusive: extract tax from sale price
+        taxAmount = salePrice - (salePrice / (1 + salesTaxRate));
+      } else {
+        // Tax-exclusive: add tax on top of sale price
+        taxAmount = salePrice * salesTaxRate;
+      }
+      form.setValue("salesTaxAmount", taxAmount.toFixed(2));
+    } else {
+      form.setValue("salesTaxAmount", "0.00");
+    }
+  }, [salePrice, salesTaxRate, taxIncluded, form]);
   
   // Auto-update profit when costs change
   React.useEffect(() => {
@@ -146,7 +168,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
       ...data,
       inventoryItemId: data.inventoryItemId || null,
       saleDate: data.saleDate instanceof Date ? data.saleDate : new Date(data.saleDate),
-      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : null),
+      tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === "string" && data.tags ? (data.tags as string).split(",").map((tag: string) => tag.trim()).filter(Boolean) : null),
     };
 
     if (sale) {
@@ -347,7 +369,85 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
               </FormItem>
             )}
           />
+        </div>
 
+        {/* Sales Tax Section */}
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-medium mb-4">Sales Tax Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="salesTaxRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax Rate</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.0001"
+                      min="0"
+                      max="1"
+                      placeholder="0.0825"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-gray-500">
+                    As decimal (e.g., 0.0825 for 8.25%)
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="salesTaxAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax Amount (Auto-calculated)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      readOnly
+                      className="bg-gray-50"
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="taxIncluded"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-sm">Tax Included</FormLabel>
+                    <p className="text-xs text-gray-500">
+                      {field.value ? "In sale price" : "Added on top"}
+                    </p>
+                  </div>
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value || false}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="saleDate"

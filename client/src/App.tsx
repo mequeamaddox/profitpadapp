@@ -51,9 +51,9 @@ function AuthenticatedRouter() {
           <Route path="/reports" component={Reports} />
           <Route path="/research" component={Research} />
           <Route path="/profit-estimator" component={ProfitEstimatorPage} />
+          <Route path="/settings" component={Settings} />
           <Route path="/logout" component={Logout} />
           <Route path="/billing" component={Billing} />
-          <Route path="/settings" component={Settings} />
           <Route path="/help" component={Help} />
         </>
       )}
