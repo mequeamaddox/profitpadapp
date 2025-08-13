@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Webcam from 'react-webcam';
-import { BrowserMultiFormatReader } from '@zxing/library';
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,17 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
 
   useEffect(() => {
     if (isOpen) {
-      codeReader.current = new BrowserMultiFormatReader();
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.QR_CODE
+      ]);
+      codeReader.current = new BrowserMultiFormatReader(hints);
       setError('');
       setCameraError('');
       setScannedCode('');
@@ -82,13 +92,27 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
           canvas.height = videoElement.videoHeight;
           context.drawImage(videoElement, 0, 0);
 
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const result = await codeReader.current.decodeFromCanvas(canvas);
-          
-          if (result) {
-            setScannedCode(result.getText());
-            setIsScanning(false);
-            return;
+          // Try different ZXing decode methods
+          try {
+            const result = await codeReader.current.decodeFromVideoDevice(undefined, videoElement);
+            if (result) {
+              setScannedCode(result.getText());
+              setIsScanning(false);
+              return;
+            }
+          } catch {
+            // Fallback to canvas method
+            try {
+              const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+              const result = await codeReader.current.decode(imageData);
+              if (result) {
+                setScannedCode(result.getText());
+                setIsScanning(false);
+                return;
+              }
+            } catch {
+              // Continue scanning
+            }
           }
         } catch (error) {
           // Continue scanning - this is expected when no barcode is found
