@@ -175,6 +175,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/sales", isAuthenticated, checkTrialExpired, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Convert saleDate string to Date object if needed
+      if (req.body.saleDate && typeof req.body.saleDate === 'string') {
+        req.body.saleDate = new Date(req.body.saleDate);
+      }
+      
       const validatedData = insertSalesRecordSchema.parse(req.body);
       const sale = await storage.createSalesRecord({ ...validatedData, userId });
       res.status(201).json(sale);
