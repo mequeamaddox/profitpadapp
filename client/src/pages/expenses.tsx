@@ -56,8 +56,8 @@ export default function Expenses() {
   const totalTaxAmount = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.taxAmount || "0"), 0);
   const deductibleExpenses = filteredExpenses.filter(e => e.deductible).reduce((sum, expense) => sum + parseFloat(expense.total || "0"), 0);
 
-  const categories = Array.from(new Set(expenses.map(e => e.category)));
-  const taxTypes = Array.from(new Set(expenses.map(e => e.taxType)));
+  const categories = Array.from(new Set(expenses.map(e => e.category).filter(Boolean)));
+  const taxTypes = Array.from(new Set(expenses.map(e => e.taxType).filter(Boolean)));
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
@@ -204,8 +204,8 @@ export default function Expenses() {
           <SelectContent>
             <SelectItem value="all">All Tax Types</SelectItem>
             {taxTypes.map((type) => (
-              <SelectItem key={type} value={type || "none"}>
-                {type === "none" ? "No Tax" : type === "inclusive" ? "Tax Inclusive" : "Tax Exclusive"}
+              <SelectItem key={type} value={type}>
+                {type === "none" ? "No Tax" : type === "inclusive" ? "Tax Inclusive" : type === "exclusive" ? "Tax Exclusive" : type}
               </SelectItem>
             ))}
           </SelectContent>
