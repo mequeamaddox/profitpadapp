@@ -79,7 +79,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth mobile-modal-content" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+        <div className="flex-1 overflow-y-auto min-h-0 mobile-modal-content" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
