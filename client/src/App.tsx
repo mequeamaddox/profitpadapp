@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +22,10 @@ import Billing from "@/pages/billing";
 
 
 function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
+  // Temporarily bypass useAuth to test QueryClient setup
+  // const { isAuthenticated, isLoading } = useAuth();
+  const isAuthenticated = false; // Force showing landing page
+  const isLoading = false;
 
   return (
     <Switch>
@@ -52,8 +56,8 @@ function AuthenticatedRouter() {
 }
 
 function App() {
-  // Create QueryClient instance inside App component
-  const queryClient = new QueryClient({
+  // Create QueryClient instance with useMemo to prevent recreation
+  const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
       queries: {
         queryFn: getQueryFn({ on401: "throw" }),
@@ -66,7 +70,7 @@ function App() {
         retry: false,
       },
     },
-  });
+  }), []);
 
   return (
     <QueryClientProvider client={queryClient}>
