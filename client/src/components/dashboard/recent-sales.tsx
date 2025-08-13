@@ -1,16 +1,11 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLocation } from "wouter";
-import { DashboardMetrics, type SalesRecord } from "@shared/schema";
-import SalesForm from "@/components/forms/sales-form";
+import { DashboardMetrics } from "@shared/schema";
 
 export default function RecentSales() {
   const [, setLocation] = useLocation();
-  const [selectedSale, setSelectedSale] = useState<SalesRecord | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   
   const { data: metrics, isLoading } = useQuery<DashboardMetrics>({
     queryKey: ["/api/dashboard/metrics"],
@@ -19,33 +14,8 @@ export default function RecentSales() {
   const recentSales = metrics?.recentSales || [];
 
   const handleSaleClick = (sale: any) => {
-    // Convert the sale data to match SalesRecord interface
-    const saleRecord: SalesRecord = {
-      id: sale.id,
-      userId: sale.userId,
-      inventoryItemId: sale.inventoryItemId,
-      itemTitle: sale.itemTitle,
-      purchasePrice: sale.purchasePrice,
-      salePrice: sale.salePrice,
-      platformFee: sale.platformFee || "0.00",
-      shippingCost: sale.shippingCost || "0.00",
-      otherFees: sale.otherFees || "0.00",
-      profit: sale.profit,
-      saleDate: new Date(sale.saleDate),
-      platform: sale.platform,
-      buyerInfo: sale.buyerInfo,
-      notes: sale.notes,
-      tags: sale.tags || [],
-      createdAt: new Date(sale.createdAt),
-      updatedAt: new Date(sale.updatedAt),
-    };
-    setSelectedSale(saleRecord);
-    setShowEditModal(true);
-  };
-
-  const handleEditSuccess = () => {
-    setShowEditModal(false);
-    setSelectedSale(null);
+    // Navigate to sales page with the specific sale ID for editing
+    setLocation(`/sales?edit=${sale.id}`);
   };
 
   return (
@@ -117,21 +87,6 @@ export default function RecentSales() {
           </div>
         )}
       </CardContent>
-
-      {/* Edit Sale Modal */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Sale</DialogTitle>
-          </DialogHeader>
-          {selectedSale && (
-            <SalesForm 
-              salesRecord={selectedSale} 
-              onSuccess={handleEditSuccess}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

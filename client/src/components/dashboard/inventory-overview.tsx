@@ -18,6 +18,11 @@ export default function InventoryOverview() {
 
   const inventoryStats = metrics?.inventoryStats || {};
 
+  const handleInventoryClick = (item: any) => {
+    // Navigate to inventory page with the specific item ID for editing
+    setLocation(`/inventory?edit=${item.id}`);
+  };
+
   const getConditionColor = (condition: string) => {
     switch (condition?.toLowerCase()) {
       case "new":
@@ -50,19 +55,19 @@ export default function InventoryOverview() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center p-4 bg-slate-50 rounded-lg">
             <p className="text-2xl font-bold text-slate-900">
-              {isLoading ? "..." : inventoryStats.totalItems || 0}
+              {isLoading ? "..." : (inventoryStats as any)?.totalItems || 0}
             </p>
             <p className="text-sm text-slate-600">Total Items</p>
           </div>
           <div className="text-center p-4 bg-emerald-50 rounded-lg">
             <p className="text-2xl font-bold text-emerald-600">
-              {isLoading ? "..." : inventoryStats.activeListings || 0}
+              {isLoading ? "..." : (inventoryStats as any)?.activeListings || 0}
             </p>
             <p className="text-sm text-slate-600">Active Listings</p>
           </div>
           <div className="text-center p-4 bg-amber-50 rounded-lg">
             <p className="text-2xl font-bold text-amber-600">
-              {isLoading ? "..." : inventoryStats.lowStock || 0}
+              {isLoading ? "..." : (inventoryStats as any)?.lowStock || 0}
             </p>
             <p className="text-sm text-slate-600">Low Stock</p>
           </div>
@@ -96,7 +101,11 @@ export default function InventoryOverview() {
             </div>
           ) : (
             recentInventory.slice(0, 3).map((item: any) => (
-              <div key={item.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+              <div 
+                key={item.id} 
+                className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                onClick={() => handleInventoryClick(item)}
+              >
                 <div className="flex items-center space-x-3">
                   {item.images && item.images.length > 0 ? (
                     <img

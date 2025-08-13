@@ -22,6 +22,15 @@ export default function Sales() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
 
+  // Check for edit parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    if (editId) {
+      setIsFormOpen(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -40,6 +49,22 @@ export default function Sales() {
     queryKey: ["/api/sales"],
     enabled: isAuthenticated,
   });
+
+  // Handle URL edit parameter
+  useEffect(() => {
+    if (sales.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editId = urlParams.get('edit');
+      if (editId) {
+        const saleToEdit = sales.find(sale => sale.id === editId);
+        if (saleToEdit) {
+          setEditingSale(saleToEdit);
+        }
+        // Clear URL parameter
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [sales]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

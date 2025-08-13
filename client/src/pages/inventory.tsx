@@ -227,6 +227,15 @@ export default function Inventory() {
   const [isPalletFormOpen, setIsPalletFormOpen] = useState(false);
   const [editingPallet, setEditingPallet] = useState<Pallet | null>(null);
 
+  // Check for edit parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    if (editId) {
+      setIsFormOpen(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -250,6 +259,22 @@ export default function Inventory() {
     queryKey: ["/api/pallets"],
     enabled: isAuthenticated,
   });
+
+  // Handle URL edit parameter
+  useEffect(() => {
+    if (inventory.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editId = urlParams.get('edit');
+      if (editId) {
+        const itemToEdit = inventory.find(item => item.id === editId);
+        if (itemToEdit) {
+          setEditingItem(itemToEdit);
+        }
+        // Clear URL parameter
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [inventory]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
