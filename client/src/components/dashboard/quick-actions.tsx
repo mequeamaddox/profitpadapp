@@ -55,23 +55,27 @@ export default function QuickActions() {
 
   return (
     <>
-      <Card>
+      <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '800ms' }}>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <span>Quick Actions</span>
+            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {actions.map((action) => (
+            {actions.map((action, index) => (
               <Button
                 key={action.id}
                 variant="outline"
-                className="w-full justify-start p-3 h-auto"
+                className="w-full justify-start p-3 h-auto hover:shadow-md hover:scale-[1.02] transition-all duration-300 border-gray-200 hover:border-gray-300 animate-fadeInUp group/button"
+                style={{ animationDelay: `${800 + (index * 100)}ms` }}
                 onClick={() => handleActionClick(action.id)}
               >
-                <div className={`w-8 h-8 ${action.iconBg} rounded-lg flex items-center justify-center mr-3`}>
-                  <action.icon className={`${action.iconColor} text-sm`} size={16} />
+                <div className={`w-8 h-8 ${action.iconBg} rounded-lg flex items-center justify-center mr-3 transition-all duration-300 group-hover/button:scale-110 group-hover/button:rotate-3`}>
+                  <action.icon className={`${action.iconColor} text-sm transition-all duration-300`} size={16} />
                 </div>
-                <span className="font-medium text-slate-900">{action.title}</span>
+                <span className="font-medium text-slate-900 group-hover/button:text-slate-800 transition-colors">{action.title}</span>
               </Button>
             ))}
           </div>

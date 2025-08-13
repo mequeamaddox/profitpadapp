@@ -41,11 +41,16 @@ export default function InventoryOverview() {
   };
 
   return (
-    <Card>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '600ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Inventory Overview</CardTitle>
-          <Button variant="link" onClick={() => setLocation("/inventory")}>
+          <CardTitle className="flex items-center space-x-2">
+            <span>Inventory Overview</span>
+            {!isLoading && !inventoryLoading && (inventoryStats as any)?.totalItems > 0 && (
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+            )}
+          </CardTitle>
+          <Button variant="link" onClick={() => setLocation("/inventory")} className="text-blue-600 hover:text-blue-800 transition-colors">
             Manage Inventory
           </Button>
         </div>
@@ -53,23 +58,44 @@ export default function InventoryOverview() {
       <CardContent>
         {/* Inventory Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-4 bg-slate-50 rounded-lg">
-            <p className="text-2xl font-bold text-slate-900">
-              {isLoading ? "..." : (inventoryStats as any)?.totalItems || 0}
-            </p>
-            <p className="text-sm text-slate-600">Total Items</p>
+          <div className={`text-center p-4 bg-slate-50 rounded-lg transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
+            {isLoading && (
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+            )}
+            {isLoading ? (
+              <div className="w-8 h-8 bg-gradient-to-r from-slate-200 to-slate-300 rounded animate-pulse-soft mx-auto"></div>
+            ) : (
+              <p className="text-2xl font-bold text-slate-900">
+                <span className="animate-bounceIn">{(inventoryStats as any)?.totalItems || 0}</span>
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mt-2">Total Items</p>
           </div>
-          <div className="text-center p-4 bg-emerald-50 rounded-lg">
-            <p className="text-2xl font-bold text-emerald-600">
-              {isLoading ? "..." : (inventoryStats as any)?.activeListings || 0}
-            </p>
-            <p className="text-sm text-slate-600">Active Listings</p>
+          <div className={`text-center p-4 bg-emerald-50 rounded-lg transition-all duration-300 hover:bg-emerald-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
+            {isLoading && (
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animationDelay: '200ms' }}></div>
+            )}
+            {isLoading ? (
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-200 to-emerald-300 rounded animate-pulse-soft mx-auto"></div>
+            ) : (
+              <p className="text-2xl font-bold text-emerald-600">
+                <span className="animate-bounceIn" style={{ animationDelay: '200ms' }}>{(inventoryStats as any)?.activeListings || 0}</span>
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mt-2">Active Listings</p>
           </div>
-          <div className="text-center p-4 bg-amber-50 rounded-lg">
-            <p className="text-2xl font-bold text-amber-600">
-              {isLoading ? "..." : (inventoryStats as any)?.lowStock || 0}
-            </p>
-            <p className="text-sm text-slate-600">Low Stock</p>
+          <div className={`text-center p-4 bg-amber-50 rounded-lg transition-all duration-300 hover:bg-amber-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
+            {isLoading && (
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animationDelay: '400ms' }}></div>
+            )}
+            {isLoading ? (
+              <div className="w-8 h-8 bg-gradient-to-r from-amber-200 to-amber-300 rounded animate-pulse-soft mx-auto"></div>
+            ) : (
+              <p className="text-2xl font-bold text-amber-600">
+                <span className="animate-bounceIn" style={{ animationDelay: '400ms' }}>{(inventoryStats as any)?.lowStock || 0}</span>
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mt-2">Low Stock</p>
           </div>
         </div>
 

@@ -82,10 +82,18 @@ export default function RevenueChart() {
   };
 
   return (
-    <Card>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '200ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Monthly Revenue</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <span>Monthly Revenue</span>
+            {!isLoading && (
+              <div className="flex items-center space-x-1 text-sm text-slate-500">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-xs">Live Data</span>
+              </div>
+            )}
+          </CardTitle>
           <Select defaultValue="12months">
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -101,11 +109,40 @@ export default function RevenueChart() {
       <CardContent>
         <div className="h-64">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-pulse text-slate-600">Loading chart...</div>
+            <div className="h-full relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+              {/* Animated shimmer overlay */}
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              
+              {/* Chart placeholder with animated bars */}
+              <div className="p-6 h-full flex flex-col justify-end">
+                <div className="flex items-end justify-between h-full space-x-2">
+                  {[...Array(12)].map((_, i) => (
+                    <div key={i} className="flex-1 flex flex-col justify-end">
+                      <div 
+                        className="bg-gradient-to-t from-blue-200 to-blue-300 rounded-t animate-pulse-soft w-full"
+                        style={{ 
+                          height: `${Math.random() * 80 + 20}%`,
+                          animationDelay: `${i * 100}ms`
+                        }}
+                      ></div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Axis labels placeholder */}
+                <div className="flex justify-between mt-4 text-xs text-slate-400">
+                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, i) => (
+                    <span key={month} className="animate-pulse" style={{ animationDelay: `${i * 50}ms` }}>
+                      {month}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
-            <Line data={chartData} options={chartOptions} />
+            <div className="animate-bounceIn">
+              <Line data={chartData} options={chartOptions} />
+            </div>
           )}
         </div>
       </CardContent>

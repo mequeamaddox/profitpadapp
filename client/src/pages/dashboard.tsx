@@ -32,7 +32,10 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-pulse text-slate-600">Loading...</div>
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-4 animate-pulse"></div>
+          <div className="text-slate-600 animate-pulse-soft">Loading your dashboard...</div>
+        </div>
       </div>
     );
   }
@@ -67,7 +70,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fadeInUp" style={{ animationDelay: '1000ms' }}>
             <InventoryValue />
           </div>
         </div>

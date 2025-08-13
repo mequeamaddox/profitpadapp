@@ -57,11 +57,14 @@ export default function InventoryValue() {
   const profitMargin = totalInvestment > 0 ? (potentialProfit / totalInvestment) * 100 : 0;
 
   return (
-    <Card>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          Inventory Resell Value
+          <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+          <span>Inventory Resell Value</span>
+          {totalInvestment > 0 && (
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          )}
         </CardTitle>
         <p className="text-sm text-slate-600">
           Potential profit from current inventory at listed prices
@@ -69,9 +72,9 @@ export default function InventoryValue() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-4">
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1300ms' }}>
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-blue-600" />
+              <DollarSign className="h-4 w-4 text-blue-600 transition-transform duration-300 hover:scale-110" />
               <span className="text-sm font-medium text-blue-900">Total Investment</span>
             </div>
             <span className="font-semibold text-blue-900">
@@ -79,9 +82,9 @@ export default function InventoryValue() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1400ms' }}>
             <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-green-600" />
+              <Target className="h-4 w-4 text-green-600 transition-transform duration-300 hover:scale-110" />
               <span className="text-sm font-medium text-green-900">Potential Revenue</span>
             </div>
             <span className="font-semibold text-green-900">
@@ -89,9 +92,9 @@ export default function InventoryValue() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1500ms' }}>
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
+              <TrendingUp className="h-4 w-4 text-emerald-600 transition-transform duration-300 hover:scale-110" />
               <span className="text-sm font-medium text-emerald-900">Potential Profit</span>
             </div>
             <span className="font-semibold text-emerald-900">
