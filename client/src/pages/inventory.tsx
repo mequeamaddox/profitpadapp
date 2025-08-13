@@ -8,6 +8,7 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import InventoryForm from "@/components/forms/inventory-form";
 import InventoryValue from "@/components/dashboard/inventory-value";
+import BreakEvenAnalysis from "@/components/analytics/break-even-analysis";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -646,6 +647,9 @@ export default function Inventory() {
         </TabsContent>
 
         <TabsContent value="pallets" className="space-y-6">
+          {/* Break-Even Analysis for Pallet Purchases */}
+          <BreakEvenAnalysis />
+          
           {/* Pallets Actions Bar */}
           <div className="flex items-center justify-between">
             <div>
