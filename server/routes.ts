@@ -892,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stale inventory analysis endpoint
   app.get("/api/inventory/stale-analysis", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const staleItems = await storage.getStaleInventoryAnalysis(userId);
       res.json(staleItems);
     } catch (error) {

@@ -36,11 +36,14 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    name: 'connect.sid', // Explicit session name
     cookie: {
       httpOnly: true,
       secure: false, // Always false for development to ensure compatibility
       maxAge: sessionTtl,
       sameSite: 'lax',
+      domain: undefined, // Don't restrict domain for localhost
+      path: '/', // Ensure cookies work for all paths
     },
   });
 }
@@ -135,11 +138,15 @@ export async function setupAuth(app: Express) {
         }
         
         console.log("User logged in successfully:", user.claims?.sub);
+        console.log("Session ID after login:", req.sessionID);
+        console.log("Session data after login:", req.session);
+        
         // Force session save before redirect
         req.session.save((saveErr) => {
           if (saveErr) {
             console.error("Session save error:", saveErr);
           }
+          console.log("Session saved, redirecting to /");
           return res.redirect("/");
         });
       });

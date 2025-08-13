@@ -2,21 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery<User>({
+  const { data: user, isLoading, error, refetch } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: 0, // Always refetch to get latest auth state
     refetchOnMount: true,
   });
 
-  // Log to both console and DOM for debugging
+  // Enhanced debugging for auth state
   if (typeof window !== 'undefined') {
-    console.log("🔍 useAuth Debug:", { user, isLoading, error: error?.message, isAuthenticated: !!user });
+    console.log("🔍 useAuth Debug:", { 
+      user: user?.id, 
+      isLoading, 
+      error: error?.message, 
+      isAuthenticated: !!user,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other'
+    });
   }
 
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    refetch, // Allow manual refresh of auth state
   };
 }
