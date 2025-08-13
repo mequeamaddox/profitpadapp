@@ -49,6 +49,14 @@ Fixed Mobile Navigation Modal Scrolling Issues (January 2025):
 - Enhanced z-index handling to prevent mobile overlay conflicts
 - Optimized mobile scrolling with webkit-overflow-scrolling and touch-action properties
 
+Resolved Critical QueryClient Import and Context Issues (January 2025):
+- Fixed "The requested module does not provide an export named 'queryClient'" compilation errors
+- Resolved "No QueryClient set, use QueryClientProvider to set one" runtime errors
+- Updated all components to use useQueryClient() hook pattern instead of importing queryClient instance
+- Moved QueryClient instantiation inside App component with useMemo for proper React context initialization
+- Successfully restored full authentication flow and mobile PWA functionality
+- App now loads correctly on mobile devices with full feature access
+
 Reorganized Pallets module integration (January 2025):
 - Moved liquidation pallet COGS tracking from standalone page to inventory page tabs
 - Implemented tabbed interface with "Inventory Items" and "Liquidation Pallets" sections
