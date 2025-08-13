@@ -461,7 +461,7 @@ export class DatabaseStorage implements IStorage {
     const monthlyGoal = parseFloat(userResult?.monthlyGoal || "0");
     const currentMonthProfit = parseFloat(monthlyProfitResult?.total || "0");
     const monthlyProgress = monthlyGoal > 0 ? 
-      Math.min(100, Math.round((currentMonthProfit / monthlyGoal) * 100)) : 0;
+      Math.min(100, parseFloat(((currentMonthProfit / monthlyGoal) * 100).toFixed(1))) : 0;
       
     console.log("Monthly Goal Debug:", {
       userResult: userResult?.monthlyGoal,
