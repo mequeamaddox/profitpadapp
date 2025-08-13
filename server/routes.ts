@@ -508,7 +508,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate metrics
       const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.salePrice), 0);
-      const totalProfit = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.profit), 0);
+      
+      // Calculate profit dynamically using the same method as dashboard
+      const totalProfit = filteredSales.reduce((sum, sale) => {
+        const profit = parseFloat(sale.salePrice || "0") - 
+                      parseFloat(sale.purchasePrice || "0") - 
+                      parseFloat(sale.platformFee || "0") - 
+                      parseFloat(sale.shippingCost || "0");
+        return sum + profit;
+      }, 0);
       const totalSales = filteredSales.length;
       const averageProfit = totalSales > 0 ? totalProfit / totalSales : 0;
       const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
@@ -517,10 +525,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const itemSales = new Map<string, { quantity: number, revenue: number, profit: number }>();
       filteredSales.forEach(sale => {
         const current = itemSales.get(sale.itemTitle) || { quantity: 0, revenue: 0, profit: 0 };
+        const profit = parseFloat(sale.salePrice || "0") - 
+                      parseFloat(sale.purchasePrice || "0") - 
+                      parseFloat(sale.platformFee || "0") - 
+                      parseFloat(sale.shippingCost || "0");
         itemSales.set(sale.itemTitle, {
           quantity: current.quantity + 1,
           revenue: current.revenue + parseFloat(sale.salePrice),
-          profit: current.profit + parseFloat(sale.profit)
+          profit: current.profit + profit
         });
       });
 
