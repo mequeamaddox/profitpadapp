@@ -65,10 +65,9 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
       const endpoint = pallet ? `/api/pallets/${pallet.id}` : "/api/pallets";
       const method = pallet ? "PUT" : "POST";
       
-      // Transform the data to match the backend schema
+      // The backend will handle the date conversion, just send the form data as is
       const transformedData = {
         ...data,
-        purchaseDate: new Date(data.purchaseDate).toISOString(),
         totalCost: data.totalCost.toString(),
       };
       

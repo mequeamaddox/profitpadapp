@@ -691,6 +691,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pallets", isAuthenticated, checkTrialExpired, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Convert date strings to Date objects
+      if (req.body.purchaseDate && typeof req.body.purchaseDate === 'string') {
+        req.body.purchaseDate = new Date(req.body.purchaseDate);
+      }
+      
       const palletData = insertPalletSchema.parse(req.body);
       
       const pallet = await storage.createPallet({
@@ -712,6 +718,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
+      
+      // Convert date strings to Date objects
+      if (req.body.purchaseDate && typeof req.body.purchaseDate === 'string') {
+        req.body.purchaseDate = new Date(req.body.purchaseDate);
+      }
+      
       const palletData = insertPalletSchema.partial().parse(req.body);
       
       const pallet = await storage.updatePallet(id, userId, palletData);
