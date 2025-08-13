@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import InventoryForm from "@/components/forms/inventory-form";
+import InventoryValue from "@/components/dashboard/inventory-value";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -491,6 +492,9 @@ export default function Inventory() {
             </TabsList>
 
             <TabsContent value="inventory" className="space-y-6">
+              {/* Inventory Value Overview */}
+              <InventoryValue />
+              
               {/* Inventory Actions Bar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
