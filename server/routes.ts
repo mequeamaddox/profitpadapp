@@ -355,11 +355,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/expenses", isAuthenticated, checkTrialExpired, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Convert date strings to Date objects if needed
+      if (req.body.expenseDate && typeof req.body.expenseDate === 'string') {
+        req.body.expenseDate = new Date(req.body.expenseDate);
+      }
+      
       const validatedData = insertExpenseSchema.parse(req.body);
       const expense = await storage.createExpense({ ...validatedData, userId });
       res.status(201).json(expense);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Expense validation error:", JSON.stringify(error.errors, null, 2));
+        console.error("Request body:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating expense:", error);

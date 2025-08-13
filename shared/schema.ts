@@ -184,11 +184,6 @@ export const expenses = pgTable("expenses", {
   description: text("description"),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   category: varchar("category").notNull(), // shipping, packaging, storage, marketing, fees, equipment, etc.
-  taxType: varchar("tax_type").default("exclusive"), // inclusive, exclusive, none
-  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0.00"), // percentage
-  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"), // calculated tax
-  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(), // amount before tax
-  total: decimal("total", { precision: 10, scale: 2 }).notNull(), // final amount including tax
   expenseDate: timestamp("expense_date").defaultNow(),
   vendor: varchar("vendor"), // who was paid
   receiptUrl: varchar("receipt_url"), // photo of receipt

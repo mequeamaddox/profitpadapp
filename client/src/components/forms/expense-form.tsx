@@ -41,11 +41,7 @@ const expenseCategories = [
   "Other"
 ];
 
-const taxTypes = [
-  { value: "none", label: "No Tax" },
-  { value: "inclusive", label: "Tax Inclusive (tax is part of the amount)" },
-  { value: "exclusive", label: "Tax Exclusive (tax added to amount)" }
-];
+
 
 export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const { toast } = useToast();
@@ -64,50 +60,16 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
       description: expense?.description || "",
       amount: expense?.amount || "0.00",
       category: expense?.category || "",
-      taxType: expense?.taxType || "exclusive",
-      taxRate: expense?.taxRate || "0.00",
-      taxAmount: expense?.taxAmount || "0.00",
-      subtotal: expense?.subtotal || "0.00",
-      total: expense?.total || "0.00",
       expenseDate: expense?.expenseDate ? new Date(expense.expenseDate) : new Date(),
-      vendor: expense?.vendor ?? "",
-      receiptUrl: expense?.receiptUrl ?? "",
-      businessPurpose: expense?.businessPurpose ?? "",
+      vendor: expense?.vendor || "",
+      receiptUrl: expense?.receiptUrl || "",
+      businessPurpose: expense?.businessPurpose || "",
       deductible: expense?.deductible ?? false,
       tags: expense?.tags || [],
     },
   });
 
-  // Calculate tax and totals automatically
-  const amount = parseFloat(form.watch("amount") || "0");
-  const taxType = form.watch("taxType");
-  const taxRate = parseFloat(form.watch("taxRate") || "0");
-  
-  useEffect(() => {
-    let subtotal = 0;
-    let taxAmount = 0;
-    let total = 0;
 
-    if (taxType === "none") {
-      subtotal = amount;
-      taxAmount = 0;
-      total = amount;
-    } else if (taxType === "inclusive") {
-      // Tax is already included in the amount
-      total = amount;
-      subtotal = amount / (1 + taxRate / 100);
-      taxAmount = total - subtotal;
-    } else if (taxType === "exclusive") {
-      // Tax is added to the amount
-      subtotal = amount;
-      taxAmount = (subtotal * taxRate) / 100;
-      total = subtotal + taxAmount;
-    }
-
-    form.setValue("subtotal", subtotal.toFixed(2));
-    form.setValue("taxAmount", taxAmount.toFixed(2));
-    form.setValue("total", total.toFixed(2));
-  }, [amount, taxType, taxRate, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertExpense) => {
@@ -208,25 +170,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
       if (receiptData.category) {
         form.setValue('category', receiptData.category);
       }
-      if (receiptData.tax && receiptData.subtotal) {
-        // Calculate tax type based on amounts
-        const total = receiptData.total || 0;
-        const tax = receiptData.tax;
-        const subtotal = receiptData.subtotal;
-        
-        if (Math.abs(subtotal + tax - total) < 0.01) {
-          // Tax exclusive
-          form.setValue('taxType', 'exclusive');
-          form.setValue('subtotal', subtotal.toString());
-          form.setValue('taxAmount', tax.toString());
-          form.setValue('total', total.toString());
-        } else if (Math.abs(total - tax - subtotal) < 0.01) {
-          // Tax inclusive  
-          form.setValue('taxType', 'inclusive');
-          form.setValue('subtotal', subtotal.toString());
-          form.setValue('taxAmount', tax.toString());
-        }
-      }
+
       if (receiptData.items && receiptData.items.length > 0) {
         // Create a description from items
         const itemDescriptions = receiptData.items.map((item: any) => item.description).join(', ');
@@ -325,114 +269,47 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="taxType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tax Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+        <FormField
+          control={form.control}
+          name="expenseDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Expense Date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select tax type" />
-                    </SelectTrigger>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
                   </FormControl>
-                  <SelectContent>
-                    {taxTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {taxType !== "none" && (
-            <FormField
-              control={form.control}
-              name="taxRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tax Rate (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value || undefined}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
           )}
-
-          <FormField
-            control={form.control}
-            name="expenseDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Expense Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value || undefined}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Tax calculation display */}
-        {taxType !== "none" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Subtotal</label>
-              <div className="text-lg font-semibold">${form.watch("subtotal")}</div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Tax Amount</label>
-              <div className="text-lg font-semibold">${form.watch("taxAmount")}</div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Total</label>
-              <div className="text-lg font-semibold text-blue-600">${form.watch("total")}</div>
-            </div>
-          </div>
-        )}
+        />
 
         <FormField
           control={form.control}
