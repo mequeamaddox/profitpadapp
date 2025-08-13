@@ -664,16 +664,18 @@ export default function Inventory() {
                   Add Pallet
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingPallet ? "Edit Pallet" : "Add New Pallet"}
                   </DialogTitle>
                 </DialogHeader>
-                <PalletForm
-                  pallet={editingPallet || undefined}
-                  onSuccess={handlePalletFormClose}
-                />
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                  <PalletForm
+                    pallet={editingPallet || undefined}
+                    onSuccess={handlePalletFormClose}
+                  />
+                </div>
               </DialogContent>
             </Dialog>
           </div>
@@ -694,14 +696,16 @@ export default function Inventory() {
                       Add Your First Pallet
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Pallet</DialogTitle>
                     </DialogHeader>
-                    <PalletForm
-                      pallet={editingPallet || undefined}
-                      onSuccess={handlePalletFormClose}
-                    />
+                    <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                      <PalletForm
+                        pallet={editingPallet || undefined}
+                        onSuccess={handlePalletFormClose}
+                      />
+                    </div>
                   </DialogContent>
                 </Dialog>
               </CardContent>
