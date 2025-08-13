@@ -68,9 +68,9 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
     if (!open) return null;
     
     return (
-      <div className="fixed inset-0 z-[9999] bg-white">
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between p-4 border-b bg-white flex-shrink-0">
           <div className="flex items-center">
             {selectedAction ? (
               <Button
@@ -106,7 +106,7 @@ export default function AddMenuModal({ open, onOpenChange }: AddMenuModalProps) 
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-scroll h-[calc(100vh-73px)] p-4" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        <div className="flex-1 overflow-y-auto p-4" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
           {!selectedAction ? (
             <div className="space-y-3">
               {actions.map((action) => (
