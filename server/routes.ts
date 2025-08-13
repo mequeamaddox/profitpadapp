@@ -3,9 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { checkTrialExpired } from "./trialMiddleware";
-import { db } from "./db";
-import { eq, and } from "drizzle-orm";
-import { salesRecords, inventoryItems } from "@shared/schema";
 import {
   insertInventoryItemSchema,
   insertSalesRecordSchema,
@@ -512,9 +509,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate metrics
       const totalRevenue = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.salePrice), 0);
       
-      // Calculate profit using sales data directly (working method)
+      // Calculate profit dynamically using the same method as dashboard
       const totalProfit = filteredSales.reduce((sum, sale) => {
         const profit = parseFloat(sale.salePrice || "0") - 
+                      parseFloat(sale.purchasePrice || "0") - 
                       parseFloat(sale.platformFee || "0") - 
                       parseFloat(sale.shippingCost || "0");
         return sum + profit;
@@ -528,6 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       filteredSales.forEach(sale => {
         const current = itemSales.get(sale.itemTitle) || { quantity: 0, revenue: 0, profit: 0 };
         const profit = parseFloat(sale.salePrice || "0") - 
+                      parseFloat(sale.purchasePrice || "0") - 
                       parseFloat(sale.platformFee || "0") - 
                       parseFloat(sale.shippingCost || "0");
         itemSales.set(sale.itemTitle, {

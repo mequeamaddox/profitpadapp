@@ -20,7 +20,7 @@ export default function Expenses() {
   const { isAuthenticated, isLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-
+  const [selectedTaxType, setSelectedTaxType] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
@@ -48,13 +48,16 @@ export default function Expenses() {
                          expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || selectedCategory === "all" || expense.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesTaxType = !selectedTaxType || selectedTaxType === "all" || expense.taxType === selectedTaxType;
+    return matchesSearch && matchesCategory && matchesTaxType;
   });
 
-  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0);
-  const deductibleExpenses = filteredExpenses.filter(e => e.deductible).reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0);
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.total || "0"), 0);
+  const totalTaxAmount = filteredExpenses.reduce((sum, expense) => sum + parseFloat(expense.taxAmount || "0"), 0);
+  const deductibleExpenses = filteredExpenses.filter(e => e.deductible).reduce((sum, expense) => sum + parseFloat(expense.total || "0"), 0);
 
   const categories = Array.from(new Set(expenses.map(e => e.category).filter(Boolean)));
+  const taxTypes = Array.from(new Set(expenses.map(e => e.taxType).filter(Boolean)));
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
@@ -67,13 +70,17 @@ export default function Expenses() {
   };
 
   const exportToCSV = () => {
-    const csvHeaders = ["Date", "Title", "Category", "Vendor", "Amount", "Deductible", "Business Purpose"];
+    const csvHeaders = ["Date", "Title", "Category", "Vendor", "Subtotal", "Tax Rate", "Tax Amount", "Total", "Tax Type", "Deductible", "Business Purpose"];
     const csvData = filteredExpenses.map(expense => [
       expense.expenseDate ? format(new Date(expense.expenseDate), "yyyy-MM-dd") : "",
       expense.title,
       expense.category,
       expense.vendor || "",
-      expense.amount,
+      expense.subtotal,
+      expense.taxRate,
+      expense.taxAmount,
+      expense.total,
+      expense.taxType,
       expense.deductible ? "Yes" : "No",
       expense.businessPurpose || ""
     ]);
@@ -142,18 +149,18 @@ export default function Expenses() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Deductible Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Tax Paid</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${deductibleExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${totalTaxAmount.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Expense</CardTitle>
+            <CardTitle className="text-sm font-medium">Tax Deductible</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${filteredExpenses.length > 0 ? (totalExpenses / filteredExpenses.length).toFixed(2) : "0.00"}</div>
+            <div className="text-2xl font-bold text-green-600">${deductibleExpenses.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -190,7 +197,19 @@ export default function Expenses() {
             ))}
           </SelectContent>
         </Select>
-
+        <Select value={selectedTaxType} onValueChange={setSelectedTaxType}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="All Tax Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tax Types</SelectItem>
+            {taxTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type === "none" ? "No Tax" : type === "inclusive" ? "Tax Inclusive" : type === "exclusive" ? "Tax Exclusive" : type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button onClick={exportToCSV} variant="outline">
           <Download className="w-4 h-4 mr-2" />
           Export CSV
@@ -224,11 +243,19 @@ export default function Expenses() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold">${expense.amount}</div>
+                        <div className="text-2xl font-bold">${expense.total}</div>
+                        {expense.taxType !== "none" && (
+                          <div className="text-sm text-gray-500">
+                            Tax: ${expense.taxAmount} ({expense.taxRate}%)
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
                       <Badge variant="secondary">{expense.category}</Badge>
+                      <Badge variant={expense.taxType === "none" ? "outline" : "default"}>
+                        {expense.taxType === "none" ? "No Tax" : expense.taxType === "inclusive" ? "Tax Inclusive" : "Tax Exclusive"}
+                      </Badge>
                       {expense.deductible && (
                         <Badge variant="default" className="bg-green-100 text-green-800">Tax Deductible</Badge>
                       )}
