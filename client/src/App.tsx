@@ -1,6 +1,6 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,7 @@ import Logout from "@/pages/logout";
 import Billing from "@/pages/billing";
 
 
-function Router() {
+function AuthenticatedRouter() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
@@ -51,12 +51,28 @@ function Router() {
   );
 }
 
+// Create a fresh QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: getQueryFn({ on401: "throw" }),
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+      retry: false,
+    },
+    mutations: {
+      retry: false,
+    },
+  },
+});
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <AuthenticatedRouter />
       </TooltipProvider>
     </QueryClientProvider>
   );
