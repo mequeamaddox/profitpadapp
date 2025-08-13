@@ -22,10 +22,7 @@ import Billing from "@/pages/billing";
 
 
 function AuthenticatedRouter() {
-  // Temporarily bypass useAuth to test QueryClient setup
-  // const { isAuthenticated, isLoading } = useAuth();
-  const isAuthenticated = false; // Force showing landing page
-  const isLoading = false;
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
