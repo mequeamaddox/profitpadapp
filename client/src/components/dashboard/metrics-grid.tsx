@@ -12,8 +12,8 @@ export default function MetricsGrid() {
     {
       title: "Total Sales",
       value: `$${parseFloat(metrics?.totalSales || "0").toLocaleString()}`,
-      change: "+12.5%",
-      changeType: "positive",
+      change: "", // No change data available
+      changeType: "neutral",
       icon: DollarSign,
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
@@ -21,8 +21,8 @@ export default function MetricsGrid() {
     {
       title: "Total Profit",
       value: `$${parseFloat(metrics?.totalProfit || "0").toLocaleString()}`,
-      change: "+8.2%",
-      changeType: "positive",
+      change: "", // No change data available
+      changeType: "neutral",
       icon: TrendingUp,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
@@ -30,8 +30,8 @@ export default function MetricsGrid() {
     {
       title: "Items Sold",
       value: metrics?.itemsSold?.toLocaleString() || "0",
-      change: "+15.3%",
-      changeType: "positive",
+      change: "", // No change data available
+      changeType: "neutral",
       icon: Package,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
