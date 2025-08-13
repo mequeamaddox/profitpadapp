@@ -22,10 +22,11 @@ import Billing from "@/pages/billing";
 
 
 function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  // Temporarily bypass auth to test React hook issues
+  const isAuthenticated = false;
+  const isLoading = false;
 
-  // Debug logging
-  console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
+  console.log("🔍 AuthenticatedRouter (bypass mode):", { isAuthenticated, isLoading });
 
   // Show loading state
   if (isLoading) {
@@ -82,7 +83,18 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthenticatedRouter />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">ProfitPad</h1>
+          <p className="text-slate-600">Application is loading...</p>
+          <button 
+            onClick={() => window.location.href = "/api/login"}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
     </QueryClientProvider>
   );
 }
