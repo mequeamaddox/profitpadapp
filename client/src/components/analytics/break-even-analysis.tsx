@@ -76,23 +76,34 @@ export default function BreakEvenAnalysis() {
     );
   }
 
-  const totalInvestment = parseFloat(metrics.inventoryValue?.totalInvestment || "0");
-  const currentProfit = parseFloat(metrics.totalProfit || "0");
+  // Separate pallet-linked vs individual inventory for overall analysis
+  const palletLinkedItems = inventory.filter(item => item.palletId);
+  const individualItems = inventory.filter(item => !item.palletId);
+
+  // Calculate total pallet investment (sum of all pallet costs)
+  const totalPalletInvestment = pallets.reduce((sum, pallet) => sum + parseFloat(pallet.totalCost || "0"), 0);
+  
+  // Calculate total individual inventory investment (items not linked to pallets)
+  const totalIndividualInvestment = individualItems.reduce((sum, item) => sum + parseFloat(item.purchasePrice || "0"), 0);
+  
+  // For overall analysis, use ONLY individual inventory + profit from individual sales
+  // This excludes pallet-based inventory which should be tracked separately
+  const individualSoldItems = individualItems.filter(item => item.status === 'sold');
+  const individualCurrentProfit = individualSoldItems.reduce((sum, item) => {
+    return sum + (parseFloat(item.soldPrice || "0") - parseFloat(item.purchasePrice || "0"));
+  }, 0);
+
+  console.log(`Overall Analysis: Individual investment = $${totalIndividualInvestment}, Individual profit = $${individualCurrentProfit}`);
+  console.log(`Pallet investment = $${totalPalletInvestment} (tracked separately by pallet)`);
+
+  // Use individual investment and profit for overall break-even calculation
+  const totalInvestment = totalIndividualInvestment;
+  const currentProfit = individualCurrentProfit;
   const remainingToBreakEven = Math.max(0, totalInvestment - currentProfit);
   const breakEvenPercentage = totalInvestment > 0 ? (currentProfit / totalInvestment) * 100 : 0;
   
-  // Estimate break-even timeline based on recent sales trend
-  const recentSales = metrics.recentSales || [];
-  const last30DaysProfit = recentSales
-    .filter(sale => {
-      const saleDate = new Date(sale.saleDate);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return saleDate >= thirtyDaysAgo;
-    })
-    .reduce((sum, sale) => sum + parseFloat(sale.profit || "0"), 0);
-  
-  const averageDailyProfit = last30DaysProfit / 30;
+  // Estimate break-even timeline based on individual item sales only (not including pallet sales)
+  const averageDailyProfit = individualCurrentProfit / 30; // Simple estimation
   const projectedBreakEvenDays = averageDailyProfit > 0 ? Math.ceil(remainingToBreakEven / averageDailyProfit) : 0;
 
   const breakEvenData: BreakEvenData = {
@@ -106,9 +117,7 @@ export default function BreakEvenAnalysis() {
 
   const isBreakEvenReached = currentProfit >= totalInvestment;
 
-  // Separate inventory into pallet-based and individual purchases
-  const palletLinkedItems = inventory.filter(item => item.palletId);
-  const individualItems = inventory.filter(item => !item.palletId);
+  // Note: palletLinkedItems and individualItems already calculated above for overall analysis
 
   // Calculate pallet-specific break-even data - ONLY use pallet-linked inventory
   const palletBreakEvens: PalletBreakEven[] = pallets.map(pallet => {
