@@ -180,6 +180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(sale);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Sales validation error:", JSON.stringify(error.errors, null, 2));
+        console.error("Request body:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating sale:", error);
