@@ -67,6 +67,16 @@ Completed Authentication System Fix and Mobile PWA Launch (January 2025):
 - Users can now log in successfully and access all ProfitPad features on mobile devices
 - PWA ready for private distribution similar to enterprise apps like Amazon Flex
 
+Refactored Tax Management System (January 2025):
+- Removed tax calculation features from expense module for simplified expense tracking
+- Cleaned up expense schema to focus on core business expense fields (amount, deductible, businessPurpose)
+- Eliminated complex tax-specific fields (taxRate, taxAmount, taxType, subtotal, total) from expense forms
+- Added dedicated "Tax Reports" tab to Reports page for consolidated tax deduction analysis
+- Implemented comprehensive tax deductible expense tracking with category breakdowns
+- Added tax summary calculations showing total deductible vs non-deductible expenses
+- Streamlined expense CSV export to include only essential fields for cleaner data management
+- Enhanced user experience by separating tax reporting from daily expense entry workflow
+
 Reorganized Pallets module integration (January 2025):
 - Moved liquidation pallet COGS tracking from standalone page to inventory page tabs
 - Implemented tabbed interface with "Inventory Items" and "Liquidation Pallets" sections
