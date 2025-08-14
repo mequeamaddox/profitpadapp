@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import Webcam from 'react-webcam';
-import { BrowserMultiFormatReader } from '@zxing/library';
+import Quagga from 'quagga';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +14,12 @@ interface BarcodeScannerProps {
 }
 
 export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScannerProps) {
-  const webcamRef = useRef<Webcam>(null);
+  const scannerRef = useRef<HTMLDivElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [cameraError, setCameraError] = useState<string>('');
-  const codeReader = useRef<BrowserMultiFormatReader | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Search for existing inventory item by barcode
   const { data: existingItem, isLoading: searchLoading } = useQuery<InventoryItem | null>({
@@ -42,50 +41,84 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
   });
 
   useEffect(() => {
-    if (isOpen) {
-      codeReader.current = new BrowserMultiFormatReader();
+    if (isOpen && scannerRef.current) {
       setError('');
       setCameraError('');
       setScannedCode('');
+      initializeScanner();
     }
 
     return () => {
-      if (codeReader.current) {
+      if (isInitialized) {
         try {
-          codeReader.current.reset();
+          Quagga.stop();
+          setIsInitialized(false);
         } catch (e) {
-          // Ignore reset errors
+          console.warn('Error stopping Quagga:', e);
         }
       }
     };
   }, [isOpen]);
 
+  const initializeScanner = () => {
+    if (!scannerRef.current) return;
+
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: scannerRef.current,
+        constraints: {
+          width: 640,
+          height: 480,
+          facingMode: "environment" // Use back camera
+        }
+      },
+      decoder: {
+        readers: [
+          "code_128_reader",
+          "ean_reader",
+          "ean_8_reader",
+          "code_39_reader",
+          "code_39_vin_reader",
+          "codabar_reader",
+          "upc_reader",
+          "upc_e_reader"
+        ]
+      }
+    }, (err: any) => {
+      if (err) {
+        console.error('Quagga initialization error:', err);
+        setCameraError('Failed to access camera. Please check permissions.');
+        return;
+      }
+      
+      setIsInitialized(true);
+      
+      // Set up barcode detection
+      Quagga.onDetected((data: any) => {
+        const code = data.codeResult.code;
+        if (code) {
+          setScannedCode(code);
+          setIsScanning(false);
+          Quagga.stop();
+          setIsInitialized(false);
+        }
+      });
+    });
+  };
+
   const startScanning = async () => {
-    if (!webcamRef.current || !codeReader.current) return;
+    if (!isInitialized) {
+      initializeScanner();
+      return;
+    }
 
     try {
       setIsScanning(true);
       setError('');
       setCameraError('');
-
-      const videoElement = webcamRef.current.video;
-      if (!videoElement) {
-        throw new Error('Camera not available');
-      }
-
-      // Start continuous scanning with ZXing
-      codeReader.current.decodeFromVideoDevice(null, videoElement, (result, error) => {
-        if (result) {
-          setScannedCode(result.getText());
-          setIsScanning(false);
-          // Stop scanning after successful decode
-          if (codeReader.current) {
-            codeReader.current.reset();
-          }
-        }
-        // Continue scanning on error (no barcode found)
-      });
-
+      Quagga.start();
     } catch (error) {
       console.error('Error starting barcode scan:', error);
       setError('Failed to start scanning. Please ensure camera permissions are granted.');
@@ -95,11 +128,11 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
 
   const stopScanning = () => {
     setIsScanning(false);
-    if (codeReader.current) {
+    if (isInitialized) {
       try {
-        codeReader.current.reset();
+        Quagga.stop();
       } catch (e) {
-        // Ignore reset errors
+        console.warn('Error stopping scanner:', e);
       }
     }
   };
@@ -111,7 +144,7 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
     }
   };
 
-  const handleCameraError = (error: string | DOMException) => {
+  const handleCameraError = (error: string) => {
     console.error('Camera error:', error);
     setCameraError('Camera access denied or not available. Please check your camera permissions.');
   };
@@ -141,23 +174,16 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
                 </div>
               </div>
             ) : (
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                videoConstraints={{
-                  width: 640,
-                  height: 480,
-                  facingMode: { ideal: "environment" } // Use back camera on mobile
-                }}
-                onUserMediaError={handleCameraError}
-                className="w-full h-full object-cover"
+              <div 
+                ref={scannerRef}
+                className="w-full h-full"
+                style={{ minHeight: '300px' }}
               />
             )}
             
             {/* Scanning overlay */}
             {isScanning && (
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-48 h-32 border-2 border-blue-500 rounded-lg relative">
                   <div className="absolute inset-0 bg-blue-500 bg-opacity-10 animate-pulse"></div>
                   <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 animate-pulse"></div>
