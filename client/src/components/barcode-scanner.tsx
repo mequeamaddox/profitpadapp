@@ -71,28 +71,33 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         type: "LiveStream",
         target: scannerRef.current,
         constraints: {
-          width: 800,
-          height: 600,
+          width: 1280,
+          height: 720,
           facingMode: "environment" // Use back camera
         }
       },
       locator: {
-        patchSize: "medium", // x-small, small, medium, large, x-large
-        halfSample: true
+        patchSize: "large", // Better for detailed barcode reading
+        halfSample: false // Full resolution for accuracy
       },
-      numOfWorkers: 2,
-      frequency: 10,
+      numOfWorkers: 4,
+      frequency: 5, // Slower scanning for better accuracy
       decoder: {
         readers: [
-          "ean_reader", // Most common for retail products
-          "ean_8_reader", // 8-digit EAN
-          "code_128_reader", // Common in shipping/inventory
-          "upc_reader", // UPC-A (standard retail)
-          "upc_e_reader", // UPC-E (compact)
-          "code_39_reader" // Industrial/inventory codes
-        ]
+          "ean_reader", // EAN-13 (most retail products)
+          "upc_reader", // UPC-A (US retail standard)
+          "ean_8_reader", // EAN-8 (compact)
+          "upc_e_reader" // UPC-E (compact US)
+        ],
+        multiple: false // Only detect one barcode at a time
       },
-      locate: true
+      locate: true,
+      debug: {
+        drawBoundingBox: false,
+        showFrequency: false,
+        drawScanline: false,
+        showPattern: false
+      }
     }, (err: any) => {
       if (err) {
         console.error('Quagga initialization error:', err);
@@ -102,53 +107,131 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
       
       setIsInitialized(true);
       
-      // Set up barcode detection with validation
+      // Enhanced barcode detection with multiple validation checks
+      let detectionCount = 0;
+      let lastDetectedCode = '';
+      let consecutiveDetections = 0;
+      
       Quagga.onDetected(async (data: any) => {
         const code = data.codeResult.code;
         const format = data.codeResult.format;
+        const quality = data.codeResult.decodedCodes?.filter((code: any) => code.error !== undefined).length || 0;
         
-        // Validate barcode length and format for retail products
+        console.log(`Barcode candidate: ${code} (${format}) Quality: ${quality}`);
+        
+        // Enhanced validation for retail barcodes
         if (code && isValidRetailBarcode(code, format)) {
-          console.log(`Valid barcode detected: ${code} (${format})`);
-          setScannedCode(code);
-          setIsScanning(false);
-          Quagga.stop();
-          setIsInitialized(false);
+          detectionCount++;
           
-          // Try to lookup product information
-          await lookupProduct(code);
+          // Require consistent detection for accuracy
+          if (code === lastDetectedCode) {
+            consecutiveDetections++;
+          } else {
+            lastDetectedCode = code;
+            consecutiveDetections = 1;
+          }
+          
+          // Accept after 2 consecutive identical detections OR 1 high-quality detection
+          if (consecutiveDetections >= 2 || (quality <= 1 && consecutiveDetections >= 1)) {
+            console.log(`Confirmed barcode: ${code} (${format}) after ${consecutiveDetections} detections`);
+            setScannedCode(code);
+            setIsScanning(false);
+            Quagga.stop();
+            setIsInitialized(false);
+            
+            // Reset detection counters
+            detectionCount = 0;
+            consecutiveDetections = 0;
+            lastDetectedCode = '';
+            
+            // Try to lookup product information
+            await lookupProduct(code);
+          }
         } else {
-          console.warn(`Invalid or partial barcode: ${code} (${format})`);
+          console.warn(`Invalid barcode candidate: ${code} (${format})`);
         }
       });
     });
   };
 
-  // Validate barcode format for retail products
+  // Enhanced validation for retail barcodes
   const isValidRetailBarcode = (code: string, format: string): boolean => {
-    if (!code || code.length < 8) return false;
+    if (!code) return false;
     
-    // UPC-A: 12 digits
-    if (format === 'upc_a' || format === 'ean_13') {
-      return /^\d{12,13}$/.test(code);
+    // Reject obviously invalid codes
+    if (code.length < 6 || code.length > 18) return false;
+    
+    // EAN-13 (most common retail): 13 digits
+    if (format === 'ean_13') {
+      if (!/^\d{13}$/.test(code)) return false;
+      return validateEAN13Checksum(code);
     }
     
-    // UPC-E: 8 digits  
-    if (format === 'upc_e' || format === 'ean_8') {
+    // UPC-A (US retail): 12 digits  
+    if (format === 'upc_a') {
+      if (!/^\d{12}$/.test(code)) return false;
+      return validateUPCAChecksum(code);
+    }
+    
+    // EAN-8: 8 digits
+    if (format === 'ean_8') {
+      if (!/^\d{8}$/.test(code)) return false;
+      return validateEAN8Checksum(code);
+    }
+    
+    // UPC-E: 8 digits
+    if (format === 'upc_e') {
       return /^\d{8}$/.test(code);
     }
     
-    // Code 128: Variable length but typically 8-20 characters
-    if (format === 'code_128') {
-      return code.length >= 8 && code.length <= 20;
+    // Reject codes that are too short or contain invalid patterns
+    if (code.length < 8) return false;
+    if (/^0+$/.test(code)) return false; // All zeros
+    if (/^1+$/.test(code)) return false; // All ones
+    
+    return true;
+  };
+
+  // EAN-13 checksum validation
+  const validateEAN13Checksum = (code: string): boolean => {
+    if (code.length !== 13) return false;
+    
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+      const digit = parseInt(code[i]);
+      sum += i % 2 === 0 ? digit : digit * 3;
     }
     
-    // Code 39: Variable length but typically 6-20 characters
-    if (format === 'code_39') {
-      return code.length >= 6 && code.length <= 20;
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(code[12]);
+  };
+
+  // UPC-A checksum validation  
+  const validateUPCAChecksum = (code: string): boolean => {
+    if (code.length !== 12) return false;
+    
+    let sum = 0;
+    for (let i = 0; i < 11; i++) {
+      const digit = parseInt(code[i]);
+      sum += i % 2 === 0 ? digit * 3 : digit;
     }
     
-    return true; // Allow other formats through
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(code[11]);
+  };
+
+  // EAN-8 checksum validation
+  const validateEAN8Checksum = (code: string): boolean => {
+    if (code.length !== 8) return false;
+    
+    let sum = 0;
+    for (let i = 0; i < 7; i++) {
+      const digit = parseInt(code[i]);
+      sum += i % 2 === 0 ? digit * 3 : digit;
+    }
+    
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(code[7]);
   };
 
   const startScanning = async () => {
@@ -408,9 +491,11 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
             </div>
           )}
 
-          {/* Instructions */}
-          <div className="text-xs text-gray-500 text-center">
-            Point your camera at a barcode to scan it. Make sure the barcode is clearly visible and well-lit.
+          {/* Enhanced Instructions */}
+          <div className="text-xs text-gray-500 text-center space-y-1">
+            <p>Point your camera at the barcode and hold steady.</p>
+            <p>Make sure the barcode fills the green frame and is well-lit.</p>
+            <p>Scanner will automatically detect when the barcode is clear.</p>
           </div>
         </CardContent>
       </Card>
