@@ -351,14 +351,24 @@ export default function Inventory() {
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
       return await apiRequest("PUT", `/api/inventory/${id}`, updates);
     },
-    onSuccess: () => {
+    onSuccess: (updatedItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      
+      // Get status-specific success message
+      let message = "Item updated successfully";
+      if (updatedItem.status === "listed") {
+        message = `Item marked as listed on ${new Date(updatedItem.dateListed).toLocaleDateString()}`;
+      } else if (updatedItem.status === "sold") {
+        message = `Item marked as sold on ${new Date(updatedItem.dateSold).toLocaleDateString()}`;
+      }
+      
       toast({
         title: "Success",
-        description: "Item status updated successfully",
+        description: message,
       });
     },
     onError: (error) => {
+      console.error("Update mutation error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
