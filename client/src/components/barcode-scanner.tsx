@@ -71,23 +71,28 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         type: "LiveStream",
         target: scannerRef.current,
         constraints: {
-          width: 640,
-          height: 480,
+          width: 800,
+          height: 600,
           facingMode: "environment" // Use back camera
         }
       },
+      locator: {
+        patchSize: "medium", // x-small, small, medium, large, x-large
+        halfSample: true
+      },
+      numOfWorkers: 2,
+      frequency: 10,
       decoder: {
         readers: [
-          "code_128_reader",
-          "ean_reader",
-          "ean_8_reader",
-          "code_39_reader",
-          "code_39_vin_reader",
-          "codabar_reader",
-          "upc_reader",
-          "upc_e_reader"
+          "ean_reader", // Most common for retail products
+          "ean_8_reader", // 8-digit EAN
+          "code_128_reader", // Common in shipping/inventory
+          "upc_reader", // UPC-A (standard retail)
+          "upc_e_reader", // UPC-E (compact)
+          "code_39_reader" // Industrial/inventory codes
         ]
-      }
+      },
+      locate: true
     }, (err: any) => {
       if (err) {
         console.error('Quagga initialization error:', err);
@@ -97,10 +102,14 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
       
       setIsInitialized(true);
       
-      // Set up barcode detection
+      // Set up barcode detection with validation
       Quagga.onDetected(async (data: any) => {
         const code = data.codeResult.code;
-        if (code) {
+        const format = data.codeResult.format;
+        
+        // Validate barcode length and format for retail products
+        if (code && isValidRetailBarcode(code, format)) {
+          console.log(`Valid barcode detected: ${code} (${format})`);
           setScannedCode(code);
           setIsScanning(false);
           Quagga.stop();
@@ -108,9 +117,38 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
           
           // Try to lookup product information
           await lookupProduct(code);
+        } else {
+          console.warn(`Invalid or partial barcode: ${code} (${format})`);
         }
       });
     });
+  };
+
+  // Validate barcode format for retail products
+  const isValidRetailBarcode = (code: string, format: string): boolean => {
+    if (!code || code.length < 8) return false;
+    
+    // UPC-A: 12 digits
+    if (format === 'upc_a' || format === 'ean_13') {
+      return /^\d{12,13}$/.test(code);
+    }
+    
+    // UPC-E: 8 digits  
+    if (format === 'upc_e' || format === 'ean_8') {
+      return /^\d{8}$/.test(code);
+    }
+    
+    // Code 128: Variable length but typically 8-20 characters
+    if (format === 'code_128') {
+      return code.length >= 8 && code.length <= 20;
+    }
+    
+    // Code 39: Variable length but typically 6-20 characters
+    if (format === 'code_39') {
+      return code.length >= 6 && code.length <= 20;
+    }
+    
+    return true; // Allow other formats through
   };
 
   const startScanning = async () => {
@@ -267,12 +305,28 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
               />
             )}
             
-            {/* Scanning overlay */}
+            {/* Enhanced Scanning overlay */}
             {isScanning && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-48 h-32 border-2 border-blue-500 rounded-lg relative">
-                  <div className="absolute inset-0 bg-blue-500 bg-opacity-10 animate-pulse"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 animate-pulse"></div>
+                <div className="relative">
+                  {/* Main scanning frame */}
+                  <div className="w-64 h-40 border-2 border-green-500 rounded-lg relative bg-transparent">
+                    <div className="absolute inset-0 bg-green-500 bg-opacity-5 animate-pulse rounded-lg"></div>
+                    
+                    {/* Corner markers */}
+                    <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-green-500"></div>
+                    <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-green-500"></div>
+                    <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-green-500"></div>
+                    <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-green-500"></div>
+                    
+                    {/* Scanning line */}
+                    <div className="absolute top-1/2 left-2 right-2 h-1 bg-red-500 animate-pulse shadow-lg"></div>
+                  </div>
+                  
+                  {/* Instructions */}
+                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 px-2 py-1 rounded text-sm">
+                    Align barcode in frame
+                  </div>
                 </div>
               </div>
             )}
