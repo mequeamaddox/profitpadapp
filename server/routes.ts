@@ -140,14 +140,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/inventory/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      console.log("Inventory update request:", {
+        itemId: req.params.id,
+        userId,
+        body: req.body
+      });
+      
+      // Convert date strings to Date objects if needed
+      if (req.body.dateAcquired && typeof req.body.dateAcquired === 'string') {
+        req.body.dateAcquired = new Date(req.body.dateAcquired);
+      }
+      if (req.body.dateListed && typeof req.body.dateListed === 'string') {
+        req.body.dateListed = new Date(req.body.dateListed);
+      }
+      if (req.body.dateSold && typeof req.body.dateSold === 'string') {
+        req.body.dateSold = new Date(req.body.dateSold);
+      }
+      
       const validatedData = insertInventoryItemSchema.partial().parse(req.body);
+      console.log("Validated inventory data:", validatedData);
+      
       const item = await storage.updateInventoryItem(req.params.id, userId, validatedData);
       if (!item) {
+        console.log("Inventory item not found for update:", req.params.id);
         return res.status(404).json({ message: "Item not found" });
       }
+      
+      console.log("Inventory item updated successfully:", item);
       res.json(item);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Inventory update validation error:", JSON.stringify(error.errors, null, 2));
+        console.error("Request body:", JSON.stringify(req.body, null, 2));
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error updating inventory item:", error);
