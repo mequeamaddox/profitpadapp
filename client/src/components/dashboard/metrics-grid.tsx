@@ -57,7 +57,7 @@ export default function MetricsGrid() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="card-premium relative overflow-hidden animate-fadeInUp" style={{ animationDelay: `${i * 100}ms` }}>
+          <Card key={i} className="card-retail relative overflow-hidden animate-fadeInUp" style={{ animationDelay: `${i * 100}ms` }}>
             <CardContent className="p-6">
               {/* Animated shimmer overlay */}
               <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 dark:via-white/10 to-transparent"></div>
@@ -95,7 +95,7 @@ export default function MetricsGrid() {
       {metricCards.map((metric, index) => (
         <Card 
           key={index}
-          className="card-premium group relative overflow-hidden animate-fadeInUp"
+          className="card-retail group relative overflow-hidden animate-fadeInUp"
           style={{ animationDelay: `${index * 150}ms` }}
         >
           <CardContent className="p-6">

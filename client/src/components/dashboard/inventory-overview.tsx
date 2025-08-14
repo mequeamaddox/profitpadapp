@@ -41,7 +41,7 @@ export default function InventoryOverview() {
   };
 
   return (
-    <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '600ms' }}>
+    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '600ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">

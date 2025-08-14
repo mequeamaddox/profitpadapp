@@ -55,7 +55,7 @@ export default function QuickActions() {
 
   return (
     <>
-      <Card className="card-premium group animate-fadeInUp" style={{ animationDelay: '800ms' }}>
+      <Card className="card-retail group animate-fadeInUp" style={{ animationDelay: '800ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <span className="text-foreground">Quick Actions</span>

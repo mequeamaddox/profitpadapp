@@ -12,7 +12,7 @@ export default function InventoryValue() {
 
   if (isLoading) {
     return (
-      <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+      <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
@@ -35,7 +35,7 @@ export default function InventoryValue() {
 
   if (!inventoryValue) {
     return (
-      <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+      <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
@@ -57,7 +57,7 @@ export default function InventoryValue() {
   const profitMargin = totalInvestment > 0 ? (potentialProfit / totalInvestment) * 100 : 0;
 
   return (
-    <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300 text-primary" />

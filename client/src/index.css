@@ -4,72 +4,72 @@
 
 @layer base {
   :root {
-    /* Modern Premium Theme Colors */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Professional Retail Theme */
+    --background: 0 0% 98%;
+    --foreground: 215 25% 27%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 27%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 27%;
     
-    /* Premium Primary - Deep Ocean Blue */
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    /* Professional Primary - Retail Blue */
+    --primary: 214 84% 56%;
+    --primary-foreground: 0 0% 100%;
     
-    /* Modern Secondary - Cool Gray */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
+    /* Clean Secondary - Light Gray */
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 215 25% 27%;
     
-    /* Sophisticated Muted Colors */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Professional Muted */
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 20% 60%;
     
-    /* Premium Accent - Electric Blue */
-    --accent: 207 90% 54%;
-    --accent-foreground: 210 40% 98%;
+    /* Retail Accent - Success Green */
+    --accent: 142 70% 45%;
+    --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
-    --radius: 0.75rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 214 84% 56%;
+    --radius: 0.5rem;
     
-    /* Enhanced Chart Colors */
-    --chart-1: 221 83% 53%;
-    --chart-2: 207 90% 54%;
-    --chart-3: 142 76% 36%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Retail Chart Colors */
+    --chart-1: 214 84% 56%;
+    --chart-2: 142 70% 45%;
+    --chart-3: 45 93% 47%;
+    --chart-4: 262 85% 58%;
+    --chart-5: 346 87% 43%;
   }
 
   .dark {
-    /* Premium Dark Theme */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Professional Dark Retail Theme */
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 20% 98%;
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 20% 98%;
     
-    /* Dark Primary - Bright Blue */
-    --primary: 207 90% 61%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark Professional Primary */
+    --primary: 214 84% 56%;
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --secondary: 215 19% 35%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 19% 35%;
+    --muted-foreground: 217 10% 64%;
     
-    /* Dark Accent */
-    --accent: 207 90% 61%;
-    --accent-foreground: 210 40% 98%;
+    /* Dark Retail Accent */
+    --accent: 142 70% 45%;
+    --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 207 90% 61%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 19% 35%;
+    --input: 215 19% 35%;
+    --ring: 214 84% 56%;
     
     /* Dark Chart Colors */
     --chart-1: 207 90% 61%;
@@ -127,13 +127,29 @@
     border: 1px solid rgba(255, 255, 255, 0.075);
   }
 
-  /* Premium shadows */
-  .shadow-premium {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+  /* Professional Retail Styling */
+  .card-retail {
+    @apply bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300;
   }
 
-  .shadow-premium-lg {
-    box-shadow: 0 20px 64px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.08);
+  .btn-retail {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-4 py-2 rounded-md transition-colors duration-200;
+  }
+
+  .btn-retail-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium px-4 py-2 rounded-md transition-colors duration-200;
+  }
+
+  .success-indicator {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .hover-lift:hover {
+    @apply transform -translate-y-0.5 shadow-md;
   }
 }
 
@@ -287,17 +303,7 @@
   left: 100%;
 }
 
-/* Premium Card Styles */
-.card-premium {
-  @apply bg-card border rounded-xl shadow-premium hover-lift;
-  border-color: hsl(var(--border) / 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-.card-premium:hover {
-  border-color: hsl(var(--primary) / 0.2);
-  box-shadow: 0 20px 64px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.05);
-}
 
 .animate-float {
   animation: float 3s ease-in-out infinite;

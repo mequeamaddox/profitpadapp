@@ -91,7 +91,7 @@ export default function RevenueChart() {
   };
 
   return (
-    <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '200ms' }}>
+    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '200ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
