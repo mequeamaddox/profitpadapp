@@ -79,26 +79,20 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         throw new Error('Camera not available');
       }
 
-      // Start continuous scanning
-      const scanLoop = async () => {
-        if (!isScanning || !codeReader.current || !videoElement) return;
+      // Use the proper ZXing method for continuous scanning
+      const result = await codeReader.current.decodeOnceFromVideoDevice(undefined, videoElement);
+      if (result) {
+        setScannedCode(result.getText());
+        setIsScanning(false);
+      } else {
+        // If no immediate result, start manual scanning loop
+        const scanLoop = async () => {
+          if (!isScanning || !codeReader.current || !videoElement) return;
 
-        try {
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          if (!context || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
-            setTimeout(scanLoop, 100);
-            return;
-          }
-
-          canvas.width = videoElement.videoWidth;
-          canvas.height = videoElement.videoHeight;
-          context.drawImage(videoElement, 0, 0);
-
-          // Try to decode from canvas
           try {
-            const result = await codeReader.current.decodeFromCanvas(canvas);
-            if (result && result.getText()) {
+            // Try to decode from video element directly
+            const result = await codeReader.current.decodeOnceFromVideoDevice(undefined, videoElement);
+            if (result) {
               setScannedCode(result.getText());
               setIsScanning(false);
               return;
@@ -106,17 +100,15 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
           } catch {
             // No barcode found, continue scanning
           }
-        } catch (error) {
-          // Continue scanning - this is expected when no barcode is found
-        }
 
-        // Continue scanning
-        if (isScanning) {
-          setTimeout(scanLoop, 200);
-        }
-      };
+          // Continue scanning
+          if (isScanning) {
+            setTimeout(scanLoop, 500);
+          }
+        };
 
-      scanLoop();
+        scanLoop();
+      }
     } catch (error) {
       console.error('Error starting barcode scan:', error);
       setError('Failed to start scanning. Please ensure camera permissions are granted.');
