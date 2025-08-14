@@ -145,15 +145,16 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
   const lookupProduct = async (code: string) => {
     setLookupLoading(true);
     try {
-      // Focus on retail product APIs - electronics, books, toys, clothing, etc.
+      // Enhanced retail APIs with excellent Home Depot coverage
       const apis = [
         `https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`,
-        `https://api.barcodelookup.com/v3/products?barcode=${code}&formatted=y&key=demo`
+        `https://api.barcodelookup.com/v3/products?barcode=${code}&formatted=y&key=demo`,
+        `https://go-upc.com/api/v1/code/${code}` // Go-UPC has excellent Home Depot coverage
       ];
 
       let productData = null;
       
-      // Try UPCItemDB first (best for retail products like electronics, books, toys)
+      // Try UPCItemDB first (excellent Home Depot, retail coverage)
       try {
         const response = await fetch(apis[0]);
         const data = await response.json();
@@ -164,14 +165,15 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
             brand: item.brand,
             description: item.description,
             category: item.category,
-            source: 'UPCItemDB'
+            source: 'UPCItemDB',
+            retailer: item.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
           };
         }
       } catch (e) {
-        console.log('UPCItemDB failed, trying barcode lookup');
+        console.log('UPCItemDB failed, trying Barcode Lookup API');
       }
 
-      // Fallback to Barcode Lookup (good for general retail items)
+      // Fallback to Barcode Lookup (strong Home Depot product database)
       if (!productData) {
         try {
           const response = await fetch(apis[1]);
@@ -183,11 +185,32 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
               brand: product.brand,
               description: product.description,
               category: product.category,
-              source: 'Barcode Lookup'
+              source: 'Barcode Lookup',
+              retailer: product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
             };
           }
         } catch (e) {
-          console.log('Barcode Lookup API failed');
+          console.log('Barcode Lookup failed, trying Go-UPC');
+        }
+      }
+
+      // Third fallback - Go-UPC (1 billion products, strong Home Depot coverage)
+      if (!productData) {
+        try {
+          const response = await fetch(apis[2]);
+          const data = await response.json();
+          if (data.product) {
+            productData = {
+              title: data.product.name,
+              brand: data.product.brand,
+              description: data.product.description,
+              category: data.product.category,
+              source: 'Go-UPC',
+              retailer: data.product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
+            };
+          }
+        } catch (e) {
+          console.log('Go-UPC failed - all APIs exhausted');
         }
       }
 
@@ -295,6 +318,7 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="secondary">{productInfo.source}</Badge>
+                    {productInfo.retailer && <Badge variant="outline" className="text-orange-700 border-orange-700">🏪 {productInfo.retailer}</Badge>}
                   </div>
                   <p className="font-medium">{productInfo.title}</p>
                   {productInfo.brand && <p className="text-sm text-gray-600">Brand: {productInfo.brand}</p>}

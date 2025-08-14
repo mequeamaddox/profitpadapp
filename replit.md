@@ -55,7 +55,8 @@ Added comprehensive Reports section with:
 
 Implemented comprehensive Barcode Scanner system with Product Database Integration (January 2025):
 - Real-time camera-based barcode scanning using QuaggaJS (professional library used by Square)
-- Universal product database lookup using UPCItemDB and Barcode Lookup APIs for retail items
+- Universal product database lookup using UPCItemDB, Barcode Lookup, and Go-UPC APIs optimized for retail items
+- Enhanced Home Depot product recognition with dedicated retailer identification
 - Automatic form population with product title, brand, category, and description from scanned barcodes
 - Smart inventory item lookup when scanning existing product barcodes
 - Integration with inventory forms via scan button for seamless workflow
