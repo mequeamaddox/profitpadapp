@@ -20,6 +20,8 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
   const [error, setError] = useState<string>('');
   const [cameraError, setCameraError] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [productInfo, setProductInfo] = useState<any>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   // Search for existing inventory item by barcode
   const { data: existingItem, isLoading: searchLoading } = useQuery<InventoryItem | null>({
@@ -96,13 +98,16 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
       setIsInitialized(true);
       
       // Set up barcode detection
-      Quagga.onDetected((data: any) => {
+      Quagga.onDetected(async (data: any) => {
         const code = data.codeResult.code;
         if (code) {
           setScannedCode(code);
           setIsScanning(false);
           Quagga.stop();
           setIsInitialized(false);
+          
+          // Try to lookup product information
+          await lookupProduct(code);
         }
       });
     });
@@ -137,9 +142,67 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
     }
   };
 
+  const lookupProduct = async (code: string) => {
+    setLookupLoading(true);
+    try {
+      // Try multiple free UPC APIs for better coverage
+      const apis = [
+        `https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`,
+        `https://world.openfoodfacts.org/api/v0/product/${code}.json`,
+        `https://api.barcodelookup.com/v3/products?barcode=${code}&formatted=y&key=demo`
+      ];
+
+      let productData = null;
+      
+      // Try UPCItemDB first (most comprehensive for general products)
+      try {
+        const response = await fetch(apis[0]);
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const item = data.items[0];
+          productData = {
+            title: item.title,
+            brand: item.brand,
+            description: item.description,
+            category: item.category,
+            source: 'UPCItemDB'
+          };
+        }
+      } catch (e) {
+        console.log('UPCItemDB failed, trying next API');
+      }
+
+      // If that fails, try OpenFoodFacts (great for food items)
+      if (!productData) {
+        try {
+          const response = await fetch(apis[1]);
+          const data = await response.json();
+          if (data.product && data.product.product_name) {
+            productData = {
+              title: data.product.product_name,
+              brand: data.product.brands,
+              description: data.product.generic_name || data.product.product_name,
+              category: data.product.categories || 'Food & Beverage',
+              source: 'OpenFoodFacts'
+            };
+          }
+        } catch (e) {
+          console.log('OpenFoodFacts failed');
+        }
+      }
+
+      setProductInfo(productData);
+    } catch (error) {
+      console.error('Product lookup failed:', error);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
   const handleUseBarcode = () => {
     if (scannedCode) {
-      onScanSuccess(scannedCode, existingItem);
+      // Pass barcode and product info to the form
+      onScanSuccess(scannedCode, productInfo);
       onClose();
     }
   };
@@ -221,6 +284,24 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
                 <p className="font-mono text-green-700">{scannedCode}</p>
               </div>
 
+              {/* Product Lookup */}
+              {lookupLoading && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <p className="text-sm text-purple-700">Looking up product information...</p>
+                </div>
+              )}
+
+              {productInfo && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary">{productInfo.source}</Badge>
+                  </div>
+                  <p className="font-medium">{productInfo.title}</p>
+                  {productInfo.brand && <p className="text-sm text-gray-600">Brand: {productInfo.brand}</p>}
+                  {productInfo.category && <p className="text-sm text-gray-600">Category: {productInfo.category}</p>}
+                </div>
+              )}
+
               {/* Existing Item Found */}
               {searchLoading ? (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -235,16 +316,16 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
                   <p className="text-sm text-gray-600">SKU: {existingItem.sku}</p>
                   <p className="text-sm text-gray-600">Purchase Price: ${existingItem.purchasePrice}</p>
                 </div>
-              ) : (
+              ) : !productInfo ? (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-700">
-                    Item not found in inventory. You can add it as a new product.
+                    Product info not found. You can add details manually.
                   </p>
                 </div>
-              )}
+              ) : null}
 
               <Button onClick={handleUseBarcode} className="w-full">
-                {existingItem ? 'Select This Item' : 'Add New Product'}
+                {productInfo ? 'Use Product Info' : existingItem ? 'Select This Item' : 'Add New Product'}
               </Button>
             </div>
           )}

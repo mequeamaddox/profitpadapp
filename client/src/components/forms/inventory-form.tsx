@@ -178,25 +178,32 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  const handleBarcodeScanned = (barcode: string, existingItem?: any) => {
+  const handleBarcodeScanned = (barcode: string, productInfo?: any) => {
     form.setValue("barcode", barcode);
-    if (existingItem) {
-      // If item already exists, pre-fill form with existing data
-      form.setValue("title", existingItem.title);
-      form.setValue("sku", existingItem.sku);
-      form.setValue("category", existingItem.category);
-      form.setValue("purchasePrice", existingItem.purchasePrice);
-      form.setValue("listedPrice", existingItem.listedPrice);
-      form.setValue("condition", existingItem.condition);
-      form.setValue("notes", existingItem.notes || "");
+    
+    if (productInfo) {
+      // Auto-fill form with product database information
+      if (productInfo.title) {
+        form.setValue("title", productInfo.title);
+      }
+      if (productInfo.brand && productInfo.title && !productInfo.title.includes(productInfo.brand)) {
+        form.setValue("title", `${productInfo.brand} ${productInfo.title}`);
+      }
+      if (productInfo.category) {
+        form.setValue("category", productInfo.category);
+      }
+      if (productInfo.description) {
+        form.setValue("notes", productInfo.description);
+      }
+      
       toast({
-        title: "Item Found",
-        description: `Pre-filled form with existing item: ${existingItem.title}`,
+        title: "Product Found!",
+        description: `Auto-filled with: ${productInfo.title} (${productInfo.source})`,
       });
     } else {
       toast({
         title: "Barcode Scanned",
-        description: `Barcode ${barcode} added. You can now add this as a new item.`,
+        description: `Barcode ${barcode} added. Product details not found - you can add them manually.`,
       });
     }
     setShowBarcodeScanner(false);
