@@ -145,16 +145,15 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
   const lookupProduct = async (code: string) => {
     setLookupLoading(true);
     try {
-      // Try multiple free UPC APIs for better coverage
+      // Focus on retail product APIs - electronics, books, toys, clothing, etc.
       const apis = [
         `https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`,
-        `https://world.openfoodfacts.org/api/v0/product/${code}.json`,
         `https://api.barcodelookup.com/v3/products?barcode=${code}&formatted=y&key=demo`
       ];
 
       let productData = null;
       
-      // Try UPCItemDB first (most comprehensive for general products)
+      // Try UPCItemDB first (best for retail products like electronics, books, toys)
       try {
         const response = await fetch(apis[0]);
         const data = await response.json();
@@ -169,25 +168,26 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
           };
         }
       } catch (e) {
-        console.log('UPCItemDB failed, trying next API');
+        console.log('UPCItemDB failed, trying barcode lookup');
       }
 
-      // If that fails, try OpenFoodFacts (great for food items)
+      // Fallback to Barcode Lookup (good for general retail items)
       if (!productData) {
         try {
           const response = await fetch(apis[1]);
           const data = await response.json();
-          if (data.product && data.product.product_name) {
+          if (data.products && data.products.length > 0) {
+            const product = data.products[0];
             productData = {
-              title: data.product.product_name,
-              brand: data.product.brands,
-              description: data.product.generic_name || data.product.product_name,
-              category: data.product.categories || 'Food & Beverage',
-              source: 'OpenFoodFacts'
+              title: product.product_name || product.title,
+              brand: product.brand,
+              description: product.description,
+              category: product.category,
+              source: 'Barcode Lookup'
             };
           }
         } catch (e) {
-          console.log('OpenFoodFacts failed');
+          console.log('Barcode Lookup API failed');
         }
       }
 
