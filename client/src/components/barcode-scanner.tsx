@@ -79,47 +79,41 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         throw new Error('Camera not available');
       }
 
-      // Start scanning
+      // Start continuous scanning
       const scanLoop = async () => {
         if (!isScanning || !codeReader.current || !videoElement) return;
 
         try {
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
-          if (!context) return;
+          if (!context || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+            setTimeout(scanLoop, 100);
+            return;
+          }
 
           canvas.width = videoElement.videoWidth;
           canvas.height = videoElement.videoHeight;
           context.drawImage(videoElement, 0, 0);
 
-          // Try different ZXing decode methods
+          // Try to decode from canvas
           try {
-            const result = await codeReader.current.decodeFromVideoDevice(undefined, videoElement);
-            if (result) {
+            const result = await codeReader.current.decodeFromCanvas(canvas);
+            if (result && result.getText()) {
               setScannedCode(result.getText());
               setIsScanning(false);
               return;
             }
           } catch {
-            // Fallback to canvas method
-            try {
-              const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-              const result = await codeReader.current.decode(imageData);
-              if (result) {
-                setScannedCode(result.getText());
-                setIsScanning(false);
-                return;
-              }
-            } catch {
-              // Continue scanning
-            }
+            // No barcode found, continue scanning
           }
         } catch (error) {
           // Continue scanning - this is expected when no barcode is found
         }
 
         // Continue scanning
-        setTimeout(scanLoop, 100);
+        if (isScanning) {
+          setTimeout(scanLoop, 200);
+        }
       };
 
       scanLoop();

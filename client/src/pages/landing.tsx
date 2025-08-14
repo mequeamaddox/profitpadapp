@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, RefreshCw } from "lucide-react";
+import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
-  const { refetch, isLoading } = useAuth();
+  const {} = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -18,19 +18,6 @@ export default function Landing() {
             <span className="font-bold text-xl text-slate-900">ProfitPad</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                refetch();
-                // Also refresh the page to clear any cached state
-                setTimeout(() => window.location.reload(), 500);
-              }}
-              disabled={isLoading}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh Auth
-            </Button>
             <Button onClick={() => window.location.href = "/api/login"}>
               Sign In
             </Button>
