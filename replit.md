@@ -54,7 +54,7 @@ Added comprehensive Reports section with:
 - Interactive tabbed interface for different report types
 
 Implemented comprehensive Barcode Scanner system (January 2025):
-- Real-time camera-based barcode scanning using @zxing/library and react-webcam
+- Real-time camera-based barcode scanning using QuaggaJS (professional library used by Square)
 - Integration with inventory forms via scan button for seamless workflow
 - Automatic inventory item lookup when scanning existing product barcodes
 - Smart form pre-filling when matching items are found in inventory
