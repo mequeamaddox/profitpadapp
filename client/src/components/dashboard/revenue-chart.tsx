@@ -37,11 +37,16 @@ export default function RevenueChart() {
       {
         label: "Revenue",
         data: metrics?.revenueData?.map((item: any) => item.revenue) || [],
-        borderColor: "#3B82F6",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderColor: "hsl(221 83% 53%)",
+        backgroundColor: "hsla(221, 83%, 53%, 0.1)",
         borderWidth: 3,
         fill: true,
         tension: 0.4,
+        pointBackgroundColor: "hsl(221 83% 53%)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
       },
     ],
   };
@@ -65,12 +70,21 @@ export default function RevenueChart() {
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(148, 163, 184, 0.1)",
+          color: "hsl(var(--border) / 0.3)",
         },
         ticks: {
+          color: "hsl(var(--muted-foreground))",
           callback: function(value: any) {
             return "$" + value.toLocaleString();
           },
+        },
+      },
+      x: {
+        grid: {
+          color: "hsl(var(--border) / 0.2)",
+        },
+        ticks: {
+          color: "hsl(var(--muted-foreground))",
         },
       },
       x: {

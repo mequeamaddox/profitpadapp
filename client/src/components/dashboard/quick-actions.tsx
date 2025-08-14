@@ -15,29 +15,29 @@ export default function QuickActions() {
       id: "inventory",
       title: "Add Inventory Item",
       icon: Plus,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
+      gradient: "from-blue-500 to-blue-600",
+      description: "Add new products to track",
     },
     {
       id: "sales",
       title: "Record Sale",
       icon: DollarSign,
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      gradient: "from-emerald-500 to-emerald-600",
+      description: "Log completed transactions",
     },
     {
       id: "csv",
       title: "Import CSV",
       icon: Upload,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
+      gradient: "from-purple-500 to-purple-600",
+      description: "Bulk import inventory data",
     },
     {
       id: "reminder",
       title: "Create Reminder",
       icon: Bell,
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
+      gradient: "from-amber-500 to-amber-600",
+      description: "Set task notifications",
     },
   ];
 
@@ -55,11 +55,11 @@ export default function QuickActions() {
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '800ms' }}>
+      <Card className="card-premium group animate-fadeInUp" style={{ animationDelay: '800ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <span>Quick Actions</span>
-            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+            <span className="text-foreground">Quick Actions</span>
+            <div className="w-2 h-2 gradient-primary rounded-full animate-pulse shadow-sm"></div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -68,14 +68,17 @@ export default function QuickActions() {
               <Button
                 key={action.id}
                 variant="outline"
-                className="w-full justify-start p-3 h-auto hover:shadow-md hover:scale-[1.02] transition-all duration-300 border-gray-200 hover:border-gray-300 animate-fadeInUp group/button"
+                className="w-full justify-start p-4 h-auto hover:shadow-lg hover-lift transition-all duration-300 border-border/60 hover:border-primary/30 animate-fadeInUp group/button bg-card/50 backdrop-blur-sm"
                 style={{ animationDelay: `${800 + (index * 100)}ms` }}
                 onClick={() => handleActionClick(action.id)}
               >
-                <div className={`w-8 h-8 ${action.iconBg} rounded-lg flex items-center justify-center mr-3 transition-all duration-300 group-hover/button:scale-110 group-hover/button:rotate-3`}>
-                  <action.icon className={`${action.iconColor} text-sm transition-all duration-300`} size={16} />
+                <div className={`w-10 h-10 bg-gradient-to-br ${action.gradient} rounded-xl flex items-center justify-center mr-4 transition-all duration-300 group-hover/button:scale-110 group-hover/button:rotate-6 shadow-lg animate-float`}>
+                  <action.icon className="text-white" size={20} />
                 </div>
-                <span className="font-medium text-slate-900 group-hover/button:text-slate-800 transition-colors">{action.title}</span>
+                <div className="flex flex-col items-start">
+                  <span className="text-foreground font-medium">{action.title}</span>
+                  <span className="text-xs text-muted-foreground">{action.description}</span>
+                </div>
               </Button>
             ))}
           </div>
