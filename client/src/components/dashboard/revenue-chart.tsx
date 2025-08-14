@@ -87,24 +87,19 @@ export default function RevenueChart() {
           color: "hsl(var(--muted-foreground))",
         },
       },
-      x: {
-        grid: {
-          color: "rgba(148, 163, 184, 0.1)",
-        },
-      },
     },
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '200ms' }}>
+    <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '200ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <span>Monthly Revenue</span>
+            <span className="text-foreground">Monthly Revenue</span>
             {!isLoading && (
-              <div className="flex items-center space-x-1 text-sm text-slate-500">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-xs">Live Data</span>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 gradient-primary rounded-full animate-pulse shadow-sm"></div>
+                <span className="text-xs text-muted-foreground">Live Data</span>
               </div>
             )}
           </CardTitle>

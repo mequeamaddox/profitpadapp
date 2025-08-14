@@ -41,16 +41,16 @@ export default function InventoryOverview() {
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '600ms' }}>
+    <Card className="card-premium animate-fadeInUp" style={{ animationDelay: '600ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <span>Inventory Overview</span>
+            <span className="text-foreground">Inventory Overview</span>
             {!isLoading && !inventoryLoading && (inventoryStats as any)?.totalItems > 0 && (
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse shadow-sm"></div>
             )}
           </CardTitle>
-          <Button variant="link" onClick={() => setLocation("/inventory")} className="text-blue-600 hover:text-blue-800 transition-colors">
+          <Button variant="link" onClick={() => setLocation("/inventory")} className="text-primary hover:text-primary/80 transition-colors font-medium">
             Manage Inventory
           </Button>
         </div>
