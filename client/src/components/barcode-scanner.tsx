@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Webcam from 'react-webcam';
-import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
+import { BrowserMultiFormatReader } from '@zxing/library';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,17 +43,7 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
 
   useEffect(() => {
     if (isOpen) {
-      const hints = new Map();
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.CODE_128,
-        BarcodeFormat.CODE_39,
-        BarcodeFormat.UPC_A,
-        BarcodeFormat.UPC_E,
-        BarcodeFormat.EAN_13,
-        BarcodeFormat.EAN_8,
-        BarcodeFormat.QR_CODE
-      ]);
-      codeReader.current = new BrowserMultiFormatReader(hints);
+      codeReader.current = new BrowserMultiFormatReader();
       setError('');
       setCameraError('');
       setScannedCode('');
@@ -61,7 +51,11 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
 
     return () => {
       if (codeReader.current) {
-        codeReader.current.reset();
+        try {
+          codeReader.current.reset();
+        } catch (e) {
+          // Ignore reset errors
+        }
       }
     };
   }, [isOpen]);
@@ -79,36 +73,19 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         throw new Error('Camera not available');
       }
 
-      // Use the proper ZXing method for continuous scanning
-      const result = await codeReader.current.decodeOnceFromVideoDevice(undefined, videoElement);
-      if (result) {
-        setScannedCode(result.getText());
-        setIsScanning(false);
-      } else {
-        // If no immediate result, start manual scanning loop
-        const scanLoop = async () => {
-          if (!isScanning || !codeReader.current || !videoElement) return;
-
-          try {
-            // Try to decode from video element directly
-            const result = await codeReader.current.decodeOnceFromVideoDevice(undefined, videoElement);
-            if (result) {
-              setScannedCode(result.getText());
-              setIsScanning(false);
-              return;
-            }
-          } catch {
-            // No barcode found, continue scanning
+      // Start continuous scanning with ZXing
+      codeReader.current.decodeFromVideoDevice(null, videoElement, (result, error) => {
+        if (result) {
+          setScannedCode(result.getText());
+          setIsScanning(false);
+          // Stop scanning after successful decode
+          if (codeReader.current) {
+            codeReader.current.reset();
           }
+        }
+        // Continue scanning on error (no barcode found)
+      });
 
-          // Continue scanning
-          if (isScanning) {
-            setTimeout(scanLoop, 500);
-          }
-        };
-
-        scanLoop();
-      }
     } catch (error) {
       console.error('Error starting barcode scan:', error);
       setError('Failed to start scanning. Please ensure camera permissions are granted.');
@@ -118,6 +95,13 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
 
   const stopScanning = () => {
     setIsScanning(false);
+    if (codeReader.current) {
+      try {
+        codeReader.current.reset();
+      } catch (e) {
+        // Ignore reset errors
+      }
+    }
   };
 
   const handleUseBarcode = () => {
