@@ -37,16 +37,11 @@ export default function RevenueChart() {
       {
         label: "Revenue",
         data: metrics?.revenueData?.map((item: any) => item.revenue) || [],
-        borderColor: "hsl(221 83% 53%)",
-        backgroundColor: "hsla(221, 83%, 53%, 0.1)",
+        borderColor: "#3B82F6",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
         borderWidth: 3,
         fill: true,
         tension: 0.4,
-        pointBackgroundColor: "hsl(221 83% 53%)",
-        pointBorderColor: "#fff",
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8,
       },
     ],
   };
@@ -70,10 +65,9 @@ export default function RevenueChart() {
       y: {
         beginAtZero: true,
         grid: {
-          color: "hsl(var(--border) / 0.3)",
+          color: "rgba(148, 163, 184, 0.1)",
         },
         ticks: {
-          color: "hsl(var(--muted-foreground))",
           callback: function(value: any) {
             return "$" + value.toLocaleString();
           },
@@ -81,25 +75,22 @@ export default function RevenueChart() {
       },
       x: {
         grid: {
-          color: "hsl(var(--border) / 0.2)",
-        },
-        ticks: {
-          color: "hsl(var(--muted-foreground))",
+          color: "rgba(148, 163, 184, 0.1)",
         },
       },
     },
   };
 
   return (
-    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '200ms' }}>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '200ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <span className="text-foreground">Monthly Revenue</span>
+            <span>Monthly Revenue</span>
             {!isLoading && (
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 gradient-primary rounded-full animate-pulse shadow-sm"></div>
-                <span className="text-xs text-muted-foreground">Live Data</span>
+              <div className="flex items-center space-x-1 text-sm text-slate-500">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-xs">Live Data</span>
               </div>
             )}
           </CardTitle>

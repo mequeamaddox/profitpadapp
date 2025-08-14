@@ -19,16 +19,16 @@ export default function RecentSales() {
   };
 
   return (
-    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '400ms' }}>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '400ms' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <span className="text-foreground">Recent Sales</span>
+            <span>Recent Sales</span>
             {!isLoading && recentSales.length > 0 && (
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm"></div>
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
             )}
           </CardTitle>
-          <Button variant="link" onClick={() => setLocation("/sales")} className="text-primary hover:text-primary/80 transition-colors font-medium">
+          <Button variant="link" onClick={() => setLocation("/sales")} className="text-blue-600 hover:text-blue-800 transition-colors">
             View all
           </Button>
         </div>
@@ -37,24 +37,24 @@ export default function RecentSales() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-3 p-4 rounded-xl border border-border/30 relative overflow-hidden bg-card/50">
+              <div key={i} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-100 relative overflow-hidden">
                 {/* Animated shimmer overlay */}
-                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 dark:via-white/10 to-transparent"></div>
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
                 
-                <div className="w-12 h-12 gradient-primary rounded-xl animate-pulse shadow-lg relative z-10"></div>
+                <div className="w-12 h-12 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg animate-pulse-soft relative z-10"></div>
                 <div className="flex-1 relative z-10">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}></div>
-                  <div className="h-3 bg-muted/60 rounded w-1/2 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}></div>
+                  <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 rounded w-3/4 mb-2 animate-pulse-soft" style={{ animationDelay: `${i * 100}ms` }}></div>
+                  <div className="h-3 bg-slate-200 rounded w-1/2 animate-pulse-soft" style={{ animationDelay: `${i * 150}ms` }}></div>
                 </div>
                 <div className="text-right relative z-10">
-                  <div className="h-4 bg-emerald-200 dark:bg-emerald-800 rounded w-16 mb-2 animate-pulse" style={{ animationDelay: `${i * 200}ms` }}></div>
-                  <div className="h-3 bg-muted/60 rounded w-12 animate-pulse" style={{ animationDelay: `${i * 250}ms` }}></div>
+                  <div className="h-4 bg-gradient-to-l from-emerald-200 to-emerald-300 rounded w-16 mb-2 animate-pulse-soft" style={{ animationDelay: `${i * 200}ms` }}></div>
+                  <div className="h-3 bg-slate-200 rounded w-12 animate-pulse-soft" style={{ animationDelay: `${i * 250}ms` }}></div>
                 </div>
               </div>
             ))}
           </div>
         ) : recentSales.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-slate-500">
             No recent sales. Record your first sale to see it here.
           </div>
         ) : (
@@ -62,7 +62,7 @@ export default function RecentSales() {
             {recentSales.map((sale: any, index: number) => (
               <div 
                 key={sale.id} 
-                className="flex items-center space-x-3 p-4 rounded-xl hover:bg-accent/50 cursor-pointer transition-all duration-300 hover-lift hover:shadow-lg border border-border/30 hover:border-primary/30 animate-fadeInUp bg-card/30 backdrop-blur-sm"
+                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-sm border border-transparent hover:border-gray-200 animate-fadeInUp"
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handleSaleClick(sale)}
               >

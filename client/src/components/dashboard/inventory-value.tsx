@@ -12,19 +12,19 @@ export default function InventoryValue() {
 
   if (isLoading) {
     return (
-      <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-primary" />
-            <span className="text-foreground">Inventory Resell Value</span>
+            <Package className="h-5 w-5" />
+            Inventory Resell Value
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="animate-pulse space-y-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex justify-between">
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-                <div className="h-4 bg-muted rounded w-1/4"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
               </div>
             ))}
           </div>
@@ -35,15 +35,15 @@ export default function InventoryValue() {
 
   if (!inventoryValue) {
     return (
-      <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-primary" />
-            <span className="text-foreground">Inventory Resell Value</span>
+            <Package className="h-5 w-5" />
+            Inventory Resell Value
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-center py-8">
+          <p className="text-slate-500 text-center py-8">
             No inventory data available
           </p>
         </CardContent>
@@ -57,16 +57,16 @@ export default function InventoryValue() {
   const profitMargin = totalInvestment > 0 ? (potentialProfit / totalInvestment) * 100 : 0;
 
   return (
-    <Card className="card-retail animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300 text-primary" />
-          <span className="text-foreground">Inventory Resell Value</span>
+          <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+          <span>Inventory Resell Value</span>
           {totalInvestment > 0 && (
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           )}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-slate-600">
           Potential profit from current inventory at listed prices
         </p>
       </CardHeader>

@@ -31,10 +31,10 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-accent/5 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 gradient-primary rounded-full mx-auto mb-6 animate-pulse shadow-premium-lg"></div>
-          <div className="text-foreground font-medium animate-pulse-soft">Loading your business insights...</div>
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-4 animate-pulse"></div>
+          <div className="text-slate-600 animate-pulse-soft">Loading your dashboard...</div>
         </div>
       </div>
     );
@@ -45,10 +45,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background via-muted/10 to-accent/5">
+    <div className="flex h-screen bg-slate-50">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Dashboard" subtitle="Welcome back! Here's what's happening with your retail business." />
+        <Header title="Dashboard" subtitle="Welcome back! Here's what's happening with your business." />
         <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
           <MetricsGrid />
           

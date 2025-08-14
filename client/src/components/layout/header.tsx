@@ -28,17 +28,17 @@ export default function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <>
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border/60 px-4 md:px-6 py-4 shadow-premium">
+      <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Mobile Navigation */}
           <MobileNav />
           
           <div className="flex-1 md:flex-initial md:mr-4">
-            <h1 className="text-lg md:text-2xl font-bold text-foreground truncate">{title}</h1>
+            <h1 className="text-lg md:text-2xl font-bold text-slate-900 truncate">{title}</h1>
             {subtitle && (
-              <p className="text-muted-foreground mt-1 text-sm md:text-base hidden sm:block">
+              <p className="text-slate-600 mt-1 text-sm md:text-base hidden sm:block">
                 {subtitle.includes("Welcome back") 
-                  ? `Welcome back, ${user?.firstName || "there"}! Here's what's happening with your retail business.`
+                  ? `Welcome back, ${user?.firstName || "there"}! Here's what's happening with your business.`
                   : subtitle
                 }
               </p>
@@ -68,11 +68,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             </Button>
             
             {/* Add New Button - Responsive */}
-            <Button 
-              onClick={() => setShowAddMenu(true)} 
-              size="sm" 
-              className="btn-premium md:h-auto shadow-lg hover:shadow-xl"
-            >
+            <Button onClick={() => setShowAddMenu(true)} size="sm" className="md:h-auto">
               <Plus className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Add New</span>
             </Button>
