@@ -347,6 +347,37 @@ export default function Inventory() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
+      return await apiRequest("PUT", `/api/inventory/${id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      toast({
+        title: "Success",
+        description: "Item status updated successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update item status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deletePalletMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/pallets/${id}`);
@@ -588,6 +619,7 @@ export default function Inventory() {
                       <TableHead>Listed Price</TableHead>
                       <TableHead>Condition</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Quick Actions</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -610,9 +642,50 @@ export default function Inventory() {
                           <Badge variant="outline">{item.condition || "Not specified"}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={item.archived ? "secondary" : "default"}>
-                            {item.archived ? "Archived" : "Active"}
+                          <Badge 
+                            variant={
+                              item.status === "sold" ? "default" :
+                              item.status === "listed" ? "secondary" :
+                              item.status === "returned" ? "destructive" :
+                              "outline"
+                            }
+                          >
+                            {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || "Unlisted"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            {item.status !== "listed" && item.status !== "sold" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => 
+                                  updateMutation.mutate({ 
+                                    id: item.id, 
+                                    status: "listed",
+                                    dateListed: new Date()
+                                  })
+                                }
+                              >
+                                List
+                              </Button>
+                            )}
+                            {item.status !== "sold" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => 
+                                  updateMutation.mutate({ 
+                                    id: item.id, 
+                                    status: "sold",
+                                    dateSold: new Date()
+                                  })
+                                }
+                              >
+                                Mark Sold
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">

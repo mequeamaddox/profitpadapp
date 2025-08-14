@@ -70,7 +70,10 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       category: item?.category || "",
       purchasePrice: item?.purchasePrice || "",
       listedPrice: item?.listedPrice || "",
+      soldPrice: item?.soldPrice || "",
       dateAcquired: item?.dateAcquired ? new Date(item.dateAcquired) : new Date(),
+      dateListed: item?.dateListed ? new Date(item.dateListed) : undefined,
+      dateSold: item?.dateSold ? new Date(item.dateSold) : undefined,
       condition: item?.condition || "",
       notes: item?.notes || "",
       tags: item?.tags || [],
@@ -296,7 +299,15 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select onValueChange={(value) => {
+                  field.onChange(value);
+                  // Auto-set date fields based on status
+                  if (value === "listed" && !form.getValues("dateListed")) {
+                    form.setValue("dateListed", new Date());
+                  } else if (value === "sold" && !form.getValues("dateSold")) {
+                    form.setValue("dateSold", new Date());
+                  }
+                }} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -432,6 +443,28 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             )}
           />
 
+          {form.watch("status") === "sold" && (
+            <FormField
+              control={form.control}
+              name="soldPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sold Price ($)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <FormField
             control={form.control}
             name="dateAcquired"
@@ -473,6 +506,94 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
               </FormItem>
             )}
           />
+
+          {form.watch("status") === "listed" && (
+            <FormField
+              control={form.control}
+              name="dateListed"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date Listed</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {form.watch("status") === "sold" && (
+            <FormField
+              control={form.control}
+              name="dateSold"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date Sold</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
