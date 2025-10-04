@@ -14,21 +14,33 @@ export interface SubscriptionLimits {
 
 export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
   trial: {
-    inventoryLimit: -1, // unlimited during trial
-    salesLimit: -1, // unlimited during trial
-    remindersLimit: -1, // unlimited during trial
-    csvImport: true,
-    advancedAnalytics: true,
+    inventoryLimit: 50, // limited during trial
+    salesLimit: 50, // limited during trial
+    remindersLimit: 20,
+    csvImport: false,
+    advancedAnalytics: false,
     multiPlatform: true,
     teamAccess: false,
-    customReporting: true,
-    apiAccess: true,
+    customReporting: false,
+    apiAccess: false,
+    prioritySupport: false,
+  },
+  starter: {
+    inventoryLimit: 100,
+    salesLimit: 100,
+    remindersLimit: 50,
+    csvImport: false,
+    advancedAnalytics: false,
+    multiPlatform: true,
+    teamAccess: false,
+    customReporting: false,
+    apiAccess: false,
     prioritySupport: false,
   },
   professional: {
-    inventoryLimit: -1, // unlimited
-    salesLimit: -1, // unlimited
-    remindersLimit: -1, // unlimited
+    inventoryLimit: 500,
+    salesLimit: 500,
+    remindersLimit: 200,
     csvImport: true,
     advancedAnalytics: true,
     multiPlatform: true,
