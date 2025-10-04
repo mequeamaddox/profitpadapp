@@ -87,3 +87,9 @@ Preferred communication style: Simple, everyday language.
 ## Barcode Scanning
 - **QuaggaJS**: Real-time camera-based barcode scanning.
 - **UPCItemDB, Barcode Lookup, Go-UPC**: Product database APIs for universal lookup.
+
+## Payment Processing
+- **PayPal**: Exclusive payment provider for subscription billing and payments.
+- **PayPal Server SDK**: Backend integration for order creation and capture.
+- **PayPal Web SDK**: Frontend integration for payment button rendering.
+- **Note**: This application uses PayPal exclusively - NO Stripe integration exists or should be added.
