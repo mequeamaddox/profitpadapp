@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
+import { getSubscriptionLimits } from "./subscriptionLimits";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import {
   insertInventoryItemSchema,
@@ -778,7 +779,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription usage endpoint
+  app.get("/api/subscription/usage", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userData = await storage.getUser(userId);
 
+      if (!userData) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const tier = userData.subscriptionTier || 'trial';
+      const limits = getSubscriptionLimits(tier);
+
+      const inventory = await storage.getInventoryByUserId(userId);
+      const sales = await storage.getSalesByUserId(userId);
+      const remindersCount = await storage.getRemindersCount(userId);
+
+      res.json({
+        tier,
+        limits,
+        usage: {
+          inventory: inventory.length,
+          sales: sales.length,
+          reminders: remindersCount
+        },
+        isAdmin: userData.isAdmin || false
+      });
+    } catch (error) {
+      console.error("Error fetching subscription usage:", error);
+      res.status(500).json({ message: "Failed to fetch subscription usage" });
+    }
+  });
 
   // Pallets routes
   app.get("/api/pallets", isAuthenticated, async (req: any, res) => {
