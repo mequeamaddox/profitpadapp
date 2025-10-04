@@ -23,8 +23,10 @@ import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload } from "lucide-react";
+import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload, Scan, Printer } from "lucide-react";
+import { useLocation } from "wouter";
 import type { InventoryItem, Pallet } from "@shared/schema";
+import BarcodeScanner from "@/components/barcode-scanner";
 
 // Pallet form schema
 const palletFormSchema = z.object({
@@ -235,6 +237,8 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isPalletFormOpen, setIsPalletFormOpen] = useState(false);
   const [editingPallet, setEditingPallet] = useState<Pallet | null>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Check for edit parameter in URL
   useEffect(() => {
@@ -487,17 +491,38 @@ export default function Inventory() {
         title: "CSV Import Complete",
         description: `Successfully imported ${successCount} items. ${errorCount > 0 ? `${errorCount} items failed.` : ''}`,
       });
-
     } catch (error) {
       toast({
         title: "Import Error",
-        description: "Failed to process CSV file. Please check the format.",
+        description: "Failed to import CSV file",
         variant: "destructive",
       });
     }
+  };
 
-    // Reset the input
-    event.target.value = '';
+  const handleBarcodeScan = (scannedSku: string) => {
+    setShowBarcodeScanner(false);
+    
+    // Search for the item by SKU
+    const foundItem = inventory.find(item => 
+      item.sku?.toLowerCase() === scannedSku.toLowerCase()
+    );
+    
+    if (foundItem) {
+      // Open the edit dialog with the found item
+      setEditingItem(foundItem);
+      setIsFormOpen(true);
+      toast({
+        title: "Item Found",
+        description: `Found: ${foundItem.title}`,
+      });
+    } else {
+      toast({
+        title: "Not Found",
+        description: `No item found with SKU: ${scannedSku}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePalletEdit = (pallet: Pallet) => {
@@ -555,8 +580,21 @@ export default function Inventory() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 w-full"
+                      data-testid="input-search"
                     />
                   </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setShowBarcodeScanner(true)}
+                    data-testid="button-scan-sku"
+                  >
+                    <Scan className="h-4 w-4 mr-2" />
+                    Scan SKU
+                  </Button>
+                  
                   <Button
                     variant={showArchived ? "default" : "outline"}
                     onClick={() => setShowArchived(!showArchived)}
@@ -564,6 +602,17 @@ export default function Inventory() {
                     className="w-full sm:w-auto"
                   >
                     {showArchived ? "Show Archived" : "Show Active"}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setLocation("/print-labels")}
+                    data-testid="button-print-labels"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print Labels
                   </Button>
                   
                   <Button
@@ -585,7 +634,7 @@ export default function Inventory() {
                 
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setEditingItem(null)} className="shrink-0">
+                    <Button onClick={() => setEditingItem(null)} className="shrink-0" data-testid="button-add-inventory">
                       <Plus className="h-4 w-4 md:mr-2" />
                       <span className="hidden md:inline">Add Item</span>
                     </Button>
@@ -889,6 +938,13 @@ export default function Inventory() {
       </Tabs>
     </div>
       </main>
+      
+      {/* Barcode Scanner Dialog */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onScanSuccess={handleBarcodeScan}
+        onClose={() => setShowBarcodeScanner(false)}
+      />
     </div>
   );
 }
