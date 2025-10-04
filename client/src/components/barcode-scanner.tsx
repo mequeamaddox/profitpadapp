@@ -91,10 +91,8 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         ]
       },
       locate: true,
-      locateFile: (file: string) => {
-        return `https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/${file}`;
-      }
-    }, (err: any) => {
+      locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/${file}`
+    } as any, (err: any) => {
       if (err) {
         console.error('Quagga initialization error:', err);
         setCameraError('Failed to access camera. Please check permissions.');
