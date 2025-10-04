@@ -102,8 +102,15 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, cb) => {
+    console.log("🔹 Serializing user:", { sub: user.claims?.sub, hasTokens: !!user.access_token });
+    cb(null, user);
+  });
+  
+  passport.deserializeUser((user: any, cb) => {
+    console.log("🔹 Deserializing user:", { sub: user?.claims?.sub, hasTokens: !!user?.access_token });
+    cb(null, user);
+  });
 
   app.get("/api/login", (req, res, next) => {
     // Handle localhost development by using the first configured domain
