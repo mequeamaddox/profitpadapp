@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@shared/schema";
 
 interface SalesFormProps {
@@ -135,7 +135,7 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const otherFees = parseFloat(form.watch("otherFees") || "0");
   
   // Auto-update profit when costs change
-  React.useEffect(() => {
+  useEffect(() => {
     const profit = salePrice - purchasePrice - platformFee - shippingCost - otherFees;
     form.setValue("profit", profit.toFixed(2));
   }, [salePrice, purchasePrice, platformFee, shippingCost, otherFees, form]);
