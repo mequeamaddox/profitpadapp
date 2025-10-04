@@ -443,6 +443,35 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
 
           <FormField
             control={form.control}
+            name="palletId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source Pallet</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || "none"}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-pallet">
+                      <SelectValue placeholder="Which pallet did this come from?" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Individual purchase (not from pallet)</SelectItem>
+                    {pallets.map((pallet) => (
+                      <SelectItem key={pallet.id} value={pallet.id}>
+                        {pallet.palletCode || pallet.name} - {pallet.name} (${pallet.totalCost})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Track which liquidation pallet this item came from for cost allocation and break-even analysis.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="upc"
             render={({ field }) => (
               <FormItem>
@@ -577,35 +606,6 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="palletId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source Pallet (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || "none"}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Leave blank for individual purchases" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Individual purchase (not from pallet)</SelectItem>
-                    {pallets.map((pallet) => (
-                      <SelectItem key={pallet.id} value={pallet.id}>
-                        {pallet.name} - ${pallet.totalCost}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500 mt-1">
-                  Only select a pallet if this item came from a liquidation pallet purchase. Most individual items, parts, and standalone purchases should be left blank.
-                </p>
                 <FormMessage />
               </FormItem>
             )}

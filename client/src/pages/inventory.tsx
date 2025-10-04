@@ -674,6 +674,7 @@ export default function Inventory() {
                     <TableRow>
                       <TableHead>Item</TableHead>
                       <TableHead>SKU</TableHead>
+                      <TableHead>Pallet</TableHead>
                       <TableHead>Platform</TableHead>
                       <TableHead>Purchase Price</TableHead>
                       <TableHead>Listed Price</TableHead>
@@ -684,7 +685,9 @@ export default function Inventory() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {inventory.map((item: InventoryItem) => (
+                    {inventory.map((item: InventoryItem) => {
+                      const itemPallet = pallets.find(p => p.id === item.palletId);
+                      return (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div>
@@ -695,6 +698,15 @@ export default function Inventory() {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">{item.sku}</TableCell>
+                        <TableCell>
+                          {itemPallet ? (
+                            <Badge variant="secondary" className="font-mono">
+                              {itemPallet.palletCode || itemPallet.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-slate-400">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>{item.platform || "-"}</TableCell>
                         <TableCell>${item.purchasePrice}</TableCell>
                         <TableCell>${item.listedPrice}</TableCell>
@@ -778,7 +790,8 @@ export default function Inventory() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    );
+                    })}
                   </TableBody>
                 </Table>
               )}
