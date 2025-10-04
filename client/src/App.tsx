@@ -52,7 +52,10 @@ function AuthenticatedRouter() {
   }
 
   // Check if user needs onboarding (new user without subscription or trial)
-  if (isAuthenticated && user && !user.isAdmin && !user.trialEndsAt && window.location.pathname !== '/onboarding') {
+  // User needs onboarding if they have no subscription tier set OR have trial tier with no trialEndsAt
+  const needsOnboarding = user && !user.trialEndsAt && (!user.subscriptionTier || user.subscriptionTier === 'trial');
+  
+  if (isAuthenticated && needsOnboarding && window.location.pathname !== '/onboarding') {
     setLocation('/onboarding');
     return null;
   }
