@@ -62,6 +62,42 @@ const statuses = [
   "unlisted", "listed", "sold", "returned"
 ];
 
+// SKU Builder Options
+const toolTypes = [
+  { code: "TRIM", label: "Trimmer Attachment (Expand-It)" },
+  { code: "COMBO", label: "Trimmer + Blower Combo Kit" },
+  { code: "BLOW", label: "Jet Fan Blower (Attachment)" },
+  { code: "SAW", label: "Chainsaw" },
+  { code: "POLE", label: "Pole Saw" },
+];
+
+const brands = [
+  { code: "RYO", label: "Ryobi" },
+];
+
+const powerOptions = [
+  { code: "18V", label: "18 Volt Battery Powered" },
+  { code: "40V", label: "40 Volt Battery Powered" },
+  { code: "18V-BLS", label: "18 Volt Brushless Motor" },
+  { code: "ATT", label: "Universal Attachment" },
+];
+
+const skuConditions = [
+  { code: "NEW", label: "New Condition" },
+  { code: "USED", label: "Used Condition" },
+  { code: "DMG", label: "Damaged" },
+  { code: "UNT", label: "Untested" },
+];
+
+// Serial prefixes based on tool type
+const serialPrefixes: Record<string, string> = {
+  "TRIM": "T",
+  "COMBO": "C",
+  "BLOW": "B",
+  "SAW": "S",
+  "POLE": "P",
+};
+
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -259,70 +295,147 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <FormLabel>SKU (Auto-Generated)</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="Select pallet & category, then generate" {...field} data-testid="input-sku" readOnly />
+                    <Input placeholder="Click Build SKU to generate" {...field} data-testid="input-sku" readOnly />
                   </FormControl>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={async () => {
-                      const palletId = form.getValues("palletId");
-                      const category = form.getValues("category");
+                  <Dialog open={showSkuBuilder} onOpenChange={setShowSkuBuilder}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        data-testid="button-build-sku"
+                      >
+                        <Wrench className="w-4 h-4 mr-2" />
+                        Build SKU
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>SKU Builder</DialogTitle>
+                        <DialogDescription>
+                          Build a detailed SKU for your power tool item
+                        </DialogDescription>
+                      </DialogHeader>
                       
-                      if (!palletId || palletId === "none") {
-                        toast({
-                          title: "Pallet Required",
-                          description: "Please select a pallet first",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      
-                      if (!category) {
-                        toast({
-                          title: "Category Required",
-                          description: "Please select a category first",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      
-                      const categoryCode = categoryCodeMap[category];
-                      if (!categoryCode) {
-                        toast({
-                          title: "Invalid Category",
-                          description: "Category not recognized",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      
-                      try {
-                        const response = await fetch(`/api/inventory/generate-sku?palletId=${encodeURIComponent(palletId)}&categoryCode=${categoryCode}`);
-                        const data = await response.json();
-                        
-                        if (!response.ok) {
-                          throw new Error(data.message || "Failed to generate SKU");
-                        }
-                        
-                        form.setValue("sku", data.sku);
-                        toast({
-                          title: "SKU Generated",
-                          description: `${data.sku} (Pallet: ${data.palletCode}, Category: ${categoryCode})`,
-                        });
-                      } catch (error: any) {
-                        toast({
-                          title: "Error",
-                          description: error.message || "Failed to generate SKU",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                    data-testid="button-generate-sku"
-                  >
-                    Generate
-                  </Button>
+                      <div className="space-y-4 mt-4">
+                        <div>
+                          <Label>Tool Type</Label>
+                          <Select value={skuToolType} onValueChange={setSkuToolType}>
+                            <SelectTrigger data-testid="select-tool-type">
+                              <SelectValue placeholder="Select tool type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {toolTypes.map((type) => (
+                                <SelectItem key={type.code} value={type.code}>
+                                  {type.code} - {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>Brand</Label>
+                          <Select value={skuBrand} onValueChange={setSkuBrand}>
+                            <SelectTrigger data-testid="select-brand">
+                              <SelectValue placeholder="Select brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {brands.map((brand) => (
+                                <SelectItem key={brand.code} value={brand.code}>
+                                  {brand.code} - {brand.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>Power / Motor / Style</Label>
+                          <Select value={skuPower} onValueChange={setSkuPower}>
+                            <SelectTrigger data-testid="select-power">
+                              <SelectValue placeholder="Select power type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {powerOptions.map((power) => (
+                                <SelectItem key={power.code} value={power.code}>
+                                  {power.code} - {power.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>Condition</Label>
+                          <Select value={skuCondition} onValueChange={setSkuCondition}>
+                            <SelectTrigger data-testid="select-condition">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {skuConditions.map((cond) => (
+                                <SelectItem key={cond.code} value={cond.code}>
+                                  {cond.code} - {cond.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="text-sm font-medium mb-2">Preview:</p>
+                          <p className="text-lg font-mono">
+                            {skuToolType && skuBrand && skuPower && skuCondition
+                              ? `${skuToolType}-${skuBrand}-${skuPower}-${skuCondition}-${serialPrefixes[skuToolType] || 'X'}###`
+                              : 'Select all options to see preview'}
+                          </p>
+                        </div>
+
+                        <Button
+                          type="button"
+                          className="w-full"
+                          onClick={async () => {
+                            if (!skuToolType || !skuBrand || !skuPower || !skuCondition) {
+                              toast({
+                                title: "Incomplete Selection",
+                                description: "Please select all SKU components",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+
+                            try {
+                              const response = await fetch(
+                                `/api/inventory/generate-sku?toolType=${skuToolType}&brand=${skuBrand}&power=${skuPower}&condition=${skuCondition}`
+                              );
+                              const data = await response.json();
+
+                              if (!response.ok) {
+                                throw new Error(data.message || "Failed to generate SKU");
+                              }
+
+                              form.setValue("sku", data.sku);
+                              toast({
+                                title: "SKU Generated",
+                                description: `${data.sku}`,
+                              });
+                              setShowSkuBuilder(false);
+                            } catch (error: any) {
+                              toast({
+                                title: "Error",
+                                description: error.message || "Failed to generate SKU",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          data-testid="button-generate-sku"
+                        >
+                          Generate SKU
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <p className="text-xs text-muted-foreground">Format: PALLET-CATEGORY-### (e.g. PL01-ELE-001). Select pallet and category first.</p>
+                <p className="text-xs text-muted-foreground">Format: TOOLTYPE-BRAND-POWER-CONDITION-SERIAL (e.g. TRIM-RYO-40V-USED-T001)</p>
                 <FormMessage />
               </FormItem>
             )}

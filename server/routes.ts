@@ -77,51 +77,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate SKU endpoint - pallet-category-sequence format
+  // Generate SKU endpoint - tool-based SKU format
   app.get("/api/inventory/generate-sku", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { palletId, categoryCode } = req.query;
+      const { toolType, brand, power, condition } = req.query;
       
-      if (!palletId || !categoryCode) {
+      if (!toolType || !brand || !power || !condition) {
         return res.status(400).json({ 
-          message: "Pallet and category are required for SKU generation" 
+          message: "Tool type, brand, power, and condition are required for SKU generation" 
         });
       }
       
-      // Get the pallet to find its code
-      const pallet = await storage.getPallet(palletId as string, userId);
-      if (!pallet) {
-        return res.status(404).json({ message: "Pallet not found" });
+      // Serial prefixes based on tool type
+      const serialPrefixes: Record<string, string> = {
+        "TRIM": "T",
+        "COMBO": "C",
+        "BLOW": "B",
+        "SAW": "S",
+        "POLE": "P",
+      };
+      
+      const serialPrefix = serialPrefixes[toolType as string];
+      if (!serialPrefix) {
+        return res.status(400).json({ message: "Invalid tool type" });
       }
       
-      const palletCode = pallet.palletCode || `PL${String(Math.floor(Math.random() * 99) + 1).padStart(2, '0')}`;
-      
-      // If pallet doesn't have a code yet, generate and save one
-      if (!pallet.palletCode) {
-        await storage.updatePallet(palletId as string, userId, { palletCode });
-      }
-      
-      // Get all inventory items from this pallet with this category
+      // Get all inventory items to find highest serial number for this tool type
       const allItems = await storage.getInventoryItems(userId, false);
       
-      // Filter items matching this pallet code and category code
-      const matchingPattern = new RegExp(`^${palletCode}-${categoryCode}-(\\d+)$`);
-      const sequenceNumbers = allItems
+      // Filter items matching this tool type's serial pattern
+      const matchingPattern = new RegExp(`${serialPrefix}(\\d+)$`);
+      const serialNumbers = allItems
         .map(item => {
           const match = item.sku?.match(matchingPattern);
           return match ? parseInt(match[1], 10) : 0;
         })
         .filter(num => !isNaN(num) && num > 0);
       
-      // Find highest sequence and increment
-      const highestSeq = sequenceNumbers.length > 0 ? Math.max(...sequenceNumbers) : 0;
-      const nextSeq = highestSeq + 1;
+      // Find highest serial and increment
+      const highestSerial = serialNumbers.length > 0 ? Math.max(...serialNumbers) : 0;
+      const nextSerial = highestSerial + 1;
       
-      // Format as PALLETCODE-CATEGORYCODE-###
-      const sku = `${palletCode}-${categoryCode}-${String(nextSeq).padStart(3, '0')}`;
+      // Format as TOOLTYPE-BRAND-POWER-CONDITION-SERIAL
+      const sku = `${toolType}-${brand}-${power}-${condition}-${serialPrefix}${String(nextSerial).padStart(3, '0')}`;
       
-      res.json({ sku, palletCode });
+      res.json({ sku });
     } catch (error) {
       console.error("Error generating SKU:", error);
       res.status(500).json({ message: "Failed to generate SKU" });
