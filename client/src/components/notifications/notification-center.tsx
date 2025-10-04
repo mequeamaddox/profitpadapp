@@ -40,10 +40,7 @@ export default function NotificationCenter() {
 
   const completeMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/reminders/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ completed: true }),
-      });
+      return apiRequest("PUT", `/api/reminders/${id}`, { completed: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reminders"] });
@@ -56,10 +53,7 @@ export default function NotificationCenter() {
 
   const snoozeMutation = useMutation({
     mutationFn: async ({ id, minutes }: { id: string; minutes: number }) => {
-      return apiRequest(`/api/reminders/${id}/snooze`, {
-        method: "POST",
-        body: JSON.stringify({ minutes }),
-      });
+      return apiRequest("POST", `/api/reminders/${id}/snooze`, { minutes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reminders"] });
