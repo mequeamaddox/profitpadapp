@@ -77,6 +77,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate SKU endpoint
+  app.get("/api/inventory/generate-sku", isAuthenticated, async (req: any, res) => {
+    try {
+      const { category } = req.query;
+      
+      // Create category prefix (first 3 letters uppercase, or "ITM" as default)
+      let prefix = "ITM";
+      if (category && typeof category === "string") {
+        prefix = category.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+        if (prefix.length < 3) {
+          prefix = prefix.padEnd(3, 'X');
+        }
+      }
+      
+      // Create date suffix (YYYYMMDD)
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const dateSuffix = `${year}${month}${day}`;
+      
+      // Create random 3-digit number for uniqueness
+      const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+      
+      // Combine: CAT-YYYYMMDD-XXX
+      const sku = `${prefix}-${dateSuffix}-${randomNum}`;
+      
+      res.json({ sku });
+    } catch (error) {
+      console.error("Error generating SKU:", error);
+      res.status(500).json({ message: "Failed to generate SKU" });
+    }
+  });
+
   // Barcode search endpoint
   app.get("/api/inventory/search", isAuthenticated, async (req: any, res) => {
     try {

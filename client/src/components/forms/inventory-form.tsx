@@ -234,9 +234,36 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>SKU</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter SKU" {...field} />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input placeholder="Enter SKU or generate one" {...field} />
+                  </FormControl>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={async () => {
+                      const category = form.getValues("category");
+                      try {
+                        const response = await fetch(`/api/inventory/generate-sku?category=${encodeURIComponent(category || '')}`);
+                        const data = await response.json();
+                        form.setValue("sku", data.sku);
+                        toast({
+                          title: "SKU Generated",
+                          description: `Generated SKU: ${data.sku}`,
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to generate SKU",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    data-testid="button-generate-sku"
+                  >
+                    Generate
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
