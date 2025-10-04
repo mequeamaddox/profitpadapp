@@ -36,9 +36,10 @@ export default function BarcodeLookup() {
 
   const lookupMutation = useMutation({
     mutationFn: async (upc: string) => {
-      return await apiRequest("POST", "/api/barcode-lookup", { upc });
+      const response = await apiRequest("POST", "/api/barcode-lookup", { upc });
+      return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: ProductLookupData) => {
       setLookupData(data);
     },
   });
@@ -135,8 +136,9 @@ export default function BarcodeLookup() {
       {/* Scanner Modal */}
       {isScannerOpen && (
         <BarcodeScanner
-          onScan={handleBarcodeScanned}
+          onScanSuccess={handleBarcodeScanned}
           onClose={() => setIsScannerOpen(false)}
+          isOpen={isScannerOpen}
         />
       )}
 
