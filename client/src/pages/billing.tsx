@@ -10,6 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Star, Crown, Building2, Calendar, CreditCard } from "lucide-react";
 import type { User } from "@shared/schema";
+import PayPalButton from "@/components/PayPalButton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const plans = [
   {
@@ -74,6 +82,8 @@ export default function Billing() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [showPayPalDialog, setShowPayPalDialog] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
@@ -82,10 +92,12 @@ export default function Billing() {
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
-    toast({
-      title: "Plan Selection",
-      description: "Contact support to upgrade your plan or manage your subscription through your Replit account settings.",
-    });
+    const plan = plans.find(p => p.id === planId);
+    if (plan) {
+      const amount = plan.price.replace('$', '');
+      setPaymentAmount(amount);
+      setShowPayPalDialog(true);
+    }
   };
 
   const getTrialStatus = () => {
@@ -256,22 +268,21 @@ export default function Billing() {
             <CardHeader>
               <CardTitle>Billing Management</CardTitle>
               <CardDescription>
-                Plan changes and billing are managed through your Replit account
+                Secure payments processed through PayPal
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 mb-2">How to Update Your Plan</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">Payment Information</h4>
                   <p className="text-sm text-blue-800 mb-3">
-                    ProfitPad subscriptions are managed through your Replit account. To upgrade, downgrade, or cancel your plan:
+                    All payments are securely processed through PayPal. You can pay with:
                   </p>
-                  <ol className="text-sm text-blue-800 space-y-1 ml-4 list-decimal">
-                    <li>Go to your Replit account settings</li>
-                    <li>Navigate to the Billing section</li>
-                    <li>Find ProfitPad in your subscriptions</li>
-                    <li>Make changes as needed</li>
-                  </ol>
+                  <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                    <li>PayPal account balance</li>
+                    <li>Credit or debit card (via PayPal)</li>
+                    <li>Bank account (via PayPal)</li>
+                  </ul>
                 </div>
                 
                 <Separator />
@@ -290,6 +301,32 @@ export default function Billing() {
           </Card>
         </div>
       </main>
+
+      {/* PayPal Payment Dialog */}
+      <Dialog open={showPayPalDialog} onOpenChange={setShowPayPalDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              Subscribe to {plans.find(p => p.id === selectedPlan)?.name} for ${paymentAmount}/month
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="text-center mb-4">
+              <p className="text-2xl font-bold text-slate-900">${paymentAmount}</p>
+              <p className="text-sm text-slate-600">per month</p>
+            </div>
+            <PayPalButton 
+              amount={paymentAmount}
+              currency="USD"
+              intent="CAPTURE"
+            />
+            <p className="text-xs text-slate-500 text-center mt-2">
+              Payments are securely processed through PayPal. Your subscription will renew monthly.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
