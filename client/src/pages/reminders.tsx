@@ -236,7 +236,7 @@ export default function Reminders() {
                 <Card 
                   key={reminder.id} 
                   className={`${reminder.completed ? 'opacity-60' : ''} ${
-                    isOverdue(new Date(reminder.dueDate)) && !reminder.completed ? 'border-red-200 bg-red-50' : ''
+                    isOverdue(reminder.dueDate.toString()) && !reminder.completed ? 'border-red-200 bg-red-50' : ''
                   }`}
                 >
                   <CardContent className="p-6">
@@ -270,7 +270,7 @@ export default function Reminders() {
                                 minute: "2-digit",
                               })}
                             </div>
-                            {isOverdue(new Date(reminder.dueDate)) && !reminder.completed && (
+                            {isOverdue(reminder.dueDate.toString()) && !reminder.completed && (
                               <Badge variant="destructive">Overdue</Badge>
                             )}
                             {reminder.completed && (

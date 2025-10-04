@@ -349,16 +349,17 @@ export default function Inventory() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
-      return await apiRequest("PUT", `/api/inventory/${id}`, updates);
+      const response = await apiRequest("PUT", `/api/inventory/${id}`, updates);
+      return await response.json();
     },
-    onSuccess: (updatedItem) => {
+    onSuccess: (updatedItem: InventoryItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
       
       // Get status-specific success message
       let message = "Item updated successfully";
-      if (updatedItem.status === "listed") {
+      if (updatedItem.status === "listed" && updatedItem.dateListed) {
         message = `Item marked as listed on ${new Date(updatedItem.dateListed).toLocaleDateString()}`;
-      } else if (updatedItem.status === "sold") {
+      } else if (updatedItem.status === "sold" && updatedItem.dateSold) {
         message = `Item marked as sold on ${new Date(updatedItem.dateSold).toLocaleDateString()}`;
       }
       
@@ -660,7 +661,7 @@ export default function Inventory() {
                               "outline"
                             }
                           >
-                            {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || "Unlisted"}
+                            {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unlisted"}
                           </Badge>
                         </TableCell>
                         <TableCell>
