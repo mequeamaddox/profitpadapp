@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
@@ -26,6 +26,7 @@ import Onboarding from "@/pages/onboarding";
 
 function AuthenticatedRouter() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const [, setLocation] = useLocation();
 
   // Debug logging
   console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
@@ -48,6 +49,12 @@ function AuthenticatedRouter() {
         </div>
       </div>
     );
+  }
+
+  // Check if user needs onboarding (new user without subscription or trial)
+  if (isAuthenticated && user && !user.isAdmin && !user.trialEndsAt && window.location.pathname !== '/onboarding') {
+    setLocation('/onboarding');
+    return null;
   }
 
   return (

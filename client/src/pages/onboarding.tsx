@@ -113,8 +113,15 @@ export default function Onboarding() {
   };
 
   const handlePaymentSuccess = () => {
-    setShowPayPalDialog(false);
+    // After successful PayPal payment, activate the subscription
     updateSubscriptionMutation.mutate(selectedPlan);
+  };
+
+  const handlePaymentDialogClose = (open: boolean) => {
+    if (!open && !paymentCompleted) {
+      // User closed dialog without completing payment
+      setShowPayPalDialog(false);
+    }
   };
 
   if (authLoading) {
@@ -268,7 +275,7 @@ export default function Onboarding() {
       </main>
 
       {/* PayPal Payment Dialog */}
-      <Dialog open={showPayPalDialog} onOpenChange={setShowPayPalDialog}>
+      <Dialog open={showPayPalDialog} onOpenChange={handlePaymentDialogClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
@@ -292,6 +299,15 @@ export default function Onboarding() {
             <p className="text-xs text-slate-500 text-center mt-2">
               Your payment information is securely processed by PayPal. You will be charged ${selectedPlanData?.price} after your 3-day trial ends. Cancel anytime for a full refund.
             </p>
+            <div className="w-full mt-4">
+              <Button 
+                onClick={handlePaymentSuccess}
+                className="w-full"
+                data-testid="button-payment-complete"
+              >
+                I've Completed Payment
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
