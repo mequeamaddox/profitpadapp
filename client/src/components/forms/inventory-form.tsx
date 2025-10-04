@@ -165,7 +165,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       soldPrice: data.soldPrice || null,
       // Handle tags properly
       tags: typeof data.tags === "string" ? 
-        (data.tags && data.tags.trim() ? data.tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
+        (data.tags && (data.tags as string).trim() ? (data.tags as string).split(",").map((tag: string) => tag.trim()).filter(Boolean) : null) : 
         (Array.isArray(data.tags) ? data.tags : null),
     };
 
@@ -543,7 +543,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={field.value || undefined}
                         onSelect={field.onChange}
                         disabled={(date) =>
                           date > new Date() || date < new Date("1900-01-01")
@@ -587,7 +587,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={field.value || undefined}
                         onSelect={field.onChange}
                         disabled={(date) =>
                           date > new Date() || date < new Date("1900-01-01")
