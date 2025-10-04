@@ -6,15 +6,12 @@
 // Retain this comment after all edits.
 //
 // <BEGIN_EXACT_CODE>
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "paypal-button": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
+      "paypal-button": any;
     }
   }
 }

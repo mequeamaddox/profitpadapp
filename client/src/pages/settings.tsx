@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,7 +46,7 @@ export default function Settings() {
   });
 
   // Update form when user data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       form.reset({
         monthlyGoal: user.monthlyGoal || "10000.00",
