@@ -82,7 +82,7 @@ export default function RecentSales() {
                     {sale.itemTitle || "Manual Sale Entry"}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {sale.itemSku || new Date(sale.dateSold).toLocaleDateString()}
+                    {sale.itemSku || new Date(sale.saleDate).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="text-right">
