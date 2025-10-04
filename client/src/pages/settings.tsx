@@ -58,7 +58,7 @@ export default function Settings() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: SettingsFormData) => {
-      return await apiRequest("/api/user/settings", "PUT", {
+      return await apiRequest("PUT", "/api/user/settings", {
         monthlyGoal: data.monthlyGoal,
         salesTaxRate: data.salesTaxRate,
         taxInclusiveSales: data.taxInclusiveSales,
