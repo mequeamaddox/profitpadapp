@@ -49,7 +49,7 @@ export default function Landing() {
           >
             Start Your Free 3-Day Trial →
           </Button>
-          <p className="text-sm text-slate-500 mt-4">No credit card required • Cancel anytime</p>
+          <p className="text-sm text-slate-500 mt-4">Credit card required • Cancel anytime • Full refund if cancelled within 3 days</p>
         </div>
 
         {/* Social Proof */}
@@ -327,7 +327,7 @@ export default function Landing() {
             </Card>
           </div>
           <p className="text-center text-slate-600 mt-8">
-            💳 Cancel anytime, no credit card traps • All plans include a 3-day free trial
+            💳 Credit card required for trial • Cancel anytime for full refund within 3 days • All plans include a 3-day trial period
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export default function Landing() {
           >
             Start Your Free 3-Day Trial →
           </Button>
-          <p className="text-sm mt-4 opacity-75">No credit card required • Takes less than 60 seconds</p>
+          <p className="text-sm mt-4 opacity-75">Credit card required • Full refund if cancelled within trial • Takes less than 60 seconds</p>
         </div>
       </main>
 

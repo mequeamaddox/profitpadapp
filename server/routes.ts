@@ -812,6 +812,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription activation endpoint (after PayPal payment)
+  app.post("/api/subscription/activate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { tier } = req.body;
+
+      if (!tier || !['starter', 'professional', 'enterprise'].includes(tier)) {
+        return res.status(400).json({ message: "Invalid subscription tier" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Set trial end date (3 days from now)
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 3);
+
+      const updatedUser = await storage.upsertUser({
+        ...user,
+        subscriptionTier: tier,
+        trialEndsAt: trialEndsAt
+      });
+
+      console.log(`Subscription activated for user ${userId}: ${tier} tier with trial ending ${trialEndsAt}`);
+
+      res.json({
+        message: "Subscription activated successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error activating subscription:", error);
+      res.status(500).json({ message: "Failed to activate subscription" });
+    }
+  });
+
   // Pallets routes
   app.get("/api/pallets", isAuthenticated, async (req: any, res) => {
     try {
