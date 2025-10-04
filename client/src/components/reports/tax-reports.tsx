@@ -247,7 +247,7 @@ export default function TaxReports() {
                     mode="single"
                     selected={startDate}
                     onSelect={setStartDate}
-                    disabled={(date) => date > new Date() || (endDate && date > endDate)}
+                    disabled={(date) => date > new Date() || (endDate ? date > endDate : false)}
                   />
                 </PopoverContent>
               </Popover>
@@ -273,7 +273,7 @@ export default function TaxReports() {
                     mode="single"
                     selected={endDate}
                     onSelect={setEndDate}
-                    disabled={(date) => date > new Date() || (startDate && date < startDate)}
+                    disabled={(date) => date > new Date() || (startDate ? date < startDate : false)}
                   />
                 </PopoverContent>
               </Popover>
