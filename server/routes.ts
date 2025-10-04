@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { checkTrialExpired } from "./trialMiddleware";
+import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import {
   insertInventoryItemSchema,
@@ -161,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/inventory", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+  app.post("/api/inventory", isAuthenticated, checkTrialExpired, checkSubscriptionLimit('inventoryLimit'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       
@@ -273,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sales", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+  app.post("/api/sales", isAuthenticated, checkTrialExpired, checkSubscriptionLimit('salesLimit'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       
@@ -385,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/reminders", isAuthenticated, checkTrialExpired, async (req: any, res) => {
+  app.post("/api/reminders", isAuthenticated, checkTrialExpired, checkSubscriptionLimit('remindersLimit'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertReminderSchema.parse(req.body);
