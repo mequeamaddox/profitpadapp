@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import Quagga from 'quagga';
+import Quagga from '@ericblade/quagga2';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,32 +71,28 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
         type: "LiveStream",
         target: scannerRef.current,
         constraints: {
-          width: 1280,
-          height: 720,
-          facingMode: "environment" // Use back camera
+          width: { min: 640 },
+          height: { min: 480 },
+          facingMode: "environment"
         }
       },
       locator: {
-        patchSize: "large", // Better for detailed barcode reading
-        halfSample: false // Full resolution for accuracy
+        patchSize: "medium",
+        halfSample: true
       },
-      numOfWorkers: 4,
-      frequency: 5, // Slower scanning for better accuracy
+      numOfWorkers: 2,
+      frequency: 10,
       decoder: {
         readers: [
-          "ean_reader", // EAN-13 (most retail products)
-          "upc_reader", // UPC-A (US retail standard)
-          "ean_8_reader", // EAN-8 (compact)
-          "upc_e_reader" // UPC-E (compact US)
-        ],
-        multiple: false // Only detect one barcode at a time
+          "ean_reader",
+          "upc_reader",
+          "ean_8_reader",
+          "upc_e_reader"
+        ]
       },
       locate: true,
-      debug: {
-        drawBoundingBox: false,
-        showFrequency: false,
-        drawScanline: false,
-        showPattern: false
+      locateFile: (file: string) => {
+        return `https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/${file}`;
       }
     }, (err: any) => {
       if (err) {
@@ -106,49 +102,24 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
       }
       
       setIsInitialized(true);
-      
-      // Enhanced barcode detection with multiple validation checks
-      let detectionCount = 0;
-      let lastDetectedCode = '';
-      let consecutiveDetections = 0;
+      Quagga.start();
       
       Quagga.onDetected(async (data: any) => {
         const code = data.codeResult.code;
         const format = data.codeResult.format;
-        const quality = data.codeResult.decodedCodes?.filter((code: any) => code.error !== undefined).length || 0;
         
-        console.log(`Barcode candidate: ${code} (${format}) Quality: ${quality}`);
+        console.log(`Barcode detected: ${code} (${format})`);
         
-        // Enhanced validation for retail barcodes
         if (code && isValidRetailBarcode(code, format)) {
-          detectionCount++;
+          console.log(`Valid barcode confirmed: ${code} (${format})`);
+          setScannedCode(code);
+          setIsScanning(false);
+          Quagga.stop();
+          setIsInitialized(false);
           
-          // Require consistent detection for accuracy
-          if (code === lastDetectedCode) {
-            consecutiveDetections++;
-          } else {
-            lastDetectedCode = code;
-            consecutiveDetections = 1;
-          }
-          
-          // Accept after 2 consecutive identical detections OR 1 high-quality detection
-          if (consecutiveDetections >= 2 || (quality <= 1 && consecutiveDetections >= 1)) {
-            console.log(`Confirmed barcode: ${code} (${format}) after ${consecutiveDetections} detections`);
-            setScannedCode(code);
-            setIsScanning(false);
-            Quagga.stop();
-            setIsInitialized(false);
-            
-            // Reset detection counters
-            detectionCount = 0;
-            consecutiveDetections = 0;
-            lastDetectedCode = '';
-            
-            // Try to lookup product information
-            await lookupProduct(code);
-          }
+          await lookupProduct(code);
         } else {
-          console.warn(`Invalid barcode candidate: ${code} (${format})`);
+          console.warn(`Invalid barcode: ${code} (${format})`);
         }
       });
     });
