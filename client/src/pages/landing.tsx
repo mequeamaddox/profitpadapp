@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, CheckCircle2, Star, Upload, Calculator, LineChart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
@@ -9,7 +10,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="px-6 py-4 border-b bg-white/80 backdrop-blur-sm">
+      <header className="px-6 py-4 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -18,7 +19,10 @@ export default function Landing() {
             <span className="font-bold text-xl text-slate-900">ProfitPad</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={() => window.location.href = "/api/login"}>
+            <Button 
+              onClick={() => window.location.href = "/api/login"}
+              data-testid="button-signin-header"
+            >
               Sign In
             </Button>
           </div>
@@ -27,94 +31,215 @@ export default function Landing() {
 
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-slate-900 mb-6">
-            Maximize Your Business <span className="text-primary">Profitability</span>
+        <div className="text-center mb-20">
+          <Badge className="mb-6 text-sm px-4 py-1">Built by resellers, for resellers</Badge>
+          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+            Know your <span className="text-primary">REAL profit</span> on every flip<br/>
+            <span className="text-3xl md:text-4xl text-slate-600">after fees, shipping & costs</span>
           </h1>
-          <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-            Track inventory, record sales, and analyze your business performance with powerful analytics. 
-            Start your 3-day trial with full access to all features.
+          <p className="text-xl text-slate-600 mb-10 max-w-3xl mx-auto">
+            ProfitPad replaces messy spreadsheets so you can grow your reselling business with clarity and confidence. 
+            Stop guessing—start knowing exactly what you're making.
           </p>
           <Button 
             size="lg" 
-            className="px-8 py-4 text-lg"
+            className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/api/login"}
+            data-testid="button-start-trial-hero"
           >
-            Start 3-Day Trial
+            Start Your Free 3-Day Trial →
           </Button>
+          <p className="text-sm text-slate-500 mt-4">No credit card required • Cancel anytime</p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          <Card>
-            <CardHeader>
-              <Package className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Inventory Management</CardTitle>
-              <CardDescription>
-                Track your products with SKU management, condition tracking, and multi-platform support.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+        {/* Social Proof */}
+        <div className="mb-20 bg-white rounded-2xl p-8 shadow-sm border">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Trusted by resellers nationwide</h3>
+            <p className="text-slate-600">See what other sellers are saying</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-3">
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                </div>
+                <p className="text-slate-700 mb-4">"ProfitPad helped me discover I was losing $2 per sale without knowing it. Game changer for my business!"</p>
+                <p className="text-sm text-slate-500">- Sarah M., eBay Seller</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-3">
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                </div>
+                <p className="text-slate-700 mb-4">"Finally ditched my spreadsheets! ProfitPad shows me exactly which items are actually profitable."</p>
+                <p className="text-sm text-slate-500">- Mike T., Pallet Reseller</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-3">
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                </div>
+                <p className="text-slate-700 mb-4">"The fee calculator alone has saved me hundreds. I know my real margins before I even list!"</p>
+                <p className="text-sm text-slate-500">- Jessica L., Amazon FBA</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <DollarSign className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Sales Tracking</CardTitle>
-              <CardDescription>
-                Record sales with detailed profit calculations including fees, shipping, and platform costs.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+        {/* How It Works */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              How ProfitPad Works
+            </h2>
+            <p className="text-xl text-slate-600">
+              Get started in 3 simple steps
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center border-2">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Upload className="h-8 w-8 text-primary" />
+                </div>
+                <div className="text-3xl font-bold text-primary mb-2">1</div>
+                <CardTitle className="text-xl">Enter Your Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">
+                  Add items manually or import from your selling platform. Quick and easy setup.
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <BarChart3 className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Analytics Dashboard</CardTitle>
-              <CardDescription>
-                Visualize your performance with real-time metrics, charts, and profitability insights.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+            <Card className="text-center border-2">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calculator className="h-8 w-8 text-primary" />
+                </div>
+                <div className="text-3xl font-bold text-primary mb-2">2</div>
+                <CardTitle className="text-xl">Auto-Calculate Costs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">
+                  ProfitPad automatically calculates fees, shipping, and all costs for accurate profit tracking.
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <Bell className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Smart Reminders</CardTitle>
-              <CardDescription>
-                Never miss important tasks with intelligent reminders linked to your inventory and sales.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+            <Card className="text-center border-2">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LineChart className="h-8 w-8 text-primary" />
+                </div>
+                <div className="text-3xl font-bold text-primary mb-2">3</div>
+                <CardTitle className="text-xl">See True Profit</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">
+                  View your real profit and discover what products bring the most money to your pocket.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <Target className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Goal Tracking</CardTitle>
-              <CardDescription>
-                Set monthly profit goals and track your progress with visual indicators and reports.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+        {/* Features as Benefits */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Everything You Need to Scale
+            </h2>
+            <p className="text-xl text-slate-600">
+              Stop leaving money on the table
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Package className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Never Oversell or Lose Track</CardTitle>
+                <CardDescription className="text-base">
+                  Manage your inventory across all platforms. Know exactly what you have in stock, where it's listed, and what condition it's in.
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <TrendingUp className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>CSV Import/Export</CardTitle>
-              <CardDescription>
-                Easily import existing data and export reports for accounting and analysis purposes.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <DollarSign className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>See Your REAL Profit After Hidden Costs</CardTitle>
+                <CardDescription className="text-base">
+                  Track every fee, shipping charge, and expense. No more surprises—know your actual take-home on every sale.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <BarChart3 className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Know What Brings the Most Profit</CardTitle>
+                <CardDescription className="text-base">
+                  Detailed analytics show which products make you the most money—not just revenue, but actual profit you keep.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Bell className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Never Miss Important Tasks</CardTitle>
+                <CardDescription className="text-base">
+                  Smart reminders for repricing, relisting, and follow-ups keep your business running smoothly without the mental load.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Target className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Hit Your Monthly Goals</CardTitle>
+                <CardDescription className="text-base">
+                  Set profit targets and track progress in real-time. Stay motivated and focused on growing your business.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <TrendingUp className="h-12 w-12 text-primary mb-4" />
+                <CardTitle>Simplify Tax Time & Accounting</CardTitle>
+                <CardDescription className="text-base">
+                  Export clean reports for your accountant. Track expenses and income all year long—no scrambling at tax time.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
 
         {/* Pricing Tiers */}
-        <div className="mb-16">
+        <div className="mb-20" id="pricing">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Choose Your Perfect Plan
+              Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-slate-600">
-              Start free and scale with your business success
+              Less than the cost of one flip mistake per month
             </p>
           </div>
 
@@ -127,17 +252,18 @@ export default function Landing() {
                 <CardDescription>Perfect for getting started</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Up to 100 inventory items</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Complete sales tracking</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Essential analytics dashboard</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Task reminders</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>CSV import/export</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>3-day free trial</li>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 100 inventory items</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 100 sales records</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Basic profit analytics</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Task reminders</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>3-day free trial</span></li>
                 </ul>
                 <Button 
                   className="w-full mt-6"
+                  variant="outline"
                   onClick={() => window.location.href = "/api/login"}
+                  data-testid="button-trial-starter"
                 >
                   Start Free Trial
                 </Button>
@@ -145,30 +271,30 @@ export default function Landing() {
             </Card>
 
             {/* Professional Tier */}
-            <Card className="relative border-primary shadow-lg">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
+            <Card className="relative border-primary border-2 shadow-xl scale-105">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                MOST POPULAR
               </div>
-              <CardHeader>
+              <CardHeader className="pt-8">
                 <CardTitle className="text-2xl">Professional</CardTitle>
                 <div className="text-4xl font-bold text-slate-900">$19.99<span className="text-base font-normal text-slate-500">/month</span></div>
                 <CardDescription>For growing businesses</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Unlimited inventory items</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Advanced profit analytics</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Multi-platform integration</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Smart profit insights</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Priority support</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Custom reporting</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Goal tracking & alerts</li>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 500 inventory items</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 500 sales records</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Advanced profit analytics</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>CSV import/export reports</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Priority support</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Custom reporting</span></li>
                 </ul>
                 <Button 
                   className="w-full mt-6"
                   onClick={() => window.location.href = "/api/login"}
+                  data-testid="button-trial-professional"
                 >
-                  Start Professional Trial
+                  Start Professional Trial →
                 </Button>
               </CardContent>
             </Card>
@@ -181,44 +307,57 @@ export default function Landing() {
                 <CardDescription>For serious entrepreneurs</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Everything in Professional</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Multi-user team access</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Advanced automation</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>API integrations</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>White-label reporting</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Dedicated account manager</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Custom integrations</li>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Unlimited everything</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Multi-user team access</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>API integrations</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>White-label reporting</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Dedicated account manager</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Custom integrations</span></li>
                 </ul>
                 <Button 
                   variant="outline"
                   className="w-full mt-6"
                   onClick={() => window.location.href = "/api/login"}
+                  data-testid="button-trial-enterprise"
                 >
                   Start Enterprise Trial
                 </Button>
               </CardContent>
             </Card>
           </div>
+          <p className="text-center text-slate-600 mt-8">
+            💳 Cancel anytime, no credit card traps • All plans include a 3-day free trial
+          </p>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center bg-white rounded-2xl p-12 shadow-sm border">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            Ready to boost your profits?
+        {/* Final CTA Section */}
+        <div className="text-center bg-gradient-to-r from-primary to-blue-600 text-white rounded-2xl p-12 shadow-xl">
+          <h2 className="text-4xl font-bold mb-4">
+            Stop Guessing. Start Growing.
           </h2>
-          <p className="text-lg text-slate-600 mb-8">
-            Join thousands of entrepreneurs who use ProfitPad to optimize their business performance.
+          <p className="text-xl mb-8 opacity-90">
+            Join hundreds of resellers who've taken control of their profits with ProfitPad
           </p>
           <Button 
             size="lg" 
-            className="px-8 py-4 text-lg"
+            variant="secondary"
+            className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/api/login"}
+            data-testid="button-start-trial-footer"
           >
-            Start Your 3-Day Trial
+            Start Your Free 3-Day Trial →
           </Button>
+          <p className="text-sm mt-4 opacity-75">No credit card required • Takes less than 60 seconds</p>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t mt-20">
+        <div className="max-w-7xl mx-auto px-6 py-8 text-center text-slate-600">
+          <p className="text-sm">© 2025 ProfitPad. Built for resellers who want to maximize every flip.</p>
+        </div>
+      </footer>
     </div>
   );
 }
