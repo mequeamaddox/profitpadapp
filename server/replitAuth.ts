@@ -107,8 +107,25 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     // Handle localhost development by using the first configured domain
-    const hostname = req.hostname === 'localhost' ? 
-      process.env.REPLIT_DOMAINS!.split(",")[0] : req.hostname;
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    let hostname = req.hostname;
+    
+    // For localhost, use the first configured domain
+    if (hostname === 'localhost') {
+      hostname = domains[0];
+    } else {
+      // Find matching domain (handles www prefix and other variations)
+      const matchedDomain = domains.find(d => 
+        hostname === d || hostname === `www.${d}` || hostname.endsWith(`.${d}`)
+      );
+      if (matchedDomain) {
+        hostname = matchedDomain;
+      } else {
+        // Fallback to first domain if no match
+        hostname = domains[0];
+      }
+    }
+    
     passport.authenticate(`replitauth:${hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -117,8 +134,24 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     // Handle localhost development by using the first configured domain
-    const hostname = req.hostname === 'localhost' ? 
-      process.env.REPLIT_DOMAINS!.split(",")[0] : req.hostname;
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    let hostname = req.hostname;
+    
+    // For localhost, use the first configured domain
+    if (hostname === 'localhost') {
+      hostname = domains[0];
+    } else {
+      // Find matching domain (handles www prefix and other variations)
+      const matchedDomain = domains.find(d => 
+        hostname === d || hostname === `www.${d}` || hostname.endsWith(`.${d}`)
+      );
+      if (matchedDomain) {
+        hostname = matchedDomain;
+      } else {
+        // Fallback to first domain if no match
+        hostname = domains[0];
+      }
+    }
     
     passport.authenticate(`replitauth:${hostname}`, (err: any, user: any, info: any) => {
       if (err) {
