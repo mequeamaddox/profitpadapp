@@ -237,78 +237,24 @@ export default function BarcodeScanner({ onScanSuccess, onClose, isOpen }: Barco
   const lookupProduct = async (code: string) => {
     setLookupLoading(true);
     try {
-      // Enhanced retail APIs with excellent Home Depot coverage
-      const apis = [
-        `https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`,
-        `https://api.barcodelookup.com/v3/products?barcode=${code}&formatted=y&key=demo`,
-        `https://go-upc.com/api/v1/code/${code}` // Go-UPC has excellent Home Depot coverage
-      ];
+      const response = await fetch('/api/barcode-lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ upc: code }),
+      });
 
-      let productData = null;
-      
-      // Try UPCItemDB first (excellent Home Depot, retail coverage)
-      try {
-        const response = await fetch(apis[0]);
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-          const item = data.items[0];
-          productData = {
-            title: item.title,
-            brand: item.brand,
-            description: item.description,
-            category: item.category,
-            source: 'UPCItemDB',
-            retailer: item.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
-          };
-        }
-      } catch (e) {
-        console.log('UPCItemDB failed, trying Barcode Lookup API');
+      if (response.ok) {
+        const productData = await response.json();
+        setProductInfo(productData);
+      } else {
+        console.error('Product lookup failed:', response.statusText);
+        setProductInfo(null);
       }
-
-      // Fallback to Barcode Lookup (strong Home Depot product database)
-      if (!productData) {
-        try {
-          const response = await fetch(apis[1]);
-          const data = await response.json();
-          if (data.products && data.products.length > 0) {
-            const product = data.products[0];
-            productData = {
-              title: product.product_name || product.title,
-              brand: product.brand,
-              description: product.description,
-              category: product.category,
-              source: 'Barcode Lookup',
-              retailer: product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
-            };
-          }
-        } catch (e) {
-          console.log('Barcode Lookup failed, trying Go-UPC');
-        }
-      }
-
-      // Third fallback - Go-UPC (1 billion products, strong Home Depot coverage)
-      if (!productData) {
-        try {
-          const response = await fetch(apis[2]);
-          const data = await response.json();
-          if (data.product) {
-            productData = {
-              title: data.product.name,
-              brand: data.product.brand,
-              description: data.product.description,
-              category: data.product.category,
-              source: 'Go-UPC',
-              retailer: data.product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
-            };
-          }
-        } catch (e) {
-          console.log('Go-UPC failed - all APIs exhausted');
-        }
-      }
-
-      setProductInfo(productData);
     } catch (error) {
-      console.error('Product lookup failed:', error);
+      console.error('Product lookup error:', error);
+      setProductInfo(null);
     } finally {
       setLookupLoading(false);
     }

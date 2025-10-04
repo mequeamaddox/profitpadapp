@@ -900,7 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Barcode lookup endpoint
+  // Barcode lookup endpoint - calls external APIs server-side for security
   app.post("/api/barcode-lookup", isAuthenticated, async (req, res) => {
     try {
       const { upc } = req.body;
@@ -909,39 +909,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "UPC is required" });
       }
 
-      // Simulate product lookup with realistic data
-      // In production, this would integrate with APIs like:
-      // - UPC Database API
-      // - eBay Completed Listings API
-      // - Amazon Product Advertising API
-      // - Google Shopping API
+      let productData = null;
       
-      const mockProductData = {
-        title: "Apple AirPods Pro (2nd Generation)",
-        brand: "Apple",
-        category: "Electronics > Audio > Headphones",
-        upc: upc,
-        estimatedValue: {
-          low: 180.00,
-          average: 220.00,
-          high: 250.00
-        },
-        demandLevel: "High" as const,
-        salesVelocity: 150, // sales per month
-        competitorCount: 45,
-        lastSaleDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        marketTrend: "Stable" as const,
-        suggestedListPrice: 225.00,
-        profitPotential: "High" as const,
-        notes: [
-          "High demand item with consistent sales",
-          "Best selling season: November-December",
-          "Consider competitive pricing due to high seller count",
-          "Authentic items command premium prices"
-        ]
-      };
+      // Try UPCItemDB (free trial, good retail coverage including Home Depot)
+      try {
+        const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items && data.items.length > 0) {
+            const item = data.items[0];
+            productData = {
+              title: item.title,
+              brand: item.brand,
+              description: item.description,
+              category: item.category,
+              source: 'UPCItemDB',
+              retailer: item.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
+            };
+          }
+        }
+      } catch (e) {
+        console.log('UPCItemDB failed, trying Barcode Lookup');
+      }
 
-      res.json(mockProductData);
+      // Fallback to Barcode Lookup (demo key, good Home Depot coverage)
+      if (!productData) {
+        try {
+          const response = await fetch(`https://api.barcodelookup.com/v3/products?barcode=${upc}&formatted=y&key=demo`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.products && data.products.length > 0) {
+              const product = data.products[0];
+              productData = {
+                title: product.product_name || product.title,
+                brand: product.brand,
+                description: product.description,
+                category: product.category,
+                source: 'Barcode Lookup',
+                retailer: product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
+              };
+            }
+          }
+        } catch (e) {
+          console.log('Barcode Lookup failed, trying Go-UPC');
+        }
+      }
+
+      // Third fallback - Go-UPC (public API, 1 billion products, excellent Home Depot coverage)
+      if (!productData) {
+        try {
+          const response = await fetch(`https://go-upc.com/api/v1/code/${upc}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.product) {
+              productData = {
+                title: data.product.name,
+                brand: data.product.brand,
+                description: data.product.description,
+                category: data.product.category,
+                source: 'Go-UPC',
+                retailer: data.product.brand?.toLowerCase().includes('depot') ? 'Home Depot' : undefined
+              };
+            }
+          }
+        } catch (e) {
+          console.log('Go-UPC failed - all APIs exhausted');
+        }
+      }
+
+      if (productData) {
+        res.json(productData);
+      } else {
+        res.status(404).json({ error: "Product not found in any database" });
+      }
     } catch (error) {
       console.error("Error in barcode lookup:", error);
       res.status(500).json({ error: "Failed to lookup product" });
