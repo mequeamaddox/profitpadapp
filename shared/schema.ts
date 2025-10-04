@@ -282,6 +282,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
 export const pallets = pgTable("pallets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
+  palletCode: varchar("pallet_code"), // Short code for SKU generation (e.g., PL01, PL02)
   name: varchar("name").notNull(),
   description: text("description"),
   supplier: varchar("supplier"),

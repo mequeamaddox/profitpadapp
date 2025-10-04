@@ -37,39 +37,29 @@ const categories = [
   "Art & Crafts", "Musical Instruments", "Jewelry & Watches", "Other"
 ];
 
+// Category code mapping for SKUs
+const categoryCodeMap: Record<string, string> = {
+  "Electronics": "ELE",
+  "Clothing & Accessories": "CLO",
+  "Collectibles": "COL",
+  "Sports & Outdoors": "SPO",
+  "Home & Garden": "HOM",
+  "Automotive": "AUT",
+  "Books & Media": "BOK",
+  "Toys & Games": "TOY",
+  "Health & Beauty": "HEA",
+  "Art & Crafts": "ART",
+  "Musical Instruments": "MUS",
+  "Jewelry & Watches": "JEW",
+  "Other": "OTH"
+};
+
 const conditions = [
   "New", "Like New", "Good", "Fair", "Poor"
 ];
 
 const statuses = [
   "unlisted", "listed", "sold", "returned"
-];
-
-// SKU Builder Options
-const toolTypes = [
-  { code: "TRIM", label: "Trimmer Attachment (Expand-It)" },
-  { code: "COMBO", label: "Trimmer + Blower Combo Kit" },
-  { code: "BLOW", label: "Jet Fan Blower (Attachment)" },
-  { code: "SAW", label: "Chainsaw" },
-  { code: "POLE", label: "Pole Saw" },
-];
-
-const brands = [
-  { code: "RYO", label: "Ryobi" },
-];
-
-const powerOptions = [
-  { code: "18V", label: "18 Volt Battery Powered" },
-  { code: "40V", label: "40 Volt Battery Powered" },
-  { code: "18V-BLS", label: "18 Volt Brushless Motor" },
-  { code: "ATT", label: "Universal Attachment" },
-];
-
-const skuConditions = [
-  { code: "NEW", label: "New Condition" },
-  { code: "USED", label: "Used Condition" },
-  { code: "DMG", label: "Damaged" },
-  { code: "UNT", label: "Untested" },
 ];
 
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
@@ -269,24 +259,60 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                 <FormLabel>SKU (Auto-Generated)</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="Click Generate to create SKU" {...field} data-testid="input-sku" readOnly />
+                    <Input placeholder="Select pallet & category, then generate" {...field} data-testid="input-sku" readOnly />
                   </FormControl>
                   <Button 
                     type="button" 
                     variant="outline"
                     onClick={async () => {
+                      const palletId = form.getValues("palletId");
+                      const category = form.getValues("category");
+                      
+                      if (!palletId || palletId === "none") {
+                        toast({
+                          title: "Pallet Required",
+                          description: "Please select a pallet first",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      if (!category) {
+                        toast({
+                          title: "Category Required",
+                          description: "Please select a category first",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      const categoryCode = categoryCodeMap[category];
+                      if (!categoryCode) {
+                        toast({
+                          title: "Invalid Category",
+                          description: "Category not recognized",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
                       try {
-                        const response = await fetch('/api/inventory/generate-sku');
+                        const response = await fetch(`/api/inventory/generate-sku?palletId=${encodeURIComponent(palletId)}&categoryCode=${categoryCode}`);
                         const data = await response.json();
+                        
+                        if (!response.ok) {
+                          throw new Error(data.message || "Failed to generate SKU");
+                        }
+                        
                         form.setValue("sku", data.sku);
                         toast({
                           title: "SKU Generated",
-                          description: `Generated: ${data.sku}`,
+                          description: `${data.sku} (Pallet: ${data.palletCode}, Category: ${categoryCode})`,
                         });
-                      } catch (error) {
+                      } catch (error: any) {
                         toast({
                           title: "Error",
-                          description: "Failed to generate SKU",
+                          description: error.message || "Failed to generate SKU",
                           variant: "destructive",
                         });
                       }
@@ -296,7 +322,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     Generate
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Auto-generates INV-001, INV-002, etc. Each SKU becomes a scannable barcode.</p>
+                <p className="text-xs text-muted-foreground">Format: PALLET-CATEGORY-### (e.g. PL01-ELE-001). Select pallet and category first.</p>
                 <FormMessage />
               </FormItem>
             )}
