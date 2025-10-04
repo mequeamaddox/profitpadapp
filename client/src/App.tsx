@@ -19,6 +19,7 @@ import Help from "@/pages/help";
 import ProfitEstimatorPage from "@/pages/profit-estimator";
 import Logout from "@/pages/logout";
 import Billing from "@/pages/billing";
+import PrintLabels from "@/pages/print-labels";
 
 
 function AuthenticatedRouter() {
@@ -55,6 +56,7 @@ function AuthenticatedRouter() {
           <Route path="/logout" component={Logout} />
           <Route path="/billing" component={Billing} />
           <Route path="/help" component={Help} />
+          <Route path="/print-labels" component={PrintLabels} />
         </>
       )}
       <Route component={NotFound} />

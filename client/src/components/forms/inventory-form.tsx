@@ -266,142 +266,37 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
             name="sku"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SKU</FormLabel>
+                <FormLabel>SKU (Auto-Generated)</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="Enter SKU or use builder" {...field} data-testid="input-sku" />
+                    <Input placeholder="Click Generate to create SKU" {...field} data-testid="input-sku" readOnly />
                   </FormControl>
-                  <Dialog open={showSkuBuilder} onOpenChange={setShowSkuBuilder}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        data-testid="button-open-sku-builder"
-                      >
-                        <Wrench className="w-4 h-4 mr-2" />
-                        Build SKU
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>SKU Builder</DialogTitle>
-                        <DialogDescription>
-                          Build a custom SKU for your power tools inventory
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label>Tool Type</Label>
-                          <Select value={skuToolType} onValueChange={setSkuToolType}>
-                            <SelectTrigger data-testid="select-sku-tooltype">
-                              <SelectValue placeholder="Select tool type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {toolTypes.map((tool) => (
-                                <SelectItem key={tool.code} value={tool.code}>
-                                  {tool.code} - {tool.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Brand</Label>
-                          <Select value={skuBrand} onValueChange={setSkuBrand}>
-                            <SelectTrigger data-testid="select-sku-brand">
-                              <SelectValue placeholder="Select brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {brands.map((brand) => (
-                                <SelectItem key={brand.code} value={brand.code}>
-                                  {brand.code} - {brand.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Power / Motor / Style</Label>
-                          <Select value={skuPower} onValueChange={setSkuPower}>
-                            <SelectTrigger data-testid="select-sku-power">
-                              <SelectValue placeholder="Select power type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {powerOptions.map((power) => (
-                                <SelectItem key={power.code} value={power.code}>
-                                  {power.code} - {power.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Condition</Label>
-                          <Select value={skuCondition} onValueChange={setSkuCondition}>
-                            <SelectTrigger data-testid="select-sku-condition">
-                              <SelectValue placeholder="Select condition" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skuConditions.map((cond) => (
-                                <SelectItem key={cond.code} value={cond.code}>
-                                  {cond.code} - {cond.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="border-t pt-4">
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Preview: {skuToolType && skuBrand && skuPower && skuCondition 
-                              ? `${skuToolType}-${skuBrand}-${skuPower}-${skuCondition}-[AUTO]`
-                              : "Select all options to preview SKU"}
-                          </p>
-                        </div>
-
-                        <Button 
-                          type="button"
-                          className="w-full"
-                          onClick={async () => {
-                            if (!skuToolType || !skuBrand || !skuPower || !skuCondition) {
-                              toast({
-                                title: "Missing Information",
-                                description: "Please select all SKU components",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-
-                            try {
-                              const response = await fetch(
-                                `/api/inventory/generate-sku?toolType=${skuToolType}&brand=${skuBrand}&power=${encodeURIComponent(skuPower)}&condition=${skuCondition}`
-                              );
-                              const data = await response.json();
-                              form.setValue("sku", data.sku);
-                              setShowSkuBuilder(false);
-                              toast({
-                                title: "SKU Generated",
-                                description: `${data.sku} (Next serial: ${data.nextSerial})`,
-                              });
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description: "Failed to generate SKU",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                          data-testid="button-generate-sku"
-                        >
-                          Generate SKU
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/inventory/generate-sku');
+                        const data = await response.json();
+                        form.setValue("sku", data.sku);
+                        toast({
+                          title: "SKU Generated",
+                          description: `Generated: ${data.sku}`,
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to generate SKU",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    data-testid="button-generate-sku"
+                  >
+                    Generate
+                  </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">Auto-generates INV-001, INV-002, etc. Each SKU becomes a scannable barcode.</p>
                 <FormMessage />
               </FormItem>
             )}
