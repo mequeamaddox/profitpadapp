@@ -5,6 +5,7 @@ import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { BarChart3 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -30,9 +31,22 @@ function AuthenticatedRouter() {
 
   // Show loading state
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-lg">Loading...</div>
-    </div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center animate-pulse">
+              <BarChart3 className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">ProfitPad</h2>
+          <p className="text-sm text-slate-600">Loading your dashboard...</p>
+          <div className="mt-4 flex justify-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
