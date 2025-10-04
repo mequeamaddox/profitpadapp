@@ -13,8 +13,9 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { Settings as SettingsIcon, DollarSign, Calculator } from "lucide-react";
+import { Settings as SettingsIcon, DollarSign, Calculator, ArrowLeft } from "lucide-react";
 import { z } from "zod";
+import { Link } from "wouter";
 
 // Settings form schema
 const settingsSchema = z.object({
@@ -116,9 +117,16 @@ export default function Settings() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex items-center gap-2 mb-6">
-        <SettingsIcon className="w-6 h-6" />
-        <h1 className="text-3xl font-bold">Settings</h1>
+      <div className="flex items-center gap-4 mb-6">
+        <Link href="/">
+          <Button variant="outline" size="icon" data-testid="button-back">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </Link>
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="w-6 h-6" />
+          <h1 className="text-3xl font-bold">Settings</h1>
+        </div>
       </div>
 
       <Form {...form}>
