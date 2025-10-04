@@ -77,34 +77,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate SKU endpoint
+  // Generate SKU endpoint with custom format support
   app.get("/api/inventory/generate-sku", isAuthenticated, async (req: any, res) => {
     try {
-      const { category } = req.query;
+      const userId = req.user.claims.sub;
+      const { toolType, brand, power, condition } = req.query;
       
-      // Create category prefix (first 3 letters uppercase, or "ITM" as default)
-      let prefix = "ITM";
-      if (category && typeof category === "string") {
-        prefix = category.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
-        if (prefix.length < 3) {
-          prefix = prefix.padEnd(3, 'X');
+      // If custom format parameters are provided, use the power tools format
+      if (toolType && brand && power && condition) {
+        // Map tool types to serial prefixes
+        const serialPrefixMap: Record<string, string> = {
+          'TRIM': 'T',
+          'COMBO': 'C',
+          'BLOW': 'B',
+          'SAW': 'S',
+          'POLE': 'P'
+        };
+        
+        const serialPrefix = serialPrefixMap[toolType as string] || 'X';
+        
+        // Query existing SKUs to find the highest serial number for this tool type
+        const allItems = await storage.getInventoryItems(userId, false);
+        
+        // Filter items that match this tool type and extract serial numbers
+        const matchingSerials = allItems
+          .filter(item => item.sku?.startsWith(`${toolType}-`))
+          .map(item => {
+            // Extract serial from SKU (last part after final dash)
+            const parts = item.sku?.split('-') || [];
+            const serial = parts[parts.length - 1] || '';
+            // Extract numeric part (e.g., "T001" -> 1)
+            const numMatch = serial.match(/\d+/);
+            return numMatch ? parseInt(numMatch[0], 10) : 0;
+          })
+          .filter(num => !isNaN(num));
+        
+        // Find the highest serial number and increment
+        const highestSerial = matchingSerials.length > 0 ? Math.max(...matchingSerials) : 0;
+        const nextSerial = highestSerial + 1;
+        
+        // Format serial as PREFIX### (e.g., T001)
+        const formattedSerial = `${serialPrefix}${String(nextSerial).padStart(3, '0')}`;
+        
+        // Build SKU: TOOLTYPE-BRAND-POWER-CONDITION-SERIAL
+        const sku = `${toolType}-${brand}-${power}-${condition}-${formattedSerial}`;
+        
+        res.json({ sku, nextSerial: formattedSerial });
+      } else {
+        // Fallback to simple format for backward compatibility
+        const { category } = req.query;
+        
+        let prefix = "ITM";
+        if (category && typeof category === "string") {
+          prefix = category.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+          if (prefix.length < 3) {
+            prefix = prefix.padEnd(3, 'X');
+          }
         }
+        
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateSuffix = `${year}${month}${day}`;
+        
+        const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+        const sku = `${prefix}-${dateSuffix}-${randomNum}`;
+        
+        res.json({ sku });
       }
-      
-      // Create date suffix (YYYYMMDD)
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const dateSuffix = `${year}${month}${day}`;
-      
-      // Create random 3-digit number for uniqueness
-      const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-      
-      // Combine: CAT-YYYYMMDD-XXX
-      const sku = `${prefix}-${dateSuffix}-${randomNum}`;
-      
-      res.json({ sku });
     } catch (error) {
       console.error("Error generating SKU:", error);
       res.status(500).json({ message: "Failed to generate SKU" });
