@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
+import { useSubscription } from "@/hooks/useSubscription";
 import { insertInventoryItemSchema, type InventoryItem, type InsertInventoryItem, type User, type Pallet } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import BarcodeScanner from "@/components/barcode-scanner";
+import { UpgradeModal } from "@/components/modals/upgrade-modal";
 
 interface InventoryFormProps {
   item?: InventoryItem | null;
@@ -101,9 +103,11 @@ const serialPrefixes: Record<string, string> = {
 export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { subscriptionData, tier } = useSubscription();
 
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showSkuBuilder, setShowSkuBuilder] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [skuToolType, setSkuToolType] = useState("");
   const [skuBrand, setSkuBrand] = useState("RYO");
   const [skuPower, setSkuPower] = useState("");
@@ -156,7 +160,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       });
       onSuccess?.();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -166,6 +170,12 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
+        return;
+      }
+
+      if (error.message?.includes("403") && error.message?.includes("limit")) {
+        setShowUpgradeModal(true);
+        queryClient.invalidateQueries({ queryKey: ["/api/subscription/usage"] });
         return;
       }
 
@@ -881,7 +891,14 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       onScanSuccess={handleBarcodeScanned}
     />
 
-
+    <UpgradeModal
+      open={showUpgradeModal}
+      onOpenChange={setShowUpgradeModal}
+      limitType="inventory"
+      currentTier={tier}
+      currentCount={subscriptionData?.usage.inventory || 0}
+      limit={subscriptionData?.limits.inventoryLimit || 0}
+    />
   </div>
   );
 }
