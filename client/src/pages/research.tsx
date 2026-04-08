@@ -9,8 +9,9 @@ import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Research() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuthContext();
-
+  const { user, isLoading } = useAuthContext();
+  const isAuthenticated = !!user;
+  
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -19,7 +20,7 @@ export default function Research() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/login";
       }, 500);
       return;
     }

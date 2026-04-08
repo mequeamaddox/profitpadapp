@@ -20,7 +20,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center space-x-2">
             <Button 
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/login"}
               data-testid="button-signin-header"
             >
               Sign In
@@ -44,7 +44,7 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/login"}
             data-testid="button-start-trial-hero"
           >
             Start Your Free 3-Day Trial →
