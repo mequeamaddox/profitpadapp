@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, CheckCircle2, Star, Upload, Calculator, LineChart } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth //
 
 export default function Landing() {
-  const {} = useAuth();
+  // const {} = useAuth();//
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
