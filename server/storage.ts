@@ -28,28 +28,63 @@ import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createLocalUser(
+    user: Partial<UpsertUser> & { email: string; passwordHash: string },
+  ): Promise<User>;
+  updateUserLoginMetadata(id: string): Promise<void>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Inventory operations
-  getInventoryItems(userId: string, archived?: boolean): Promise<InventoryItem[]>;
-  getInventoryItem(id: string, userId: string): Promise<InventoryItem | undefined>;
-  createInventoryItem(item: InsertInventoryItem & { userId: string }): Promise<InventoryItem>;
-  updateInventoryItem(id: string, userId: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined>;
+  getInventoryItems(
+    userId: string,
+    archived?: boolean,
+  ): Promise<InventoryItem[]>;
+  getInventoryItem(
+    id: string,
+    userId: string,
+  ): Promise<InventoryItem | undefined>;
+  createInventoryItem(
+    item: InsertInventoryItem & { userId: string },
+  ): Promise<InventoryItem>;
+  updateInventoryItem(
+    id: string,
+    userId: string,
+    item: Partial<InsertInventoryItem>,
+  ): Promise<InventoryItem | undefined>;
   deleteInventoryItem(id: string, userId: string): Promise<boolean>;
-  searchInventoryItems(userId: string, query: string): Promise<InventoryItem[]>;
+  searchInventoryItems(
+    userId: string,
+    query: string,
+  ): Promise<InventoryItem[]>;
 
   // Sales operations
   getSalesRecords(userId: string): Promise<SalesRecord[]>;
-  getSalesRecord(id: string, userId: string): Promise<SalesRecord | undefined>;
-  createSalesRecord(record: InsertSalesRecord & { userId: string }): Promise<SalesRecord>;
-  updateSalesRecord(id: string, userId: string, record: Partial<InsertSalesRecord>): Promise<SalesRecord | undefined>;
+  getSalesRecord(
+    id: string,
+    userId: string,
+  ): Promise<SalesRecord | undefined>;
+  createSalesRecord(
+    record: InsertSalesRecord & { userId: string },
+  ): Promise<SalesRecord>;
+  updateSalesRecord(
+    id: string,
+    userId: string,
+    record: Partial<InsertSalesRecord>,
+  ): Promise<SalesRecord | undefined>;
   deleteSalesRecord(id: string, userId: string): Promise<boolean>;
 
   // Reminders operations
   getReminders(userId: string): Promise<Reminder[]>;
   getReminder(id: string, userId: string): Promise<Reminder | undefined>;
-  createReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder>;
-  updateReminder(id: string, userId: string, reminder: Partial<InsertReminder>): Promise<Reminder | undefined>;
+  createReminder(
+    reminder: InsertReminder & { userId: string },
+  ): Promise<Reminder>;
+  updateReminder(
+    id: string,
+    userId: string,
+    reminder: Partial<InsertReminder>,
+  ): Promise<Reminder | undefined>;
   deleteReminder(id: string, userId: string): Promise<boolean>;
   getOverdueReminders(userId: string): Promise<Reminder[]>;
 
@@ -57,27 +92,51 @@ export interface IStorage {
   getExpenses(userId: string): Promise<Expense[]>;
   getExpense(id: string, userId: string): Promise<Expense | undefined>;
   createExpense(expense: InsertExpense & { userId: string }): Promise<Expense>;
-  updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
+  updateExpense(
+    id: string,
+    userId: string,
+    expense: Partial<InsertExpense>,
+  ): Promise<Expense | undefined>;
   deleteExpense(id: string, userId: string): Promise<boolean>;
 
   // Notification settings operations
-  getNotificationSettings(userId: string): Promise<NotificationSettings | undefined>;
-  upsertNotificationSettings(settings: InsertNotificationSettings & { userId: string }): Promise<NotificationSettings>;
+  getNotificationSettings(
+    userId: string,
+  ): Promise<NotificationSettings | undefined>;
+  upsertNotificationSettings(
+    settings: InsertNotificationSettings & { userId: string },
+  ): Promise<NotificationSettings>;
 
   // Pallet operations
   getPallets(userId: string): Promise<Pallet[]>;
   getPallet(id: string, userId: string): Promise<Pallet | undefined>;
   createPallet(pallet: InsertPallet & { userId: string }): Promise<Pallet>;
-  updatePallet(id: string, userId: string, pallet: Partial<InsertPallet>): Promise<Pallet | undefined>;
+  updatePallet(
+    id: string,
+    userId: string,
+    pallet: Partial<InsertPallet>,
+  ): Promise<Pallet | undefined>;
   deletePallet(id: string, userId: string): Promise<boolean>;
 
   // Advanced reminder operations
-  getDueReminders(userId: string, leadTimeMinutes?: number): Promise<Reminder[]>;
-  createRecurringReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder>;
-  snoozeReminder(id: string, userId: string, minutes: number): Promise<Reminder | undefined>;
+  getDueReminders(
+    userId: string,
+    leadTimeMinutes?: number,
+  ): Promise<Reminder[]>;
+  createRecurringReminder(
+    reminder: InsertReminder & { userId: string },
+  ): Promise<Reminder>;
+  snoozeReminder(
+    id: string,
+    userId: string,
+    minutes: number,
+  ): Promise<Reminder | undefined>;
 
-  searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]>;
-  
+  searchInventoryByBarcode(
+    userId: string,
+    barcode: string,
+  ): Promise<InventoryItem[]>;
+
   // Analytics operations
   getDashboardMetrics(userId: string): Promise<{
     totalSales: string;
@@ -94,6 +153,34 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createLocalUser(userData: any): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return user;
+  }
+
+  async updateUserLoginMetadata(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        lastLoginAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
   }
 
   async getInventoryCount(userId: string): Promise<number> {
@@ -125,26 +212,27 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         ...userData,
-        // Don't set trialEndsAt automatically - it will be set during onboarding/payment
       })
       .onConflictDoUpdate({
         target: users.id,
         set: {
           ...userData,
           updatedAt: new Date(),
-          // Don't update trialEndsAt or subscriptionTier unless explicitly provided
         },
       })
       .returning();
     return user;
   }
 
-  async getInventoryItems(userId: string, archived?: boolean): Promise<InventoryItem[]> {
+  async getInventoryItems(
+    userId: string,
+    archived?: boolean,
+  ): Promise<InventoryItem[]> {
     const conditions = [eq(inventoryItems.userId, userId)];
     if (archived !== undefined) {
       conditions.push(eq(inventoryItems.archived, archived));
     }
-    
+
     return await db
       .select()
       .from(inventoryItems)
@@ -152,7 +240,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(inventoryItems.createdAt));
   }
 
-  async getInventoryItem(id: string, userId: string): Promise<InventoryItem | undefined> {
+  async getInventoryItem(
+    id: string,
+    userId: string,
+  ): Promise<InventoryItem | undefined> {
     const [item] = await db
       .select()
       .from(inventoryItems)
@@ -160,7 +251,9 @@ export class DatabaseStorage implements IStorage {
     return item;
   }
 
-  async createInventoryItem(item: InsertInventoryItem & { userId: string }): Promise<InventoryItem> {
+  async createInventoryItem(
+    item: InsertInventoryItem & { userId: string },
+  ): Promise<InventoryItem> {
     const [newItem] = await db
       .insert(inventoryItems)
       .values(item)
@@ -168,7 +261,11 @@ export class DatabaseStorage implements IStorage {
     return newItem;
   }
 
-  async updateInventoryItem(id: string, userId: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined> {
+  async updateInventoryItem(
+    id: string,
+    userId: string,
+    item: Partial<InsertInventoryItem>,
+  ): Promise<InventoryItem | undefined> {
     const [updatedItem] = await db
       .update(inventoryItems)
       .set({ ...item, updatedAt: new Date() })
@@ -184,7 +281,10 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async searchInventoryItems(userId: string, query: string): Promise<InventoryItem[]> {
+  async searchInventoryItems(
+    userId: string,
+    query: string,
+  ): Promise<InventoryItem[]> {
     return await db
       .select()
       .from(inventoryItems)
@@ -196,13 +296,11 @@ export class DatabaseStorage implements IStorage {
             ${inventoryItems.sku} ILIKE ${`%${query}%`} OR
             ${inventoryItems.notes} ILIKE ${`%${query}%`} OR
             ${inventoryItems.barcode} = ${query}
-          )`
-        )
+          )`,
+        ),
       )
       .orderBy(desc(inventoryItems.createdAt));
   }
-
-
 
   async getSalesRecords(userId: string): Promise<SalesRecord[]> {
     return await db
@@ -228,7 +326,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(inventoryItems.createdAt));
   }
 
-  async getSalesRecord(id: string, userId: string): Promise<SalesRecord | undefined> {
+  async getSalesRecord(
+    id: string,
+    userId: string,
+  ): Promise<SalesRecord | undefined> {
     const [record] = await db
       .select()
       .from(salesRecords)
@@ -236,7 +337,9 @@ export class DatabaseStorage implements IStorage {
     return record;
   }
 
-  async createSalesRecord(record: InsertSalesRecord & { userId: string }): Promise<SalesRecord> {
+  async createSalesRecord(
+    record: InsertSalesRecord & { userId: string },
+  ): Promise<SalesRecord> {
     const [newRecord] = await db
       .insert(salesRecords)
       .values(record)
@@ -244,7 +347,11 @@ export class DatabaseStorage implements IStorage {
     return newRecord;
   }
 
-  async updateSalesRecord(id: string, userId: string, record: Partial<InsertSalesRecord>): Promise<SalesRecord | undefined> {
+  async updateSalesRecord(
+    id: string,
+    userId: string,
+    record: Partial<InsertSalesRecord>,
+  ): Promise<SalesRecord | undefined> {
     const [updatedRecord] = await db
       .update(salesRecords)
       .set({ ...record, updatedAt: new Date() })
@@ -276,15 +383,18 @@ export class DatabaseStorage implements IStorage {
     return reminder;
   }
 
-  async createReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder> {
-    const [newReminder] = await db
-      .insert(reminders)
-      .values(reminder)
-      .returning();
+  async createReminder(
+    reminder: InsertReminder & { userId: string },
+  ): Promise<Reminder> {
+    const [newReminder] = await db.insert(reminders).values(reminder).returning();
     return newReminder;
   }
 
-  async updateReminder(id: string, userId: string, reminder: Partial<InsertReminder>): Promise<Reminder | undefined> {
+  async updateReminder(
+    id: string,
+    userId: string,
+    reminder: Partial<InsertReminder>,
+  ): Promise<Reminder | undefined> {
     const [updatedReminder] = await db
       .update(reminders)
       .set({ ...reminder, updatedAt: new Date() })
@@ -309,8 +419,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(reminders.userId, userId),
           eq(reminders.completed, false),
-          lte(reminders.dueDate, now)
-        )
+          lte(reminders.dueDate, now),
+        ),
       )
       .orderBy(desc(reminders.dueDate));
   }
@@ -337,7 +447,11 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateExpense(id: string, userId: string, expense: Partial<InsertExpense>): Promise<Expense | undefined> {
+  async updateExpense(
+    id: string,
+    userId: string,
+    expense: Partial<InsertExpense>,
+  ): Promise<Expense | undefined> {
     const [updated] = await db
       .update(expenses)
       .set(expense)
@@ -354,20 +468,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
-    // Get current month start/end and previous month for comparison
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // Total sales amount
     const [totalSalesResult] = await db
       .select({ total: sum(salesRecords.salePrice) })
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId));
 
-    // Total profit calculation - use stored profit values (same as reports)
     const allSales = await db
       .select({ profit: salesRecords.profit })
       .from(salesRecords)
@@ -377,13 +488,11 @@ export class DatabaseStorage implements IStorage {
       return acc + parseFloat(sale.profit || "0");
     }, 0);
 
-    // Items sold count
     const [itemsSoldResult] = await db
       .select({ count: count() })
       .from(salesRecords)
       .where(eq(salesRecords.userId, userId));
 
-    // Previous month calculations for comparison
     const [prevMonthSalesResult] = await db
       .select({ total: sum(salesRecords.salePrice) })
       .from(salesRecords)
@@ -391,8 +500,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd)
-        )
+          lte(salesRecords.saleDate, prevMonthEnd),
+        ),
       );
 
     const prevMonthSales = await db
@@ -402,8 +511,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd)
-        )
+          lte(salesRecords.saleDate, prevMonthEnd),
+        ),
       );
 
     const prevMonthProfit = prevMonthSales.reduce((acc, sale) => {
@@ -417,11 +526,10 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd)
-        )
+          lte(salesRecords.saleDate, prevMonthEnd),
+        ),
       );
 
-    // Calculate percentage changes
     const calculateChange = (current: number, previous: number): string => {
       if (previous === 0) return current > 0 ? "+100%" : "";
       const change = ((current - previous) / previous) * 100;
@@ -438,7 +546,6 @@ export class DatabaseStorage implements IStorage {
     const prevItemsSold = prevMonthItemsSoldResult?.count || 0;
     const itemsSoldChange = calculateChange(currentItemsSold, prevItemsSold);
 
-    // Monthly goal progress
     const [userResult] = await db
       .select({ monthlyGoal: users.monthlyGoal })
       .from(users)
@@ -451,24 +558,28 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, monthStart),
-          lte(salesRecords.saleDate, monthEnd)
-        )
+          lte(salesRecords.saleDate, monthEnd),
+        ),
       );
 
     const monthlyGoal = parseFloat(userResult?.monthlyGoal || "0");
     const currentMonthProfit = parseFloat(monthlyProfitResult?.total || "0");
-    const monthlyProgress = monthlyGoal > 0 ? 
-      Math.min(100, parseFloat(((currentMonthProfit / monthlyGoal) * 100).toFixed(1))) : 0;
-      
+    const monthlyProgress =
+      monthlyGoal > 0
+        ? Math.min(
+            100,
+            parseFloat(((currentMonthProfit / monthlyGoal) * 100).toFixed(1)),
+          )
+        : 0;
+
     console.log("Monthly Goal Debug:", {
       userResult: userResult?.monthlyGoal,
       monthlyGoal,
       currentMonthProfit,
       monthlyProgress,
-      userId
+      userId,
     });
 
-    // Recent sales with inventory details
     const recentSales = await db
       .select({
         id: salesRecords.id,
@@ -485,12 +596,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(salesRecords.saleDate))
       .limit(5);
 
-    // Revenue data for the last 12 months
     const revenueData = [];
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const nextDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      
+
       const [monthlyRevenue] = await db
         .select({ total: sum(salesRecords.salePrice) })
         .from(salesRecords)
@@ -498,17 +608,16 @@ export class DatabaseStorage implements IStorage {
           and(
             eq(salesRecords.userId, userId),
             gte(salesRecords.saleDate, date),
-            lte(salesRecords.saleDate, nextDate)
-          )
+            lte(salesRecords.saleDate, nextDate),
+          ),
         );
 
       revenueData.push({
-        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        month: date.toLocaleDateString("en-US", { month: "short" }),
         revenue: parseFloat(monthlyRevenue?.total || "0"),
       });
     }
 
-    // Inventory stats
     const [totalItemsResult] = await db
       .select({ count: count() })
       .from(inventoryItems)
@@ -522,11 +631,10 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(inventoryItems.userId, userId),
           eq(inventoryItems.archived, false),
-          sql`${salesRecords.id} IS NULL`
-        )
+          sql`${salesRecords.id} IS NULL`,
+        ),
       );
 
-    // Calculate inventory resell value potential
     const activeInventory = await db
       .select({
         purchasePrice: inventoryItems.purchasePrice,
@@ -538,21 +646,21 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(inventoryItems.userId, userId),
           eq(inventoryItems.archived, false),
-          sql`${salesRecords.id} IS NULL` // Not sold yet
-        )
+          sql`${salesRecords.id} IS NULL`,
+        ),
       )
       .leftJoin(salesRecords, eq(inventoryItems.id, salesRecords.inventoryItemId));
 
     const inventoryValue = activeInventory.reduce((acc, item) => {
       const purchasePrice = parseFloat(item.purchasePrice || "0");
       const quantity = item.quantity || 1;
-      return acc + (purchasePrice * quantity);
+      return acc + purchasePrice * quantity;
     }, 0);
 
     const potentialRevenue = activeInventory.reduce((acc, item) => {
       const listedPrice = parseFloat(item.listedPrice || "0");
       const quantity = item.quantity || 1;
-      return acc + (listedPrice * quantity);
+      return acc + listedPrice * quantity;
     }, 0);
 
     const potentialProfit = potentialRevenue - inventoryValue;
@@ -568,7 +676,7 @@ export class DatabaseStorage implements IStorage {
       inventoryStats: {
         totalItems: totalItemsResult?.count || 0,
         activeListings: activeListingsResult?.count || 0,
-        lowStock: 0, // Could be calculated based on quantity if we add that field
+        lowStock: 0,
       },
       inventoryValue: {
         totalInvestment: inventoryValue.toFixed(2),
@@ -591,7 +699,9 @@ export class DatabaseStorage implements IStorage {
     return settings;
   }
 
-  async upsertNotificationSettings(settings: InsertNotificationSettings & { userId: string }): Promise<NotificationSettings> {
+  async upsertNotificationSettings(
+    settings: InsertNotificationSettings & { userId: string },
+  ): Promise<NotificationSettings> {
     const [result] = await db
       .insert(notificationSettings)
       .values(settings)
@@ -612,23 +722,22 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(inventoryItems)
       .where(
-        and(
-          eq(inventoryItems.userId, userId),
-          eq(inventoryItems.archived, false)
-        )
+        and(eq(inventoryItems.userId, userId), eq(inventoryItems.archived, false)),
       )
       .leftJoin(salesRecords, eq(inventoryItems.id, salesRecords.inventoryItemId));
 
-    // Filter items that haven't been sold and calculate staleness
     const staleItems = activeItems
-      .filter(item => !item.sales_records) // Not sold
-      .map(item => {
-        const listingDate = item.inventory_items.dateListed || item.inventory_items.dateAcquired;
-        const daysListed = Math.floor((Date.now() - new Date(listingDate).getTime()) / (1000 * 60 * 60 * 24));
-        
+      .filter((item) => !item.sales_records)
+      .map((item) => {
+        const listingDate =
+          item.inventory_items.dateListed || item.inventory_items.dateAcquired;
+        const daysListed = Math.floor(
+          (Date.now() - new Date(listingDate).getTime()) / (1000 * 60 * 60 * 24),
+        );
+
         let staleness: "Warning" | "Stale" | "Critical";
         let suggestedAction: string;
-        
+
         if (daysListed >= 90) {
           staleness = "Critical";
           suggestedAction = "Consider 30% price reduction or bundle with other items";
@@ -639,7 +748,7 @@ export class DatabaseStorage implements IStorage {
           staleness = "Warning";
           suggestedAction = "Monitor closely, consider minor price adjustment";
         } else {
-          return null; // Not stale yet
+          return null;
         }
 
         const potentialLoss = parseFloat(item.inventory_items.purchasePrice || "0");
@@ -649,11 +758,11 @@ export class DatabaseStorage implements IStorage {
           daysListed,
           staleness,
           suggestedAction,
-          potentialLoss
+          potentialLoss,
         };
       })
-      .filter(Boolean) // Remove null entries
-      .sort((a, b) => (b?.daysListed || 0) - (a?.daysListed || 0)); // Sort by most stale first
+      .filter(Boolean)
+      .sort((a, b) => (b?.daysListed || 0) - (a?.daysListed || 0));
 
     return staleItems;
   }
@@ -676,14 +785,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPallet(pallet: InsertPallet & { userId: string }): Promise<Pallet> {
-    const [result] = await db
-      .insert(pallets)
-      .values(pallet)
-      .returning();
+    const [result] = await db.insert(pallets).values(pallet).returning();
     return result;
   }
 
-  async updatePallet(id: string, userId: string, pallet: Partial<InsertPallet>): Promise<Pallet | undefined> {
+  async updatePallet(
+    id: string,
+    userId: string,
+    pallet: Partial<InsertPallet>,
+  ): Promise<Pallet | undefined> {
     const [result] = await db
       .update(pallets)
       .set({ ...pallet, updatedAt: new Date() })
@@ -700,10 +810,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Advanced reminder operations
-  async getDueReminders(userId: string, leadTimeMinutes: number = 60): Promise<Reminder[]> {
+  async getDueReminders(
+    userId: string,
+    leadTimeMinutes: number = 60,
+  ): Promise<Reminder[]> {
     const now = new Date();
     const leadTime = new Date(now.getTime() + leadTimeMinutes * 60000);
-    
+
     return await db
       .select()
       .from(reminders)
@@ -712,36 +825,42 @@ export class DatabaseStorage implements IStorage {
           eq(reminders.userId, userId),
           eq(reminders.completed, false),
           lte(reminders.dueDate, leadTime),
-          sql`(${reminders.snoozedUntil} IS NULL OR ${reminders.snoozedUntil} <= ${now})`
-        )
+          sql`(${reminders.snoozedUntil} IS NULL OR ${reminders.snoozedUntil} <= ${now})`,
+        ),
       )
       .orderBy(reminders.dueDate);
   }
 
-  async createRecurringReminder(reminder: InsertReminder & { userId: string }): Promise<Reminder> {
-    const [result] = await db
-      .insert(reminders)
-      .values(reminder)
-      .returning();
+  async createRecurringReminder(
+    reminder: InsertReminder & { userId: string },
+  ): Promise<Reminder> {
+    const [result] = await db.insert(reminders).values(reminder).returning();
     return result;
   }
 
-  async snoozeReminder(id: string, userId: string, minutes: number): Promise<Reminder | undefined> {
+  async snoozeReminder(
+    id: string,
+    userId: string,
+    minutes: number,
+  ): Promise<Reminder | undefined> {
     const snoozeUntil = new Date(Date.now() + minutes * 60000);
-    
+
     const [result] = await db
       .update(reminders)
-      .set({ 
+      .set({
         snoozedUntil: snoozeUntil,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)))
       .returning();
-    
+
     return result;
   }
 
-  async searchInventoryByBarcode(userId: string, barcode: string): Promise<InventoryItem[]> {
+  async searchInventoryByBarcode(
+    userId: string,
+    barcode: string,
+  ): Promise<InventoryItem[]> {
     return await db
       .select()
       .from(inventoryItems)
@@ -749,8 +868,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(inventoryItems.userId, userId),
           eq(inventoryItems.barcode, barcode),
-          eq(inventoryItems.archived, false)
-        )
+          eq(inventoryItems.archived, false),
+        ),
       );
   }
 }

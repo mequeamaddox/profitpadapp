@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-const isAuthenticated = (_req: any, _res: any, next: any) => next();
+import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -24,16 +24,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
 
   // Auth routes
-  app.get("/api/auth/user", async (_req: any, res) => {
-    res.json({
-      id: "demo-user",
-      email: "demo@profitpad.com",
-      name: "Demo User",
-    });
-  });
+  app.post("/api/auth/register", registerHandler);
+  app.post("/api/auth/login", loginHandler);
+  app.post("/api/auth/logout", logoutHandler);
+  app.get("/api/auth/user", currentUserHandler);
 
   // Dashboard routes
-  app.get("/api/dashboard/metrics", isAuthenticated, async (req: any, res) => {
+  app.get("/api/dashboard/metrics", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const metrics = await storage.getDashboardMetrics(userId);
@@ -45,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Inventory routes
-  app.get("/api/inventory", isAuthenticated, async (req: any, res) => {
+  app.get("/api/inventory", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { archived, search, limit } = req.query;
@@ -73,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate SKU endpoint - tool-based SKU format
   app.get(
     "/api/inventory/generate-sku",
-    isAuthenticated,
+    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -129,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Barcode search endpoint
-  app.get("/api/inventory/search", isAuthenticated, async (req: any, res) => {
+  app.get("/api/inventory/search", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { barcode } = req.query;
@@ -153,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/inventory/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/inventory/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const item = await storage.getInventoryItem(req.params.id, userId);
@@ -169,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/inventory",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     checkSubscriptionLimit("inventoryLimit"),
     async (req: any, res) => {
@@ -213,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.put("/api/inventory/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/inventory/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
 
@@ -265,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/inventory/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/inventory/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const success = await storage.deleteInventoryItem(req.params.id, userId);
@@ -280,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sales routes
-  app.get("/api/sales", isAuthenticated, async (req: any, res) => {
+  app.get("/api/sales", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const sales = await storage.getSalesRecords(userId);
@@ -291,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/sales/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/sales/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const sale = await storage.getSalesRecord(req.params.id, userId);
@@ -307,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/sales",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     checkSubscriptionLimit("salesLimit"),
     async (req: any, res) => {
@@ -342,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.put("/api/sales/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/sales/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
 
@@ -388,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/sales/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/sales/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const success = await storage.deleteSalesRecord(req.params.id, userId);
@@ -403,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Advanced Reminders routes
-  app.get("/api/reminders", isAuthenticated, async (req: any, res) => {
+  app.get("/api/reminders", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { overdue, due } = req.query;
@@ -426,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/reminders/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/reminders/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const reminder = await storage.getReminder(req.params.id, userId);
@@ -442,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/reminders",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     checkSubscriptionLimit("remindersLimit"),
     async (req: any, res) => {
@@ -466,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.put("/api/reminders/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/reminders/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertReminderSchema.partial().parse(req.body);
@@ -490,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/reminders/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/reminders/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const success = await storage.deleteReminder(req.params.id, userId);
@@ -505,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Expense routes
-  app.get("/api/expenses", isAuthenticated, async (req: any, res) => {
+  app.get("/api/expenses", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const expenses = await storage.getExpenses(userId);
@@ -516,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/expenses/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const expense = await storage.getExpense(req.params.id, userId);
@@ -532,7 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/expenses",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     async (req: any, res) => {
       try {
@@ -566,7 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.put("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/expenses/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertExpenseSchema.partial().parse(req.body);
@@ -590,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/expenses/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const success = await storage.deleteExpense(req.params.id, userId);
@@ -607,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Snooze reminder route
   app.post(
     "/api/reminders/:id/snooze",
-    isAuthenticated,
+    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -631,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification settings routes
   app.get(
     "/api/notification-settings",
-    isAuthenticated,
+    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -661,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put(
     "/api/notification-settings",
-    isAuthenticated,
+    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -686,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Reports routes
-  app.get("/api/reports/metrics", isAuthenticated, async (req: any, res) => {
+  app.get("/api/reports/metrics", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { dateRange, startDate, endDate, platform, category } = req.query;
@@ -870,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/reports/export", isAuthenticated, async (req: any, res) => {
+  app.get("/api/reports/export", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { format } = req.query;
@@ -902,7 +899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User settings routes
-  app.put("/api/user/settings", isAuthenticated, async (req: any, res) => {
+  app.put("/api/user/settings", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { monthlyGoal, salesTaxRate, taxInclusiveSales } = req.body;
@@ -942,7 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Subscription usage endpoint
-  app.get("/api/subscription/usage", isAuthenticated, async (req: any, res) => {
+  app.get("/api/subscription/usage", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const userData = await storage.getUser(userId);
@@ -977,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription activation endpoint (after PayPal payment)
   app.post(
     "/api/subscription/activate",
-    isAuthenticated,
+    requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -1021,7 +1018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Pallets routes
-  app.get("/api/pallets", isAuthenticated, async (req: any, res) => {
+  app.get("/api/pallets", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const pallets = await storage.getPallets(userId);
@@ -1032,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/pallets/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/pallets/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
@@ -1051,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/pallets",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     async (req: any, res) => {
       try {
@@ -1087,7 +1084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put(
     "/api/pallets/:id",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     async (req: any, res) => {
       try {
@@ -1125,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete(
     "/api/pallets/:id",
-    isAuthenticated,
+    requireAuth,
     checkTrialExpired,
     async (req: any, res) => {
       try {
@@ -1147,7 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Object storage routes for receipt uploads
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
+  app.get("/objects/:objectPath(*)", requireAuth, async (req: any, res) => {
     const userId = req.user?.claims?.sub || "";
     const { ObjectStorageService } = await import("./objectStorage");
     const objectStorageService = new ObjectStorageService();
@@ -1166,7 +1163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
+  app.post("/api/objects/upload", requireAuth, async (req: any, res) => {
     try {
       const { ObjectStorageService } = await import("./objectStorage");
       const objectStorageService = new ObjectStorageService();
@@ -1178,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/receipt-images", isAuthenticated, async (req: any, res) => {
+  app.put("/api/receipt-images", requireAuth, async (req: any, res) => {
     if (!req.body.receiptImageURL) {
       return res.status(400).json({ error: "receiptImageURL is required" });
     }
@@ -1200,7 +1197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // OCR endpoint to analyze receipt images
-  app.post("/api/analyze-receipt", isAuthenticated, async (req: any, res) => {
+  app.post("/api/analyze-receipt", requireAuth, async (req: any, res) => {
     if (!req.body.imageData) {
       return res.status(400).json({ error: "imageData is required" });
     }
@@ -1231,7 +1228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Barcode lookup endpoint - calls external APIs server-side for security
-  app.post("/api/barcode-lookup", isAuthenticated, async (req, res) => {
+  app.post("/api/barcode-lookup", requireAuth, async (req, res) => {
     try {
       const { upc } = req.body;
 
@@ -1331,7 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stale inventory analysis endpoint
   app.get(
     "/api/inventory/stale-analysis",
-    isAuthenticated,
+    requireAuth,
     async (req, res) => {
       try {
         const userId = (req.user as any)?.claims?.sub;

@@ -4,8 +4,10 @@ import { useMemo } from "react";
 import { getQueryFn } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider, useAuthContext } from "@/context/auth-context";
 import { BarChart3 } from "lucide-react";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -23,40 +25,52 @@ import Billing from "@/pages/billing";
 import PrintLabels from "@/pages/print-labels";
 import Onboarding from "@/pages/onboarding";
 
-
-function AuthenticatedRouter() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const [, setLocation] = useLocation();
-
-  // Debug logging
-  console.log("🔍 AuthenticatedRouter:", { isAuthenticated, isLoading, user: user?.id });
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center animate-pulse">
-              <BarChart3 className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">ProfitPad</h2>
-          <p className="text-sm text-slate-600">Loading your dashboard...</p>
-          <div className="mt-4 flex justify-center">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="text-center">
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center animate-pulse">
+            <BarChart3 className="h-8 w-8 text-white" />
           </div>
         </div>
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">ProfitPad</h2>
+        <p className="text-sm text-slate-600">Loading your dashboard...</p>
+        <div className="mt-4 flex justify-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
-    );
+    </div>
+  );
+}
+
+function AuthenticatedRouter() {
+  const { user, isLoading } = useAuthContext();
+  const [, setLocation] = useLocation();
+
+  const isAuthenticated = !!user;
+  const needsOnboarding =
+    !!user &&
+    !user.trialEndsAt &&
+    (!user.subscriptionTier || user.subscriptionTier === "trial");
+
+  console.log("🔍 AuthenticatedRouter:", {
+    isAuthenticated,
+    isLoading,
+    user: user?.id,
+    needsOnboarding,
+  });
+
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
-  // Check if user needs onboarding (new user without subscription or trial)
-  // User needs onboarding if they have no subscription tier set OR have trial tier with no trialEndsAt
-  const needsOnboarding = user && !user.trialEndsAt && (!user.subscriptionTier || user.subscriptionTier === 'trial');
-  
-  if (isAuthenticated && needsOnboarding && window.location.pathname !== '/onboarding') {
-    setLocation('/onboarding');
+  if (
+    isAuthenticated &&
+    needsOnboarding &&
+    window.location.pathname !== "/onboarding"
+  ) {
+    setLocation("/onboarding");
     return null;
   }
 
@@ -65,6 +79,8 @@ function AuthenticatedRouter() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
           <Route path="/:rest*" component={Landing} />
         </>
       ) : (
@@ -91,28 +107,33 @@ function AuthenticatedRouter() {
 }
 
 function App() {
-  // Create QueryClient instance with useMemo to prevent recreation
-  const queryClient = useMemo(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        queryFn: getQueryFn({ on401: "returnNull" }),
-        refetchInterval: false,
-        refetchOnWindowFocus: true, // Refetch on window focus to catch auth changes
-        staleTime: 0, // Always fresh queries
-        gcTime: 0, // Don't cache any queries 
-        retry: false,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  }), []);
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            queryFn: getQueryFn({ on401: "returnNull" }),
+            refetchInterval: false,
+            refetchOnWindowFocus: true,
+            staleTime: 0,
+            gcTime: 0,
+            retry: false,
+          },
+          mutations: {
+            retry: false,
+          },
+        },
+      }),
+    [],
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <AuthenticatedRouter />
+        <AuthProvider>
+          <Toaster />
+          <AuthenticatedRouter />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
