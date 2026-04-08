@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -11,24 +12,57 @@ import InventoryValue from "@/components/dashboard/inventory-value";
 import BreakEvenAnalysis from "@/components/analytics/break-even-analysis";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Plus, Edit, Archive, Trash2, Boxes, Package, DollarSign, TrendingUp, Calculator, Calendar, User, Upload, Scan, Printer } from "lucide-react";
-import { useLocation } from "wouter";
+import {
+  Search,
+  Plus,
+  Edit,
+  Archive,
+  Trash2,
+  Boxes,
+  Package,
+  DollarSign,
+  Scan,
+  Printer,
+} from "lucide-react";
 import type { InventoryItem, Pallet } from "@shared/schema";
 import BarcodeScanner from "@/components/barcode-scanner";
 
-// Pallet form schema
 const palletFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -43,8 +77,15 @@ const palletFormSchema = z.object({
 
 type PalletFormData = z.infer<typeof palletFormSchema>;
 
-function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => void }) {
+function PalletForm({
+  pallet,
+  onSuccess,
+}: {
+  pallet?: Pallet;
+  onSuccess?: () => void;
+}) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   const form = useForm<PalletFormData>({
@@ -53,7 +94,9 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
       name: pallet?.name || "",
       description: pallet?.description || "",
       supplier: pallet?.supplier || "",
-      purchaseDate: pallet?.purchaseDate ? new Date(pallet.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      purchaseDate: pallet?.purchaseDate
+        ? new Date(pallet.purchaseDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       totalCost: pallet?.totalCost || "",
       totalItems: pallet?.totalItems || 1,
       workingItems: pallet?.workingItems || 0,
@@ -66,20 +109,21 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
     mutationFn: async (data: PalletFormData) => {
       const endpoint = pallet ? `/api/pallets/${pallet.id}` : "/api/pallets";
       const method = pallet ? "PUT" : "POST";
-      
-      // The backend will handle the date conversion, just send the form data as is
+
       const transformedData = {
         ...data,
         totalCost: data.totalCost.toString(),
       };
-      
+
       return await apiRequest(method, endpoint, transformedData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pallets"] });
       toast({
         title: pallet ? "Pallet Updated" : "Pallet Created",
-        description: pallet ? "Your pallet has been updated successfully." : "Your pallet has been created successfully.",
+        description: pallet
+          ? "Your pallet has been updated successfully."
+          : "Your pallet has been created successfully.",
       });
       onSuccess?.();
     },
@@ -87,17 +131,20 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
+
       toast({
         title: "Error",
-        description: pallet ? "Failed to update pallet." : "Failed to create pallet.",
+        description: pallet
+          ? "Failed to update pallet."
+          : "Failed to create pallet.",
         variant: "destructive",
       });
     },
@@ -190,7 +237,7 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -204,7 +251,7 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="notes"
@@ -220,7 +267,11 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
         />
 
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : pallet ? "Update Pallet" : "Create Pallet"}
+          {mutation.isPending
+            ? "Saving..."
+            : pallet
+              ? "Update Pallet"
+              : "Create Pallet"}
         </Button>
       </form>
     </Form>
@@ -229,8 +280,11 @@ function PalletForm({ pallet, onSuccess }: { pallet?: Pallet; onSuccess?: () => 
 
 export default function Inventory() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
+  const isAuthenticated = !!user;
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -238,12 +292,10 @@ export default function Inventory() {
   const [isPalletFormOpen, setIsPalletFormOpen] = useState(false);
   const [editingPallet, setEditingPallet] = useState<Pallet | null>(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [, setLocation] = useLocation();
 
-  // Check for edit parameter in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('edit');
+    const editId = urlParams.get("edit");
     if (editId) {
       setIsFormOpen(true);
     }
@@ -253,17 +305,19 @@ export default function Inventory() {
     if (!isLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "Please log in to continue.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
 
-  const { data: inventory = [], isLoading: inventoryLoading } = useQuery<InventoryItem[]>({
+      setTimeout(() => {
+        setLocation("/login");
+      }, 500);
+    }
+  }, [isAuthenticated, isLoading, toast, setLocation]);
+
+  const { data: inventory = [], isLoading: inventoryLoading } = useQuery<
+    InventoryItem[]
+  >({
     queryKey: ["/api/inventory", { archived: showArchived, search: searchQuery }],
     enabled: isAuthenticated,
   });
@@ -273,18 +327,16 @@ export default function Inventory() {
     enabled: isAuthenticated,
   });
 
-  // Handle URL edit parameter
   useEffect(() => {
     if (inventory.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
-      const editId = urlParams.get('edit');
+      const editId = urlParams.get("edit");
       if (editId) {
-        const itemToEdit = inventory.find(item => item.id === editId);
+        const itemToEdit = inventory.find((item) => item.id === editId);
         if (itemToEdit) {
           setEditingItem(itemToEdit);
         }
-        // Clear URL parameter
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, [inventory]);
@@ -304,11 +356,11 @@ export default function Inventory() {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
@@ -335,11 +387,11 @@ export default function Inventory() {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
@@ -358,15 +410,14 @@ export default function Inventory() {
     },
     onSuccess: (updatedItem: InventoryItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      
-      // Get status-specific success message
+
       let message = "Item updated successfully";
       if (updatedItem.status === "listed" && updatedItem.dateListed) {
         message = `Item marked as listed on ${new Date(updatedItem.dateListed).toLocaleDateString()}`;
       } else if (updatedItem.status === "sold" && updatedItem.dateSold) {
         message = `Item marked as sold on ${new Date(updatedItem.dateSold).toLocaleDateString()}`;
       }
-      
+
       toast({
         title: "Success",
         description: message,
@@ -377,11 +428,11 @@ export default function Inventory() {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
@@ -407,12 +458,12 @@ export default function Inventory() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized", 
-          description: "You are logged out. Logging in again...",
+          title: "Unauthorized",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
@@ -440,58 +491,72 @@ export default function Inventory() {
 
     try {
       const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      
+      const lines = text.split("\n").filter((line) => line.trim());
+
       if (lines.length < 2) {
         toast({
           title: "Error",
-          description: "CSV file must contain header row and at least one data row",
+          description:
+            "CSV file must contain header row and at least one data row",
           variant: "destructive",
         });
         return;
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
       const data = lines.slice(1);
 
       let successCount = 0;
       let errorCount = 0;
 
       for (const line of data) {
-        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+
         try {
           const item = {
-            title: values[headers.indexOf('title')] || values[headers.indexOf('item')] || values[headers.indexOf('name')] || 'Imported Item',
-            sku: values[headers.indexOf('sku')] || '',
-            purchasePrice: values[headers.indexOf('purchase_price')] || values[headers.indexOf('cost')] || '0',
-            listedPrice: values[headers.indexOf('listed_price')] || values[headers.indexOf('price')] || '0',
-            platform: values[headers.indexOf('platform')] || '',
-            condition: values[headers.indexOf('condition')] || 'Good',
-            category: values[headers.indexOf('category')] || '',
-            quantity: parseInt(values[headers.indexOf('quantity')] || '1'),
-            notes: values[headers.indexOf('notes')] || values[headers.indexOf('description')] || '',
+            title:
+              values[headers.indexOf("title")] ||
+              values[headers.indexOf("item")] ||
+              values[headers.indexOf("name")] ||
+              "Imported Item",
+            sku: values[headers.indexOf("sku")] || "",
+            purchasePrice:
+              values[headers.indexOf("purchase_price")] ||
+              values[headers.indexOf("cost")] ||
+              "0",
+            listedPrice:
+              values[headers.indexOf("listed_price")] ||
+              values[headers.indexOf("price")] ||
+              "0",
+            platform: values[headers.indexOf("platform")] || "",
+            condition: values[headers.indexOf("condition")] || "Good",
+            category: values[headers.indexOf("category")] || "",
+            quantity: parseInt(values[headers.indexOf("quantity")] || "1"),
+            notes:
+              values[headers.indexOf("notes")] ||
+              values[headers.indexOf("description")] ||
+              "",
             dateAcquired: new Date(),
-            status: 'unlisted',
+            status: "unlisted",
             archived: false,
             tags: [],
-            images: []
+            images: [],
           };
 
           await apiRequest("POST", "/api/inventory", item);
           successCount++;
-        } catch (error) {
+        } catch {
           errorCount++;
         }
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      
+
       toast({
         title: "CSV Import Complete",
-        description: `Successfully imported ${successCount} items. ${errorCount > 0 ? `${errorCount} items failed.` : ''}`,
+        description: `Successfully imported ${successCount} items.${errorCount > 0 ? ` ${errorCount} items failed.` : ""}`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Import Error",
         description: "Failed to import CSV file",
@@ -502,14 +567,12 @@ export default function Inventory() {
 
   const handleBarcodeScan = (scannedSku: string) => {
     setShowBarcodeScanner(false);
-    
-    // Search for the item by SKU
-    const foundItem = inventory.find(item => 
-      item.sku?.toLowerCase() === scannedSku.toLowerCase()
+
+    const foundItem = inventory.find(
+      (item) => item.sku?.toLowerCase() === scannedSku.toLowerCase(),
     );
-    
+
     if (foundItem) {
-      // Open the edit dialog with the found item
       setEditingItem(foundItem);
       setIsFormOpen(true);
       toast({
@@ -551,9 +614,15 @@ export default function Inventory() {
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Inventory" subtitle="Manage your products and track their performance." />
-        
-        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
+        <Header
+          title="Inventory"
+          subtitle="Manage your products and track their performance."
+        />
+
+        <div
+          className="flex-1 overflow-y-auto p-4 md:p-6"
+          style={{ paddingBottom: "150px" }}
+        >
           <Tabs defaultValue="inventory" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="inventory">
@@ -567,10 +636,8 @@ export default function Inventory() {
             </TabsList>
 
             <TabsContent value="inventory" className="space-y-6">
-              {/* Inventory Value Overview */}
               <InventoryValue />
-              
-              {/* Inventory Actions Bar */}
+
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
                   <div className="relative w-full sm:w-80">
@@ -583,7 +650,7 @@ export default function Inventory() {
                       data-testid="input-search"
                     />
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -594,7 +661,7 @@ export default function Inventory() {
                     <Scan className="h-4 w-4 mr-2" />
                     Scan SKU
                   </Button>
-                  
+
                   <Button
                     variant={showArchived ? "default" : "outline"}
                     onClick={() => setShowArchived(!showArchived)}
@@ -603,7 +670,7 @@ export default function Inventory() {
                   >
                     {showArchived ? "Show Archived" : "Show Active"}
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -614,12 +681,12 @@ export default function Inventory() {
                     <Printer className="h-4 w-4 mr-2" />
                     Print Labels
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto"
-                    onClick={() => document.getElementById('csv-upload')?.click()}
+                    onClick={() => document.getElementById("csv-upload")?.click()}
                   >
                     Import CSV
                   </Button>
@@ -627,14 +694,18 @@ export default function Inventory() {
                     id="csv-upload"
                     type="file"
                     accept=".csv"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                     onChange={handleCSVImport}
                   />
                 </div>
-                
+
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setEditingItem(null)} className="shrink-0" data-testid="button-add-inventory">
+                    <Button
+                      onClick={() => setEditingItem(null)}
+                      className="shrink-0"
+                      data-testid="button-add-inventory"
+                    >
                       <Plus className="h-4 w-4 md:mr-2" />
                       <span className="hidden md:inline">Add Item</span>
                     </Button>
@@ -643,215 +714,192 @@ export default function Inventory() {
                     <DialogHeader>
                       <DialogTitle>
                         {editingItem ? "Edit Item" : "Add New Item"}
-                  </DialogTitle>
-                </DialogHeader>
-                <InventoryForm
-                  item={editingItem}
-                  onSuccess={handleFormClose}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+                      </DialogTitle>
+                    </DialogHeader>
+                    <InventoryForm item={editingItem} onSuccess={handleFormClose} />
+                  </DialogContent>
+                </Dialog>
+              </div>
 
-          {/* Inventory Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventory Items</CardTitle>
-              <CardDescription>
-                {inventory.length} items found
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {inventoryLoading ? (
-                <div className="text-center py-8">Loading inventory...</div>
-              ) : inventory.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  {searchQuery ? "No items match your search." : "No inventory items found. Add your first item to get started."}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inventory Items</CardTitle>
+                  <CardDescription>{inventory.length} items found</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {inventoryLoading ? (
+                    <div className="text-center py-8">Loading inventory...</div>
+                  ) : inventory.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      {searchQuery
+                        ? "No items match your search."
+                        : "No inventory items found. Add your first item to get started."}
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead>SKU</TableHead>
+                          <TableHead>Pallet</TableHead>
+                          <TableHead>Platform</TableHead>
+                          <TableHead>Purchase Price</TableHead>
+                          <TableHead>Listed Price</TableHead>
+                          <TableHead>Condition</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Quick Actions</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {inventory.map((item: InventoryItem) => {
+                          const itemPallet = pallets.find((p) => p.id === item.palletId);
+
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{item.title}</div>
+                                  <div className="text-sm text-slate-500">
+                                    Added {new Date(item.dateAcquired).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-mono text-sm">
+                                {item.sku}
+                              </TableCell>
+                              <TableCell>
+                                {itemPallet ? (
+                                  <Badge variant="secondary" className="font-mono">
+                                    {itemPallet.palletCode || itemPallet.name}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-sm text-slate-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>{item.platform || "-"}</TableCell>
+                              <TableCell>${item.purchasePrice}</TableCell>
+                              <TableCell>${item.listedPrice}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {item.condition || "Not specified"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    item.status === "sold"
+                                      ? "default"
+                                      : item.status === "listed"
+                                        ? "secondary"
+                                        : item.status === "returned"
+                                          ? "destructive"
+                                          : "outline"
+                                  }
+                                >
+                                  {item.status
+                                    ? item.status.charAt(0).toUpperCase() +
+                                      item.status.slice(1)
+                                    : "Unlisted"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-1">
+                                  {item.status !== "listed" && item.status !== "sold" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        updateMutation.mutate({
+                                          id: item.id,
+                                          status: "listed",
+                                          dateListed: new Date(),
+                                        })
+                                      }
+                                    >
+                                      List
+                                    </Button>
+                                  )}
+                                  {item.status !== "sold" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        updateMutation.mutate({
+                                          id: item.id,
+                                          status: "sold",
+                                          dateSold: new Date(),
+                                        })
+                                      }
+                                    >
+                                      Mark Sold
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      archiveMutation.mutate({
+                                        id: item.id,
+                                        archived: !item.archived,
+                                      })
+                                    }
+                                  >
+                                    <Archive className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteMutation.mutate(item.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="pallets" className="space-y-6">
+              <BreakEvenAnalysis />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Liquidation Pallets</h3>
+                  <p className="text-sm text-slate-500">
+                    Track bulk purchases and cost allocation for resale items
+                  </p>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Pallet</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Purchase Price</TableHead>
-                      <TableHead>Listed Price</TableHead>
-                      <TableHead>Condition</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Quick Actions</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inventory.map((item: InventoryItem) => {
-                      const itemPallet = pallets.find(p => p.id === item.palletId);
-                      return (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{item.title}</div>
-                            <div className="text-sm text-slate-500">
-                              Added {new Date(item.dateAcquired).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{item.sku}</TableCell>
-                        <TableCell>
-                          {itemPallet ? (
-                            <Badge variant="secondary" className="font-mono">
-                              {itemPallet.palletCode || itemPallet.name}
-                            </Badge>
-                          ) : (
-                            <span className="text-sm text-slate-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{item.platform || "-"}</TableCell>
-                        <TableCell>${item.purchasePrice}</TableCell>
-                        <TableCell>${item.listedPrice}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.condition || "Not specified"}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              item.status === "sold" ? "default" :
-                              item.status === "listed" ? "secondary" :
-                              item.status === "returned" ? "destructive" :
-                              "outline"
-                            }
-                          >
-                            {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unlisted"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-1">
-                            {item.status !== "listed" && item.status !== "sold" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => 
-                                  updateMutation.mutate({ 
-                                    id: item.id, 
-                                    status: "listed",
-                                    dateListed: new Date()
-                                  })
-                                }
-                              >
-                                List
-                              </Button>
-                            )}
-                            {item.status !== "sold" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => 
-                                  updateMutation.mutate({ 
-                                    id: item.id, 
-                                    status: "sold",
-                                    dateSold: new Date()
-                                  })
-                                }
-                              >
-                                Mark Sold
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(item)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => 
-                                archiveMutation.mutate({ 
-                                  id: item.id, 
-                                  archived: !item.archived 
-                                })
-                              }
-                            >
-                              <Archive className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteMutation.mutate(item.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="pallets" className="space-y-6">
-          {/* Break-Even Analysis for Pallet Purchases */}
-          <BreakEvenAnalysis />
-          
-          {/* Pallets Actions Bar */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium">Liquidation Pallets</h3>
-              <p className="text-sm text-slate-500">Track bulk purchases and cost allocation for resale items</p>
-            </div>
-            
-            <Dialog open={isPalletFormOpen} onOpenChange={setIsPalletFormOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditingPallet(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Pallet
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingPallet ? "Edit Pallet" : "Add New Pallet"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-                  <PalletForm
-                    pallet={editingPallet || undefined}
-                    onSuccess={handlePalletFormClose}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Pallets Grid */}
-          {palletsLoading ? (
-            <div className="text-center py-8">Loading pallets...</div>
-          ) : pallets.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Boxes className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No pallets found</h3>
-                <p className="text-slate-500 mb-4">Get started by adding your first liquidation pallet purchase.</p>
                 <Dialog open={isPalletFormOpen} onOpenChange={setIsPalletFormOpen}>
                   <DialogTrigger asChild>
                     <Button onClick={() => setEditingPallet(null)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Your First Pallet
+                      Add Pallet
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Add New Pallet</DialogTitle>
+                      <DialogTitle>
+                        {editingPallet ? "Edit Pallet" : "Add New Pallet"}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
                       <PalletForm
@@ -861,98 +909,160 @@ export default function Inventory() {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pallets.map((pallet: Pallet) => {
-                const costPerItem = pallet.totalItems > 0 ? parseFloat(pallet.totalCost) / pallet.totalItems : 0;
-                const workingItems = pallet.workingItems || pallet.totalItems;
-                const workingRate = pallet.totalItems > 0 ? (workingItems / pallet.totalItems * 100) : 100;
-                
-                return (
-                  <Card key={pallet.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{pallet.name}</CardTitle>
-                          <CardDescription className="mt-1">
-                            {pallet.supplier && `Supplier: ${pallet.supplier}`}
-                          </CardDescription>
+              </div>
+
+              {palletsLoading ? (
+                <div className="text-center py-8">Loading pallets...</div>
+              ) : pallets.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Boxes className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      No pallets found
+                    </h3>
+                    <p className="text-slate-500 mb-4">
+                      Get started by adding your first liquidation pallet purchase.
+                    </p>
+                    <Dialog
+                      open={isPalletFormOpen}
+                      onOpenChange={setIsPalletFormOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button onClick={() => setEditingPallet(null)}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Your First Pallet
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Add New Pallet</DialogTitle>
+                        </DialogHeader>
+                        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                          <PalletForm
+                            pallet={editingPallet || undefined}
+                            onSuccess={handlePalletFormClose}
+                          />
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePalletEdit(pallet)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deletePalletMutation.mutate(pallet.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="flex items-center space-x-2">
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                      </DialogContent>
+                    </Dialog>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pallets.map((pallet: Pallet) => {
+                    const costPerItem =
+                      pallet.totalItems > 0
+                        ? parseFloat(pallet.totalCost) / pallet.totalItems
+                        : 0;
+                    const workingItems = pallet.workingItems || pallet.totalItems;
+                    const workingRate =
+                      pallet.totalItems > 0
+                        ? (workingItems / pallet.totalItems) * 100
+                        : 100;
+
+                    return (
+                      <Card
+                        key={pallet.id}
+                        className="hover:shadow-md transition-shadow"
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
                             <div>
-                              <p className="text-sm text-slate-500">Total Cost</p>
-                              <p className="text-lg font-semibold">${pallet.totalCost}</p>
+                              <CardTitle className="text-lg">{pallet.name}</CardTitle>
+                              <CardDescription className="mt-1">
+                                {pallet.supplier && `Supplier: ${pallet.supplier}`}
+                              </CardDescription>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handlePalletEdit(pallet)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deletePalletMutation.mutate(pallet.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Package className="h-4 w-4 text-blue-600" />
-                            <div>
-                              <p className="text-sm text-slate-500">Total Items</p>
-                              <p className="text-lg font-semibold">{pallet.totalItems}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="flex items-center space-x-2">
+                                <DollarSign className="h-4 w-4 text-green-600" />
+                                <div>
+                                  <p className="text-sm text-slate-500">Total Cost</p>
+                                  <p className="text-lg font-semibold">
+                                    ${pallet.totalCost}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Package className="h-4 w-4 text-blue-600" />
+                                <div>
+                                  <p className="text-sm text-slate-500">Total Items</p>
+                                  <p className="text-lg font-semibold">
+                                    {pallet.totalItems}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-500">
+                                  Cost per Item
+                                </span>
+                                <span className="font-medium">
+                                  ${costPerItem.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-500">
+                                  Working Items
+                                </span>
+                                <span className="font-medium">
+                                  {workingItems} ({workingRate.toFixed(1)}%)
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-500">
+                                  Purchase Date
+                                </span>
+                                <span className="font-medium">
+                                  {pallet.purchaseDate
+                                    ? new Date(pallet.purchaseDate).toLocaleDateString()
+                                    : "N/A"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {pallet.description && (
+                              <div>
+                                <p className="text-sm text-slate-500 mb-1">
+                                  Description
+                                </p>
+                                <p className="text-sm">{pallet.description}</p>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Cost per Item</span>
-                            <span className="font-medium">${costPerItem.toFixed(2)}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Working Items</span>
-                            <span className="font-medium">{workingItems} ({workingRate.toFixed(1)}%)</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Purchase Date</span>
-                            <span className="font-medium">
-                              {pallet.purchaseDate ? new Date(pallet.purchaseDate).toLocaleDateString() : "N/A"}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {pallet.description && (
-                          <div>
-                            <p className="text-sm text-slate-500 mb-1">Description</p>
-                            <p className="text-sm">{pallet.description}</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
-      
-      {/* Barcode Scanner Dialog */}
+
       <BarcodeScanner
         isOpen={showBarcodeScanner}
         onScanSuccess={handleBarcodeScan}

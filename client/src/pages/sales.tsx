@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,24 +9,45 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesForm from "@/components/forms/sales-form";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Plus, Edit, Trash2, Download } from "lucide-react";
 import type { SalesRecord } from "@shared/schema";
 
 export default function Sales() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
+  const isAuthenticated = !!user;
+  const [, setLocation] = useLocation();
+
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
 
-  // Check for edit parameter in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('edit');
+    const editId = urlParams.get("edit");
     if (editId) {
       setIsFormOpen(true);
     }
@@ -35,33 +57,31 @@ export default function Sales() {
     if (!isLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "Please log in to continue.",
         variant: "destructive",
       });
+
       setTimeout(() => {
-        window.location.href = "/api/login";
+        setLocation("/login");
       }, 500);
-      return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, toast, setLocation]);
 
   const { data: sales = [], isLoading: salesLoading } = useQuery<SalesRecord[]>({
     queryKey: ["/api/sales"],
     enabled: isAuthenticated,
   });
 
-  // Handle URL edit parameter
   useEffect(() => {
     if (sales.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
-      const editId = urlParams.get('edit');
+      const editId = urlParams.get("edit");
       if (editId) {
-        const saleToEdit = sales.find(sale => sale.id === editId);
+        const saleToEdit = sales.find((sale) => sale.id === editId);
         if (saleToEdit) {
           setEditingSale(saleToEdit);
         }
-        // Clear URL parameter
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, [sales]);
@@ -82,14 +102,15 @@ export default function Sales() {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          description: "Please log in again.",
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          setLocation("/login");
         }, 500);
         return;
       }
+
       toast({
         title: "Error",
         description: "Failed to delete sale",
@@ -112,8 +133,7 @@ export default function Sales() {
     const salePrice = parseFloat(sale.salePrice || "0");
     const platformFee = parseFloat(sale.platformFee || "0");
     const shippingCost = parseFloat(sale.shippingCost || "0");
-    
-    // Note: We'd need to join with inventory to get purchase price for accurate profit
+
     const netRevenue = salePrice - platformFee - shippingCost;
     return netRevenue;
   };
@@ -134,10 +154,15 @@ export default function Sales() {
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Sales" subtitle="Track and manage your sales transactions." />
-        
-        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
-          {/* Actions Bar */}
+        <Header
+          title="Sales"
+          subtitle="Track and manage your sales transactions."
+        />
+
+        <div
+          className="flex-1 overflow-y-auto p-4 md:p-6"
+          style={{ paddingBottom: "150px" }}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center space-x-4">
               <Button variant="outline" size="sm">
@@ -145,7 +170,7 @@ export default function Sales() {
                 <span className="hidden md:inline">Export CSV</span>
               </Button>
             </div>
-            
+
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
               <DialogTrigger asChild>
                 <Button onClick={() => setEditingSale(null)} className="shrink-0">
@@ -159,41 +184,56 @@ export default function Sales() {
                     {editingSale ? "Edit Sale" : "Record New Sale"}
                   </DialogTitle>
                 </DialogHeader>
-                <SalesForm
-                  sale={editingSale}
-                  onSuccess={handleFormClose}
-                />
+                <SalesForm sale={editingSale} onSuccess={handleFormClose} />
               </DialogContent>
             </Dialog>
           </div>
 
-          {/* Sales Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-600">Total Sales</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Total Sales
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${sales.reduce((sum: number, sale: SalesRecord) => sum + parseFloat(sale.salePrice || "0"), 0).toFixed(2)}
+                  $
+                  {sales
+                    .reduce(
+                      (sum: number, sale: SalesRecord) =>
+                        sum + parseFloat(sale.salePrice || "0"),
+                      0,
+                    )
+                    .toFixed(2)}
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-600">Net Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Net Revenue
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${sales.reduce((sum: number, sale: SalesRecord) => sum + calculateProfit(sale), 0).toFixed(2)}
+                  $
+                  {sales
+                    .reduce(
+                      (sum: number, sale: SalesRecord) => sum + calculateProfit(sale),
+                      0,
+                    )
+                    .toFixed(2)}
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-600">Items Sold</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Items Sold
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{sales.length}</div>
@@ -201,13 +241,10 @@ export default function Sales() {
             </Card>
           </div>
 
-          {/* Sales Table */}
           <Card>
             <CardHeader>
               <CardTitle>Sales Records</CardTitle>
-              <CardDescription>
-                {sales.length} sales found
-              </CardDescription>
+              <CardDescription>{sales.length} sales found</CardDescription>
             </CardHeader>
             <CardContent>
               {salesLoading ? (
@@ -234,7 +271,9 @@ export default function Sales() {
                     {sales.map((sale: SalesRecord) => (
                       <TableRow key={sale.id}>
                         <TableCell>
-                          {sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : 'N/A'}
+                          {sale.saleDate
+                            ? new Date(sale.saleDate).toLocaleDateString()
+                            : "N/A"}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">

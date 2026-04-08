@@ -1,14 +1,26 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, CheckCircle2, Star, Crown, Building2, Loader2 } from "lucide-react";
-import type { User } from "@shared/schema";
+import {
+  BarChart3,
+  CheckCircle2,
+  Star,
+  Crown,
+  Building2,
+  Loader2,
+} from "lucide-react";
 import PayPalButton from "@/components/PayPalButton";
 import {
   Dialog,
@@ -30,7 +42,7 @@ const plans = [
       "Up to 100 sales records",
       "Basic profit analytics",
       "Task reminders",
-      "3-day free trial"
+      "3-day free trial",
     ],
     icon: Star,
     popular: false,
@@ -47,7 +59,7 @@ const plans = [
       "Advanced profit analytics",
       "CSV import/export",
       "Priority support",
-      "Custom reporting"
+      "Custom reporting",
     ],
     icon: Crown,
     popular: true,
@@ -64,18 +76,19 @@ const plans = [
       "API integrations",
       "White-label reporting",
       "Dedicated account manager",
-      "Custom integrations"
+      "Custom integrations",
     ],
     icon: Building2,
     popular: false,
-  }
+  },
 ];
 
 export default function Onboarding() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuthContext();
+
   const [selectedPlan, setSelectedPlan] = useState<string>("professional");
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
@@ -84,7 +97,8 @@ export default function Onboarding() {
     mutationFn: async (tier: string) => {
       return await apiRequest("POST", "/api/subscription/activate", { tier });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setPaymentCompleted(true);
       toast({
@@ -113,13 +127,11 @@ export default function Onboarding() {
   };
 
   const handlePaymentSuccess = () => {
-    // After successful PayPal payment, activate the subscription
     updateSubscriptionMutation.mutate(selectedPlan);
   };
 
   const handlePaymentDialogClose = (open: boolean) => {
     if (!open && !paymentCompleted) {
-      // User closed dialog without completing payment
       setShowPayPalDialog(false);
     }
   };
@@ -135,25 +147,47 @@ export default function Onboarding() {
     );
   }
 
-  if (paymentCompleted) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to ProfitPad!</h2>
-            <p className="text-slate-600">Your subscription has been activated. Redirecting to your dashboard...</p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              Please log in
+            </h2>
+            <p className="text-slate-600 mb-4">
+              You need to be logged in to choose a plan.
+            </p>
+            <Button onClick={() => setLocation("/login")}>Go to Login</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const selectedPlanData = plans.find(p => p.id === selectedPlan);
+  if (paymentCompleted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              Welcome to ProfitPad!
+            </h2>
+            <p className="text-slate-600">
+              Your subscription has been activated. Redirecting to your
+              dashboard...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const selectedPlanData = plans.find((p) => p.id === selectedPlan);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
       <header className="px-6 py-4 border-b bg-white/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -166,29 +200,29 @@ export default function Onboarding() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Welcome Section */}
         <div className="text-center mb-12">
           <Badge className="mb-4">Step 1 of 2</Badge>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
             Choose Your Plan
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Start your 3-day free trial. Your card will be charged ${selectedPlanData?.price} after the trial ends. Cancel anytime for a full refund.
+            Start your 3-day free trial. Your card will be charged $
+            {selectedPlanData?.price} after the trial ends. Cancel anytime for a
+            full refund.
           </p>
         </div>
 
-        {/* Plan Selection */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
-            
+
             return (
-              <Card 
-                key={plan.id} 
+              <Card
+                key={plan.id}
                 className={`relative cursor-pointer transition-all hover:shadow-lg ${
-                  isSelected ? 'ring-2 ring-primary shadow-xl' : ''
-                } ${plan.popular ? 'border-primary border-2' : ''}`}
+                  isSelected ? "ring-2 ring-primary shadow-xl" : ""
+                } ${plan.popular ? "border-primary border-2" : ""}`}
                 onClick={() => handlePlanSelect(plan.id)}
                 data-testid={`card-plan-${plan.id}`}
               >
@@ -197,7 +231,7 @@ export default function Onboarding() {
                     <Badge className="bg-primary text-white">MOST POPULAR</Badge>
                   </div>
                 )}
-                
+
                 {isSelected && (
                   <div className="absolute -top-3 right-4">
                     <Badge className="bg-green-500 text-white">Selected</Badge>
@@ -205,11 +239,15 @@ export default function Onboarding() {
                 )}
 
                 <CardHeader className="text-center pb-4">
-                  <div className={`w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center ${
-                    plan.id === 'starter' ? 'bg-blue-100 text-blue-600' :
-                    plan.id === 'professional' ? 'bg-purple-100 text-purple-600' :
-                    'bg-yellow-100 text-yellow-600'
-                  }`}>
+                  <div
+                    className={`w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center ${
+                      plan.id === "starter"
+                        ? "bg-blue-100 text-blue-600"
+                        : plan.id === "professional"
+                          ? "bg-purple-100 text-purple-600"
+                          : "bg-yellow-100 text-yellow-600"
+                    }`}
+                  >
                     <Icon className="h-6 w-6" />
                   </div>
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
@@ -235,21 +273,28 @@ export default function Onboarding() {
           })}
         </div>
 
-        {/* Selected Plan Summary */}
         <Card className="max-w-2xl mx-auto mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-primary">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Selected Plan: {selectedPlanData?.name}</h3>
-                <p className="text-slate-600">3-day free trial, then ${selectedPlanData?.price}/month</p>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Selected Plan: {selectedPlanData?.name}
+                </h3>
+                <p className="text-slate-600">
+                  3-day free trial, then ${selectedPlanData?.price}/month
+                </p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-primary">${selectedPlanData?.price}</p>
+                <p className="text-3xl font-bold text-primary">
+                  ${selectedPlanData?.price}
+                </p>
                 <p className="text-sm text-slate-600">per month</p>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-slate-700 mb-2">💳 <strong>Payment Details:</strong></p>
+              <p className="text-sm text-slate-700 mb-2">
+                💳 <strong>Payment Details:</strong>
+              </p>
               <ul className="text-sm text-slate-600 space-y-1 ml-6 list-disc">
                 <li>3-day free trial starts today</li>
                 <li>Your card will be charged ${selectedPlanData?.price} after 3 days</li>
@@ -260,9 +305,8 @@ export default function Onboarding() {
           </CardContent>
         </Card>
 
-        {/* Continue Button */}
         <div className="text-center">
-          <Button 
+          <Button
             size="lg"
             className="px-12 py-6 text-lg"
             onClick={handleContinueToPayment}
@@ -270,11 +314,12 @@ export default function Onboarding() {
           >
             Continue to Payment →
           </Button>
-          <p className="text-sm text-slate-500 mt-4">Secure payment processed by PayPal</p>
+          <p className="text-sm text-slate-500 mt-4">
+            Secure payment processed by PayPal
+          </p>
         </div>
       </main>
 
-      {/* PayPal Payment Dialog */}
       <Dialog open={showPayPalDialog} onOpenChange={handlePaymentDialogClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -286,26 +331,33 @@ export default function Onboarding() {
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="text-center mb-4">
               <p className="text-sm text-slate-600 mb-2">Trial Period: 3 Days Free</p>
-              <p className="text-2xl font-bold text-slate-900">${selectedPlanData?.price}</p>
+              <p className="text-2xl font-bold text-slate-900">
+                ${selectedPlanData?.price}
+              </p>
               <p className="text-sm text-slate-600">charged after trial ends</p>
             </div>
             <div className="w-full" data-testid="paypal-button-container">
-              <PayPalButton 
+              <PayPalButton
                 amount={selectedPlanData?.price || "0"}
                 currency="USD"
                 intent="CAPTURE"
               />
             </div>
             <p className="text-xs text-slate-500 text-center mt-2">
-              Your payment information is securely processed by PayPal. You will be charged ${selectedPlanData?.price} after your 3-day trial ends. Cancel anytime for a full refund.
+              Your payment information is securely processed by PayPal. You will
+              be charged ${selectedPlanData?.price} after your 3-day trial ends.
+              Cancel anytime for a full refund.
             </p>
             <div className="w-full mt-4">
-              <Button 
+              <Button
                 onClick={handlePaymentSuccess}
                 className="w-full"
                 data-testid="button-payment-complete"
+                disabled={updateSubscriptionMutation.isPending}
               >
-                I've Completed Payment
+                {updateSubscriptionMutation.isPending
+                  ? "Activating..."
+                  : "I've Completed Payment"}
               </Button>
             </div>
           </div>
