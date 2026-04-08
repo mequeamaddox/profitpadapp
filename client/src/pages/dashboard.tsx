@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
+import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -13,28 +14,33 @@ import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
+  const [, setLocation] = useLocation();
+
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "Please log in to continue.",
         variant: "destructive",
       });
+
       setTimeout(() => {
-        window.location.href = "/api/login";
+        setLocation("/login");
       }, 500);
-      return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, toast, setLocation]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-4 animate-pulse"></div>
-          <div className="text-slate-600 animate-pulse-soft">Loading your dashboard...</div>
+          <div className="text-slate-600 animate-pulse-soft">
+            Loading your dashboard...
+          </div>
         </div>
       </div>
     );
@@ -48,10 +54,16 @@ export default function Dashboard() {
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Dashboard" subtitle="Welcome back! Here's what's happening with your business." />
-        <div className="flex-1 overflow-y-auto p-4 md:p-6" style={{ paddingBottom: '150px' }}>
+        <Header
+          title="Dashboard"
+          subtitle="Welcome back! Here's what's happening with your business."
+        />
+        <div
+          className="flex-1 overflow-y-auto p-4 md:p-6"
+          style={{ paddingBottom: "150px" }}
+        >
           <MetricsGrid />
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
             <div className="lg:col-span-2 order-2 lg:order-1">
               <RevenueChart />
@@ -70,7 +82,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fadeInUp" style={{ animationDelay: '1000ms' }}>
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fadeInUp"
+            style={{ animationDelay: "1000ms" }}
+          >
             <InventoryValue />
           </div>
         </div>
