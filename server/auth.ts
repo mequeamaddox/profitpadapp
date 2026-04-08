@@ -22,7 +22,7 @@ export function setupSession(app: Express) {
       store: new PgSession({
         pool,
         tableName: "sessions",
-        createTableIfMissing: false,
+        createTableIfMissing: true,
       }),
       secret: SESSION_SECRET,
       resave: false,
