@@ -86,11 +86,6 @@ export default function Billing() {
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
 
-  const { data: user } = useQuery<User>({
-    queryKey: ["/api/auth/user"],
-    enabled: isAuthenticated,
-  });
-
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
     const plan = plans.find(p => p.id === planId);
