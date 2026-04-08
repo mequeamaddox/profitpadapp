@@ -80,7 +80,8 @@ const plans = [
 
 export default function Billing() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
+  const isAuthenticated = !!user;  
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");

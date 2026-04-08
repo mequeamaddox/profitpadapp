@@ -44,7 +44,7 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-            onClick={() => window.location.href = "/login"}
+            onClick={() => window.location.href = "/register"}
             data-testid="button-start-trial-hero"
           >
             Start Your Free 3-Day Trial →
@@ -262,7 +262,7 @@ export default function Landing() {
                 <Button 
                   className="w-full mt-6"
                   variant="outline"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/register"}
                   data-testid="button-trial-starter"
                 >
                   Start Free Trial
@@ -291,7 +291,7 @@ export default function Landing() {
                 </ul>
                 <Button 
                   className="w-full mt-6"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/register"}
                   data-testid="button-trial-professional"
                 >
                   Start Professional Trial →
@@ -318,7 +318,7 @@ export default function Landing() {
                 <Button 
                   variant="outline"
                   className="w-full mt-6"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/register"}
                   data-testid="button-trial-enterprise"
                 >
                   Start Enterprise Trial
@@ -343,7 +343,7 @@ export default function Landing() {
             size="lg" 
             variant="secondary"
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/register"}
             data-testid="button-start-trial-footer"
           >
             Start Your Free 3-Day Trial →
@@ -355,7 +355,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-white border-t mt-20">
         <div className="max-w-7xl mx-auto px-6 py-8 text-center text-slate-600">
-          <p className="text-sm">© 2025 ProfitPad. Built for resellers who want to maximize every flip.</p>
+          <p className="text-sm">© 2026 ProfitPad. Built for resellers who want to maximize every flip.</p>
         </div>
       </footer>
     </div>
