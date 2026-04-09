@@ -24,6 +24,9 @@ import Logout from "@/pages/logout";
 import Billing from "@/pages/billing";
 import PrintLabels from "@/pages/print-labels";
 import Onboarding from "@/pages/onboarding";
+import Settings from "@/pages/settings";
+import SettingsProfile from "@/pages/settings-profile";
+import SettingsAccount from "@/pages/settings-account";
 
 function LoadingScreen() {
   return (
@@ -95,6 +98,8 @@ function AuthenticatedRouter() {
           <Route path="/research" component={Research} />
           <Route path="/profit-estimator" component={ProfitEstimatorPage} />
           <Route path="/settings" component={Settings} />
+          <Route path="/settings/profile" component={SettingsProfile} />
+          <Route path="/settings/account" component={SettingsAccount} />
           <Route path="/logout" component={Logout} />
           <Route path="/billing" component={Billing} />
           <Route path="/help" component={Help} />
