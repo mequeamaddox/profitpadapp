@@ -301,20 +301,6 @@ export default function Inventory() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "Please log in to continue.",
-        variant: "destructive",
-      });
-
-      setTimeout(() => {
-        setLocation("/login");
-      }, 500);
-    }
-  }, [isAuthenticated, isLoading, toast, setLocation]);
-
   const { data: inventory = [], isLoading: inventoryLoading } = useQuery<
     InventoryItem[]
   >({
