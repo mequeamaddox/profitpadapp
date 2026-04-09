@@ -68,9 +68,12 @@ export default function Header({ title, subtitle }: HeaderProps) {
             </Button>
             
             {/* Add New Button - Responsive */}
-            <Button onClick={() => setShowAddMenu(true)} size="sm" className="md:h-auto">
-              <Plus className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Add New</span>
+            <Button
+              onClick={() => setShowAddMenu(true)}
+              className="h-10 px-4 inline-flex items-center gap-2 rounded-lg"
+            >
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline leading-none">Add New</span>
             </Button>
 
             {/* User Profile Dropdown */}

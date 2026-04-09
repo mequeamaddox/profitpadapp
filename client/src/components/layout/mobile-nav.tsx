@@ -121,7 +121,7 @@ export default function MobileNav() {
                 variant="ghost" 
                 size="sm" 
                 className="w-full justify-start text-slate-600 hover:text-slate-900"
-                onClick={() => window.location.href = "/api/auth/logout"}
+                onClick={() => window.location.href = "/logout"}
               >
                 <LogOut className="h-4 w-4 mr-3" />
                 Sign Out

@@ -10,14 +10,14 @@ export default function Logout() {
   useEffect(() => {
     // Auto-redirect to login after showing the logout confirmation
     const timer = setTimeout(() => {
-      window.location.href = "/api/auth/logout";
+      window.location.href = "/logout";
     }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
 
   const handleLogoutNow = () => {
-    window.location.href = "/api/auth/logout";
+    window.location.href = "/logout";
   };
 
   const handleGoBack = () => {
