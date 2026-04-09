@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
@@ -13,23 +14,27 @@ import { BookOpen, Package, DollarSign, Bell, Settings as SettingsIcon, Trending
 
 export default function Help() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuthContext();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "Please log in to continue.",
         variant: "destructive",
       });
+
       setTimeout(() => {
-        window.location.href = "/login";
+        setLocation("/login");
       }, 500);
-      return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, toast, setLocation]);
+
 
   if (isLoading) {
     return (
