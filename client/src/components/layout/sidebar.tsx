@@ -19,7 +19,7 @@ export default function Sidebar() {
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: Home, current: location === "/" },
-    { name: "Inventory", href: "/inventory", icon: Package, current: location === "/inventory" },
+    { name: "Inventory", href: "/inventory", icon: Package, current: location.startsWith("/inventory") },
     { name: "Sales", href: "/sales", icon: DollarSign, current: location === "/sales" },
     { name: "Expenses", href: "/expenses", icon: Receipt, current: location === "/expenses" },
     { 
