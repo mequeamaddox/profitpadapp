@@ -5,31 +5,32 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import ProfitEstimator from "@/components/profit-estimator";
 
-export default function ProfitEstimatorPage() {
-  const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+      export default function ProfitEstimatorPage() {
+        const { toast } = useToast();
+        const { user, isLoading } = useAuthContext();
+        const isAuthenticated = !!user;
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+        useEffect(() => {
+          if (!isLoading && !isAuthenticated) {
+            toast({
+              title: "Unauthorized",
+              description: "You are logged out. Please log in again.",
+              variant: "destructive",
+            });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 500);
+          }
+        }, [isAuthenticated, isLoading, toast]);
 
-  if (!isAuthenticated) {
-    return null;
-  }
+        if (isLoading) {
+          return <div>Loading...</div>;
+        }
+
+        if (!isAuthenticated) {
+          return null;
+        }
 
   return (
     <div className="flex h-screen bg-slate-50">
