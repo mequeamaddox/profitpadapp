@@ -44,7 +44,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
               </p>
             )}
           </div>
-          <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="flex items-center gap-2 md:gap-4">
             {/* Search - Hidden on mobile */}
             <div className="relative hidden lg:block">
               <Input
@@ -58,7 +58,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             </div>
             
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative">
+              <Button variant="ghost" size="icon" className="relative h-10 w-10">
               <Bell className="h-5 w-5 text-slate-400 hover:text-slate-600" />
               {(overdueReminders?.length || 0) > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -103,7 +103,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <a href="/api/logout" className="w-full cursor-pointer">
+                    <a href="/logout" className="w-full cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </a>
