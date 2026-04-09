@@ -1,7 +1,4 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import MetricsGrid from "@/components/dashboard/metrics-grid";
@@ -13,25 +10,9 @@ import InventoryValue from "@/components/dashboard/inventory-value";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
 
 export default function Dashboard() {
-  const { toast } = useToast();
   const { user, isLoading } = useAuthContext();
-  const [, setLocation] = useLocation();
-
   const isAuthenticated = !!user;
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "Please log in to continue.",
-        variant: "destructive",
-      });
-
-      setTimeout(() => {
-        setLocation("/login");
-      }, 500);
-    }
-  }, [isAuthenticated, isLoading, toast, setLocation]);
 
   if (isLoading) {
     return (
