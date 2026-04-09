@@ -8,14 +8,14 @@ import { apiRequest } from "@/lib/queryClient";
 import { type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { Settings as SettingsIcon, DollarSign, Calculator, ArrowLeft } from "lucide-react";
 import { z } from "zod";
-import { Link } from "wouter";
 
 // Settings form schema
 const settingsSchema = z.object({
@@ -116,18 +116,18 @@ export default function Settings() {
   const taxRatePercent = ((parseFloat(form.watch("salesTaxRate")) || 0) * 100).toFixed(2);
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/">
-          <Button variant="outline" size="icon" data-testid="button-back">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-        </Link>
-        <div className="flex items-center gap-2">
-          <SettingsIcon className="w-6 h-6" />
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
-      </div>
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <Header
+            title="Settings"
+            subtitle="Manage your business goals and tax preferences."
+          />
+
+          <div
+            className="flex-1 overflow-y-auto p-4 md:p-6"
+            style={{ paddingBottom: "150px" }}
+          >
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
