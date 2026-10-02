@@ -60,10 +60,10 @@ Preferred communication style: Simple, everyday language.
 - **Drizzle Kit**: Database migration and schema management.
 
 ## Authentication Services
-- **Replit OIDC**: Identity provider.
+- **Email/password**: Sessions stored in Postgres (`sessions` table).
 
 ## Cloud Storage
-- **Google Cloud Storage**: File and image storage.
+- **S3-compatible bucket** (Railway Bucket): Receipt images, streamed through the server.
 
 ## UI and Component Libraries
 - **Radix UI**: Headless component primitives.
@@ -93,3 +93,12 @@ Preferred communication style: Simple, everyday language.
 - **PayPal Server SDK**: Backend integration for order creation and capture.
 - **PayPal Web SDK**: Frontend integration for payment button rendering.
 - **Note**: This application uses PayPal exclusively - NO Stripe integration exists or should be added.
+# Deployment (Railway)
+- Built and started via `railway.json` (`npm run build`, `npm run start`); healthcheck at `/api/health`.
+- Required env vars:
+  - `DATABASE_URL` — Neon Postgres connection string
+  - `SESSION_SECRET` — random string for signing session cookies
+- Optional env vars:
+  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`, `S3_BUCKET` — bucket for receipt uploads
+  - `ANTHROPIC_API_KEY` — receipt OCR
+  - `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` — billing (the `/paypal/*` routes return 503 without them)

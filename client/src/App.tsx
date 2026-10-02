@@ -24,7 +24,6 @@ import Logout from "@/pages/logout";
 import Billing from "@/pages/billing";
 import PrintLabels from "@/pages/print-labels";
 import Onboarding from "@/pages/onboarding";
-import Settings from "@/pages/settings";
 import SettingsProfile from "@/pages/settings-profile";
 import SettingsAccount from "@/pages/settings-account";
 

@@ -1,15 +1,10 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
-import {
-  createPaypalOrder,
-  capturePaypalOrder,
-  loadPaypalDefault,
-} from "./paypal";
 import {
   insertInventoryItemSchema,
   insertSalesRecordSchema,
@@ -21,6 +16,10 @@ import {
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/api/health", (_req, res) => {
+    res.json({ ok: true });
+  });
+
   // Auth middleware
 
   // Auth routes
@@ -1175,6 +1174,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put(
+    "/api/objects/upload/:objectId",
+    requireAuth,
+    express.raw({ type: "*/*", limit: "15mb" }),
+    async (req: any, res) => {
+      const { objectId } = req.params;
+      if (!/^[0-9a-f-]{36}$/i.test(objectId) || !Buffer.isBuffer(req.body)) {
+        return res.status(400).json({ error: "Invalid upload" });
+      }
+
+      try {
+        const { ObjectStorageService } = await import("./objectStorage");
+        const objectStorageService = new ObjectStorageService();
+        await objectStorageService.uploadObject(
+          objectId,
+          req.body,
+          req.headers["content-type"] || "application/octet-stream",
+        );
+        res.sendStatus(200);
+      } catch (error) {
+        console.error("Error uploading object:", error);
+        res.status(500).json({ error: "Failed to upload file" });
+      }
+    },
+  );
+
   app.put("/api/receipt-images", requireAuth, async (req: any, res) => {
     if (!req.body.receiptImageURL) {
       return res.status(400).json({ error: "receiptImageURL is required" });
@@ -1342,17 +1367,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // PayPal routes
-  app.get("/paypal/setup", async (req, res) => {
-    await loadPaypalDefault(req, res);
-  });
+  // PayPal is loaded lazily so the app still boots when its credentials
+  // (PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET) aren't configured.
+  const withPaypal =
+    (handler: "loadPaypalDefault" | "createPaypalOrder" | "capturePaypalOrder") =>
+    async (req: any, res: any) => {
+      let paypal: typeof import("./paypal");
+      try {
+        paypal = await import("./paypal");
+      } catch (error) {
+        console.error("PayPal not configured:", error);
+        return res.status(503).json({ error: "PayPal is not configured" });
+      }
+      try {
+        await paypal[handler](req, res);
+      } catch (error) {
+        console.error(`PayPal ${handler} failed:`, error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "PayPal request failed" });
+        }
+      }
+    };
 
-  app.post("/paypal/order", async (req, res) => {
-    await createPaypalOrder(req, res);
-  });
-
-  app.post("/paypal/order/:orderID/capture", async (req, res) => {
-    await capturePaypalOrder(req, res);
-  });
+  app.get("/paypal/setup", withPaypal("loadPaypalDefault"));
+  app.post("/paypal/order", withPaypal("createPaypalOrder"));
+  app.post("/paypal/order/:orderID/capture", withPaypal("capturePaypalOrder"));
 
   const httpServer = createServer(app);
   return httpServer;
