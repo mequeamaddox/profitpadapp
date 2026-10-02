@@ -13,6 +13,7 @@ import {
   insertPalletSchema,
   insertNotificationSettingsSchema,
 } from "@shared/schema";
+import { isPaidPlanId } from "@shared/plans";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -970,48 +971,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subscription activation endpoint (after PayPal payment)
+  // Start the free trial. Paid plans are only granted by a verified
+  // PayPal capture in /paypal/order/:orderID/capture.
   app.post(
     "/api/subscription/activate",
     requireAuth,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
-        const { tier } = req.body;
-
-        if (
-          !tier ||
-          !["starter", "professional", "enterprise"].includes(tier)
-        ) {
-          return res.status(400).json({ message: "Invalid subscription tier" });
-        }
-
         const user = await storage.getUser(userId);
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
 
-        // Set trial end date (3 days from now)
+        if ((user.subscriptionTier || "trial") !== "trial" || user.trialEndsAt) {
+          return res.json({ message: "Trial already started", user });
+        }
+
         const trialEndsAt = new Date();
         trialEndsAt.setDate(trialEndsAt.getDate() + 3);
 
         const updatedUser = await storage.upsertUser({
           ...user,
-          subscriptionTier: tier,
-          trialEndsAt: trialEndsAt,
+          subscriptionTier: "trial",
+          trialEndsAt,
         });
 
-        console.log(
-          `Subscription activated for user ${userId}: ${tier} tier with trial ending ${trialEndsAt}`,
-        );
-
-        res.json({
-          message: "Subscription activated successfully",
-          user: updatedUser,
-        });
+        res.json({ message: "Trial started", user: updatedUser });
       } catch (error) {
-        console.error("Error activating subscription:", error);
-        res.status(500).json({ message: "Failed to activate subscription" });
+        console.error("Error starting trial:", error);
+        res.status(500).json({ message: "Failed to start trial" });
       }
     },
   );
@@ -1369,29 +1358,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PayPal routes
   // PayPal is loaded lazily so the app still boots when its credentials
   // (PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET) aren't configured.
-  const withPaypal =
-    (handler: "loadPaypalDefault" | "createPaypalOrder" | "capturePaypalOrder") =>
-    async (req: any, res: any) => {
-      let paypal: typeof import("./paypal");
-      try {
-        paypal = await import("./paypal");
-      } catch (error) {
-        console.error("PayPal not configured:", error);
-        return res.status(503).json({ error: "PayPal is not configured" });
-      }
-      try {
-        await paypal[handler](req, res);
-      } catch (error) {
-        console.error(`PayPal ${handler} failed:`, error);
-        if (!res.headersSent) {
-          res.status(500).json({ error: "PayPal request failed" });
-        }
-      }
-    };
+  const loadPaypal = async (res: any) => {
+    try {
+      return await import("./paypal");
+    } catch (error) {
+      console.error("PayPal not configured:", error);
+      res.status(503).json({ error: "PayPal is not configured" });
+      return null;
+    }
+  };
 
-  app.get("/paypal/setup", withPaypal("loadPaypalDefault"));
-  app.post("/paypal/order", withPaypal("createPaypalOrder"));
-  app.post("/paypal/order/:orderID/capture", withPaypal("capturePaypalOrder"));
+  app.get("/paypal/setup", requireAuth, async (req, res) => {
+    const paypal = await loadPaypal(res);
+    if (!paypal) return;
+    try {
+      await paypal.loadPaypalDefault(req, res);
+    } catch (error) {
+      console.error("PayPal setup failed:", error);
+      res.status(500).json({ error: "PayPal setup failed" });
+    }
+  });
+
+  // Creates an order for a plan. The price is set on the server.
+  app.post("/paypal/order", requireAuth, async (req: any, res) => {
+    const { plan } = req.body ?? {};
+    if (!isPaidPlanId(plan)) {
+      return res.status(400).json({ error: "Invalid plan" });
+    }
+    const paypal = await loadPaypal(res);
+    if (!paypal) return;
+    try {
+      const id = await paypal.createPlanOrder(req.user.claims.sub, plan);
+      res.json({ id });
+    } catch (error) {
+      console.error("Failed to create PayPal order:", error);
+      res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+
+  // Captures the order and, only once PayPal confirms the payment for this
+  // user and plan, switches the user to that plan.
+  app.post(
+    "/paypal/order/:orderID/capture",
+    requireAuth,
+    async (req: any, res) => {
+      const paypal = await loadPaypal(res);
+      if (!paypal) return;
+      try {
+        const userId = req.user.claims.sub;
+        const result = await paypal.capturePlanOrder(req.params.orderID, userId);
+        if (!result.ok) {
+          console.warn(`PayPal capture rejected for user ${userId}: ${result.reason}`);
+          return res.status(402).json({ error: result.reason });
+        }
+
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+        const updatedUser = await storage.upsertUser({
+          ...user,
+          subscriptionTier: result.plan,
+        });
+
+        console.log(
+          `User ${userId} paid for ${result.plan} (PayPal capture ${result.captureId})`,
+        );
+        res.json({ status: "COMPLETED", plan: result.plan, user: updatedUser });
+      } catch (error) {
+        console.error("Failed to capture PayPal order:", error);
+        res.status(500).json({ error: "Failed to capture order" });
+      }
+    },
+  );
 
   const httpServer = createServer(app);
   return httpServer;

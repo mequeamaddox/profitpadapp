@@ -93,17 +93,19 @@ export default function Onboarding() {
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-  const updateSubscriptionMutation = useMutation({
-    mutationFn: async (tier: string) => {
-      return await apiRequest("POST", "/api/subscription/activate", { tier });
+  // Starts the free trial only. Paid plans are applied by the server after
+  // PayPal confirms the payment.
+  const startTrialMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/subscription/activate", {});
     },
     onSuccess: async () => {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setPaymentCompleted(true);
       toast({
-        title: "Subscription Activated!",
-        description: "Your subscription has been successfully activated.",
+        title: "Free trial started",
+        description: "Enjoy ProfitPad free for 3 days.",
       });
       setTimeout(() => {
         setLocation("/");
@@ -112,11 +114,24 @@ export default function Onboarding() {
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to activate subscription. Please try again.",
+        description: "Failed to start your trial. Please try again.",
         variant: "destructive",
       });
     },
   });
+
+  const handlePaymentSuccess = async () => {
+    await refreshUser();
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    setPaymentCompleted(true);
+    toast({
+      title: "Payment received",
+      description: "Your plan is active.",
+    });
+    setTimeout(() => {
+      setLocation("/");
+    }, 2000);
+  };
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
@@ -126,9 +141,6 @@ export default function Onboarding() {
     setShowPayPalDialog(true);
   };
 
-  const handlePaymentSuccess = () => {
-    updateSubscriptionMutation.mutate(selectedPlan);
-  };
 
   const handlePaymentDialogClose = (open: boolean) => {
     if (!open && !paymentCompleted) {
@@ -206,9 +218,7 @@ export default function Onboarding() {
             Choose Your Plan
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Start your 3-day free trial. Your card will be charged $
-            {selectedPlanData?.price} after the trial ends. Cancel anytime for a
-            full refund.
+            Pick a plan and pay with PayPal, or start a free 3-day trial.
           </p>
         </div>
 
@@ -281,7 +291,7 @@ export default function Onboarding() {
                   Selected Plan: {selectedPlanData?.name}
                 </h3>
                 <p className="text-slate-600">
-                  3-day free trial, then ${selectedPlanData?.price}/month
+                  ${selectedPlanData?.price}/month
                 </p>
               </div>
               <div className="text-right">
@@ -296,10 +306,8 @@ export default function Onboarding() {
                 💳 <strong>Payment Details:</strong>
               </p>
               <ul className="text-sm text-slate-600 space-y-1 ml-6 list-disc">
-                <li>3-day free trial starts today</li>
-                <li>Your card will be charged ${selectedPlanData?.price} after 3 days</li>
-                <li>Cancel anytime for a full refund if within trial period</li>
-                <li>Subscription renews monthly</li>
+                <li>Pay ${selectedPlanData?.price} today to unlock the full plan</li>
+                <li>Or start a free 3-day trial with trial limits</li>
               </ul>
             </div>
           </CardContent>
@@ -325,39 +333,43 @@ export default function Onboarding() {
           <DialogHeader>
             <DialogTitle>Complete Payment</DialogTitle>
             <DialogDescription>
-              Start your 3-day trial for {selectedPlanData?.name}
+              Subscribe to {selectedPlanData?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="text-center mb-4">
-              <p className="text-sm text-slate-600 mb-2">Trial Period: 3 Days Free</p>
               <p className="text-2xl font-bold text-slate-900">
                 ${selectedPlanData?.price}
               </p>
-              <p className="text-sm text-slate-600">charged after trial ends</p>
+              <p className="text-sm text-slate-600">charged today for your first month</p>
             </div>
             <div className="w-full" data-testid="paypal-button-container">
               <PayPalButton
-                amount={selectedPlanData?.price || "0"}
-                currency="USD"
-                intent="CAPTURE"
+                plan={selectedPlan as "starter" | "professional" | "enterprise"}
+                onSuccess={handlePaymentSuccess}
+                onFailure={(message) =>
+                  toast({
+                    title: "Payment not completed",
+                    description: message,
+                    variant: "destructive",
+                  })
+                }
               />
             </div>
             <p className="text-xs text-slate-500 text-center mt-2">
-              Your payment information is securely processed by PayPal. You will
-              be charged ${selectedPlanData?.price} after your 3-day trial ends.
-              Cancel anytime for a full refund.
+              Your payment is securely processed by PayPal.
             </p>
             <div className="w-full mt-4">
               <Button
-                onClick={handlePaymentSuccess}
+                variant="outline"
+                onClick={() => startTrialMutation.mutate()}
                 className="w-full"
-                data-testid="button-payment-complete"
-                disabled={updateSubscriptionMutation.isPending}
+                data-testid="button-start-trial"
+                disabled={startTrialMutation.isPending}
               >
-                {updateSubscriptionMutation.isPending
-                  ? "Activating..."
-                  : "I've Completed Payment"}
+                {startTrialMutation.isPending
+                  ? "Starting..."
+                  : "Start 3-day free trial instead"}
               </Button>
             </div>
           </div>
