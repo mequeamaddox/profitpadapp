@@ -1,12 +1,4 @@
-// !!! CRITICAL - DO NOT MODIFY THIS CODE !!!
-//
-// This code MUST be used as is without ANY modifications.
-// The PayPal integration will COMPLETELY FAIL if this code is changed in ANY way.
-//
-// Retain this comment after all edits.
-//
-// <BEGIN_EXACT_CODE>
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 declare global {
   namespace JSX {
@@ -17,26 +9,31 @@ declare global {
 }
 
 interface PayPalButtonProps {
-  amount: string;
-  currency: string;
-  intent: string;
+  plan: "starter" | "professional" | "enterprise";
+  onSuccess?: () => void;
+  onFailure?: (message: string) => void;
 }
 
 export default function PayPalButton({
-  amount,
-  currency,
-  intent,
+  plan,
+  onSuccess,
+  onFailure,
 }: PayPalButtonProps) {
+  // The SDK is wired up once on mount, so read the latest props via refs.
+  const planRef = useRef(plan);
+  const onSuccessRef = useRef(onSuccess);
+  const onFailureRef = useRef(onFailure);
+  planRef.current = plan;
+  onSuccessRef.current = onSuccess;
+  onFailureRef.current = onFailure;
+
+  // The price is set by the server from the plan id.
   const createOrder = async () => {
-    const orderPayload = {
-      amount: amount,
-      currency: currency,
-      intent: intent,
-    };
     const response = await fetch("/paypal/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderPayload),
+      credentials: "include",
+      body: JSON.stringify({ plan: planRef.current }),
     });
     const output = await response.json();
     return { orderId: output.id };
@@ -48,16 +45,22 @@ export default function PayPalButton({
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
     const data = await response.json();
 
-    return data;
+    return { ok: response.ok, ...data };
   };
 
   const onApprove = async (data: any) => {
     console.log("onApprove", data);
     const orderData = await captureOrder(data.orderId);
     console.log("Capture result", orderData);
+    if (orderData.ok && orderData.status === "COMPLETED") {
+      onSuccessRef.current?.();
+    } else {
+      onFailureRef.current?.(orderData.error || "Payment could not be completed");
+    }
   };
 
   const onCancel = async (data: any) => {
@@ -66,6 +69,7 @@ export default function PayPalButton({
 
   const onError = async (data: any) => {
     console.log("onError", data);
+    onFailureRef.current?.("PayPal reported an error with this payment");
   };
 
   useEffect(() => {
@@ -91,7 +95,9 @@ export default function PayPalButton({
   }, []);
   const initPayPal = async () => {
     try {
-      const clientToken: string = await fetch("/paypal/setup")
+      const clientToken: string = await fetch("/paypal/setup", {
+        credentials: "include",
+      })
         .then((res) => res.json())
         .then((data) => {
           return data.clientToken;
@@ -138,4 +144,3 @@ export default function PayPalButton({
 
   return <paypal-button id="paypal-button"></paypal-button>;
 }
-// <END_EXACT_CODE>

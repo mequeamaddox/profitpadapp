@@ -80,7 +80,7 @@ const plans = [
 
 export default function Billing() {
   const { toast } = useToast();
-  const { user, isLoading } = useAuthContext();
+  const { user, isLoading, refreshUser } = useAuthContext();
   const isAuthenticated = !!user;  
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
@@ -312,11 +312,26 @@ export default function Billing() {
               <p className="text-2xl font-bold text-slate-900">${paymentAmount}</p>
               <p className="text-sm text-slate-600">per month</p>
             </div>
-            <PayPalButton 
-              amount={paymentAmount}
-              currency="USD"
-              intent="CAPTURE"
-            />
+            {selectedPlan && (
+              <PayPalButton
+                plan={selectedPlan as "starter" | "professional" | "enterprise"}
+                onSuccess={async () => {
+                  await refreshUser();
+                  setShowPayPalDialog(false);
+                  toast({
+                    title: "Payment received",
+                    description: "Your plan has been upgraded.",
+                  });
+                }}
+                onFailure={(message) =>
+                  toast({
+                    title: "Payment not completed",
+                    description: message,
+                    variant: "destructive",
+                  })
+                }
+              />
+            )}
             <p className="text-xs text-slate-500 text-center mt-2">
               Payments are securely processed through PayPal. Your subscription will renew monthly.
             </p>

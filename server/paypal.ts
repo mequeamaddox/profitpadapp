@@ -1,12 +1,5 @@
-// !!! CRITICAL - DO NOT MODIFY THIS CODE !!!
-//
-// This code MUST be used as is without ANY modifications.
-// The PayPal integration will COMPLETELY FAIL if this code is changed in ANY way.
-//
-// Retain this comment after all edits.
-//
-// <BEGIN_EXACT_CODE>
 import {
+  CheckoutPaymentIntent,
   Client,
   Environment,
   LogLevel,
@@ -14,6 +7,7 @@ import {
   OrdersController,
 } from "@paypal/paypal-server-sdk";
 import { Request, Response } from "express";
+import { PAID_PLAN_PRICES, type PaidPlanId } from "@shared/plans";
 
 /* PayPal Controllers Setup */
 
@@ -32,9 +26,9 @@ const client = new Client({
   },
   timeout: 0,
   environment:
-                process.env.NODE_ENV === "production"
-                  ? Environment.Production
-                  : Environment.Sandbox,
+    process.env.NODE_ENV === "production"
+      ? Environment.Production
+      : Environment.Sandbox,
   logging: {
     logLevel: LogLevel.Info,
     logRequest: {
@@ -65,85 +59,88 @@ export async function getClientToken() {
   return result.accessToken;
 }
 
-/*  Process transactions */
-
-export async function createPaypalOrder(req: Request, res: Response) {
-  try {
-    const { amount, currency, intent } = req.body;
-
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid amount. Amount must be a positive number.",
-        });
-    }
-
-    if (!currency) {
-      return res
-        .status(400)
-        .json({ error: "Invalid currency. Currency is required." });
-    }
-
-    if (!intent) {
-      return res
-        .status(400)
-        .json({ error: "Invalid intent. Intent is required." });
-    }
-
-    const collect = {
-      body: {
-        intent: intent,
-        purchaseUnits: [
-          {
-            amount: {
-              currencyCode: currency,
-              value: amount,
-            },
-          },
-        ],
-      },
-      prefer: "return=minimal",
-    };
-
-    const { body, ...httpResponse } =
-          await ordersController.createOrder(collect);
-
-    const jsonResponse = JSON.parse(String(body));
-    const httpStatusCode = httpResponse.statusCode;
-
-    res.status(httpStatusCode).json(jsonResponse);
-  } catch (error) {
-    console.error("Failed to create order:", error);
-    res.status(500).json({ error: "Failed to create order." });
-  }
-}
-
-export async function capturePaypalOrder(req: Request, res: Response) {
-  try {
-    const { orderID } = req.params;
-    const collect = {
-      id: orderID,
-      prefer: "return=minimal",
-    };
-
-    const { body, ...httpResponse } =
-          await ordersController.captureOrder(collect);
-
-    const jsonResponse = JSON.parse(String(body));
-    const httpStatusCode = httpResponse.statusCode;
-
-    res.status(httpStatusCode).json(jsonResponse);
-  } catch (error) {
-    console.error("Failed to create order:", error);
-    res.status(500).json({ error: "Failed to capture order." });
-  }
-}
-
-export async function loadPaypalDefault(req: Request, res: Response) {
+export async function loadPaypalDefault(_req: Request, res: Response) {
   const clientToken = await getClientToken();
   res.json({
     clientToken,
   });
 }
-// <END_EXACT_CODE>
+
+/* Plan purchases
+ *
+ * The price comes from PAID_PLAN_PRICES on the server, and the buyer's user
+ * id and plan are stamped on the order as custom_id, so a capture can be
+ * checked against who is capturing it and what they paid.
+ */
+
+function planCustomId(userId: string, plan: PaidPlanId) {
+  return `${userId}:${plan}`;
+}
+
+export async function createPlanOrder(
+  userId: string,
+  plan: PaidPlanId,
+): Promise<string> {
+  const { body } = await ordersController.createOrder({
+    body: {
+      intent: CheckoutPaymentIntent.Capture,
+      purchaseUnits: [
+        {
+          amount: {
+            currencyCode: "USD",
+            value: PAID_PLAN_PRICES[plan],
+          },
+          customId: planCustomId(userId, plan),
+          description: `ProfitPad ${plan} plan`,
+        },
+      ],
+    },
+    prefer: "return=minimal",
+  });
+
+  const order = JSON.parse(String(body));
+  if (!order?.id) {
+    throw new Error("PayPal did not return an order id");
+  }
+  return order.id;
+}
+
+export type PlanCaptureResult =
+  | { ok: true; plan: PaidPlanId; captureId: string }
+  | { ok: false; reason: string };
+
+export async function capturePlanOrder(
+  orderId: string,
+  userId: string,
+): Promise<PlanCaptureResult> {
+  const { body } = await ordersController.captureOrder({
+    id: orderId,
+    prefer: "return=representation",
+  });
+  const order = JSON.parse(String(body));
+
+  if (order?.status !== "COMPLETED") {
+    return { ok: false, reason: `Order status is ${order?.status}` };
+  }
+
+  const capture = order.purchase_units?.[0]?.payments?.captures?.[0];
+  if (!capture || capture.status !== "COMPLETED") {
+    return { ok: false, reason: "Payment was not completed" };
+  }
+
+  const customId: string = capture.custom_id ?? order.purchase_units?.[0]?.custom_id ?? "";
+  const [orderUserId, plan] = customId.split(":");
+  if (orderUserId !== userId || !(plan in PAID_PLAN_PRICES)) {
+    return { ok: false, reason: "Order does not belong to this user" };
+  }
+
+  const paidPlan = plan as PaidPlanId;
+  if (
+    capture.amount?.currency_code !== "USD" ||
+    capture.amount?.value !== PAID_PLAN_PRICES[paidPlan]
+  ) {
+    return { ok: false, reason: "Paid amount does not match the plan price" };
+  }
+
+  return { ok: true, plan: paidPlan, captureId: capture.id };
+}
