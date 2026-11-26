@@ -151,12 +151,3 @@ export function describePaypalError(error: unknown): string {
   }
   return e?.message || String(error);
 }
-
-/** A loggable summary of a PayPal SDK error that never includes request headers. */
-export function describePaypalError(error: unknown): string {
-  const e = error as { statusCode?: number; body?: unknown; message?: string };
-  if (e?.statusCode) {
-    return `PayPal ${e.statusCode}: ${typeof e.body === "string" ? e.body : JSON.stringify(e.body)}`;
-  }
-  return e?.message || String(error);
-}
