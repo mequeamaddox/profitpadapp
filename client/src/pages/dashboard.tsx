@@ -13,15 +13,12 @@ export default function Dashboard() {
   const { user, isLoading } = useAuthContext();
   const isAuthenticated = !!user;
 
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-4 animate-pulse"></div>
-          <div className="text-slate-600 animate-pulse-soft">
-            Loading your dashboard...
-          </div>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+          <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -32,42 +29,33 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-hidden">
         <Header
           title="Dashboard"
           subtitle="Welcome back! Here's what's happening with your business."
         />
-        <div
-          className="flex-1 overflow-y-auto p-4 md:p-6"
-          style={{ paddingBottom: "150px" }}
-        >
-          <MetricsGrid />
+        <div className="flex-1 overflow-y-auto px-4 pb-32 pt-5 md:px-8 md:pt-6">
+          <div className="mx-auto max-w-7xl">
+            <MetricsGrid />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <RevenueChart />
-            </div>
-            <div className="order-1 lg:order-2">
+            <div className="mb-4 grid grid-cols-1 gap-4 md:mb-6 md:gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <RevenueChart />
+              </div>
               <RecentSales />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div className="order-2 lg:order-1">
-              <QuickActions />
+            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <InventoryOverview />
+              </div>
+              <div className="grid gap-4 md:gap-6">
+                <QuickActions />
+                <InventoryValue />
+              </div>
             </div>
-            <div className="lg:col-span-2 order-1 lg:order-2">
-              <InventoryOverview />
-            </div>
-          </div>
-
-          <div
-            className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fadeInUp"
-            style={{ animationDelay: "1000ms" }}
-          >
-            <InventoryValue />
           </div>
         </div>
       </main>

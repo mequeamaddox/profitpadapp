@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
+import AuthLayout from "@/components/layout/auth-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuthContext();
@@ -27,29 +32,36 @@ export default function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white rounded-xl shadow-md p-6 space-y-4"
-      >
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Sign In</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Log in to your ProfitPad account
-          </p>
-        </div>
-
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to see how your business is doing."
+      footer={
+        <>
+          New to ProfitPad?{" "}
+          <button
+            type="button"
+            className="font-semibold text-primary hover:underline"
+            onClick={() => setLocation("/register")}
+          >
+            Create an account
+          </button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error ? (
-          <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
             {error}
           </div>
         ) : null}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Email</label>
-          <input
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             type="email"
-            className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-primary"
+            autoComplete="email"
+            className="h-11"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -58,10 +70,12 @@ export default function Login() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Password</label>
-          <input
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
             type="password"
-            className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-primary"
+            autoComplete="current-password"
+            className="h-11"
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -69,25 +83,11 @@ export default function Login() {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-primary text-white rounded-md py-2 font-medium disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-
-        <p className="text-sm text-center text-slate-600">
-          Don’t have an account?{" "}
-          <button
-            type="button"
-            className="text-blue-600 hover:underline"
-            onClick={() => setLocation("/register")}
-          >
-            Create one
-          </button>
-        </p>
+        <Button type="submit" className="h-11 w-full text-base" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

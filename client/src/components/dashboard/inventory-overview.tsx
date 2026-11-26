@@ -1,13 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
+import { ArrowRight, PackageOpen } from "lucide-react";
 import { DashboardMetrics, InventoryItem } from "@shared/schema";
+
+const STATUS_STYLES: Record<string, string> = {
+  listed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  unlisted: "bg-slate-100 text-slate-600 ring-slate-500/15",
+  sold: "bg-sky-50 text-sky-700 ring-sky-600/15",
+  returned: "bg-amber-50 text-amber-700 ring-amber-600/15",
+};
 
 export default function InventoryOverview() {
   const [, setLocation] = useLocation();
-  
+
   const { data: metrics, isLoading } = useQuery<DashboardMetrics>({
     queryKey: ["/api/dashboard/metrics"],
   });
@@ -16,149 +23,91 @@ export default function InventoryOverview() {
     queryKey: ["/api/inventory", { limit: 3 }],
   });
 
-  const inventoryStats = metrics?.inventoryStats || {};
-
-  const handleInventoryClick = (item: any) => {
-    // Navigate to inventory page with the specific item ID for editing
-    setLocation(`/inventory?edit=${item.id}`);
-  };
-
-  const getConditionColor = (condition: string) => {
-    switch (condition?.toLowerCase()) {
-      case "new":
-        return "bg-emerald-100 text-emerald-800";
-      case "like new":
-        return "bg-blue-100 text-blue-800";
-      case "good":
-        return "bg-amber-100 text-amber-800";
-      case "fair":
-        return "bg-orange-100 text-orange-800";
-      case "poor":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-slate-100 text-slate-800";
-    }
-  };
+  const stats = (metrics?.inventoryStats || {}) as any;
+  const tiles = [
+    { label: "Total items", value: stats.totalItems || 0, tone: "text-foreground" },
+    { label: "Active listings", value: stats.activeListings || 0, tone: "text-emerald-700" },
+    { label: "Low stock", value: stats.lowStock || 0, tone: "text-amber-600" },
+  ];
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '600ms' }}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
-            <span>Inventory Overview</span>
-            {!isLoading && !inventoryLoading && (inventoryStats as any)?.totalItems > 0 && (
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-            )}
-          </CardTitle>
-          <Button variant="link" onClick={() => setLocation("/inventory")} className="text-blue-600 hover:text-blue-800 transition-colors">
-            Manage Inventory
-          </Button>
-        </div>
+    <Card className="animate-fadeInUp h-full" style={{ animationDelay: "300ms" }}>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle>Inventory</CardTitle>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setLocation("/inventory")}
+          className="-mr-2 h-8 gap-1 text-primary hover:bg-accent hover:text-primary"
+        >
+          Manage <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
       </CardHeader>
       <CardContent>
-        {/* Inventory Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className={`text-center p-4 bg-slate-50 rounded-lg transition-all duration-300 hover:bg-slate-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
-            {isLoading && (
-              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-            )}
-            {isLoading ? (
-              <div className="w-8 h-8 bg-gradient-to-r from-slate-200 to-slate-300 rounded animate-pulse-soft mx-auto"></div>
-            ) : (
-              <p className="text-2xl font-bold text-slate-900">
-                <span className="animate-bounceIn">{(inventoryStats as any)?.totalItems || 0}</span>
-              </p>
-            )}
-            <p className="text-sm text-slate-600 mt-2">Total Items</p>
-          </div>
-          <div className={`text-center p-4 bg-emerald-50 rounded-lg transition-all duration-300 hover:bg-emerald-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
-            {isLoading && (
-              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animationDelay: '200ms' }}></div>
-            )}
-            {isLoading ? (
-              <div className="w-8 h-8 bg-gradient-to-r from-emerald-200 to-emerald-300 rounded animate-pulse-soft mx-auto"></div>
-            ) : (
-              <p className="text-2xl font-bold text-emerald-600">
-                <span className="animate-bounceIn" style={{ animationDelay: '200ms' }}>{(inventoryStats as any)?.activeListings || 0}</span>
-              </p>
-            )}
-            <p className="text-sm text-slate-600 mt-2">Active Listings</p>
-          </div>
-          <div className={`text-center p-4 bg-amber-50 rounded-lg transition-all duration-300 hover:bg-amber-100 hover:scale-[1.02] ${isLoading ? 'relative overflow-hidden' : ''}`}>
-            {isLoading && (
-              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animationDelay: '400ms' }}></div>
-            )}
-            {isLoading ? (
-              <div className="w-8 h-8 bg-gradient-to-r from-amber-200 to-amber-300 rounded animate-pulse-soft mx-auto"></div>
-            ) : (
-              <p className="text-2xl font-bold text-amber-600">
-                <span className="animate-bounceIn" style={{ animationDelay: '400ms' }}>{(inventoryStats as any)?.lowStock || 0}</span>
-              </p>
-            )}
-            <p className="text-sm text-slate-600 mt-2">Low Stock</p>
-          </div>
+        <div className="mb-5 grid grid-cols-3 divide-x divide-border/70 rounded-xl border border-border/70 bg-muted/40">
+          {tiles.map((tile) => (
+            <div key={tile.label} className="px-3 py-3 text-center md:py-4">
+              {isLoading ? (
+                <div className="mx-auto h-7 w-10 animate-pulse rounded bg-muted" />
+              ) : (
+                <p className={`tabular text-2xl font-extrabold ${tile.tone}`}>{tile.value}</p>
+              )}
+              <p className="mt-1 text-xs font-medium text-muted-foreground">{tile.label}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Recent Inventory Items */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-slate-900">Recently Added</h4>
-          
-          {inventoryLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg animate-pulse">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded"></div>
-                    <div>
-                      <div className="h-4 bg-slate-200 rounded w-32 mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-20"></div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="h-4 bg-slate-200 rounded w-16 mb-2"></div>
-                    <div className="h-6 bg-slate-200 rounded w-20"></div>
-                  </div>
-                </div>
-              ))}
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recently added</p>
+
+        {inventoryLoading ? (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+            ))}
+          </div>
+        ) : recentInventory.length === 0 ? (
+          <div className="flex flex-col items-center py-8 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <PackageOpen className="h-5 w-5 text-accent-foreground" />
             </div>
-          ) : recentInventory.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              No inventory items yet. Add your first item to get started.
-            </div>
-          ) : (
-            recentInventory.slice(0, 3).map((item: any) => (
-              <div 
-                key={item.id} 
-                className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
-                onClick={() => handleInventoryClick(item)}
-              >
-                <div className="flex items-center space-x-3">
-                  {item.images && item.images.length > 0 ? (
-                    <img
-                      src={item.images[0]}
-                      alt={item.title}
-                      className="w-10 h-10 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center">
-                      <span className="text-slate-400 text-xs">No image</span>
+            <p className="font-semibold">No inventory yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">Add your first item to get started.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border/70">
+            {recentInventory.slice(0, 3).map((item: any) => {
+              const status = (item.status || "unlisted").toLowerCase();
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => setLocation(`/inventory?edit=${item.id}`)}
+                    className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-muted/60"
+                  >
+                    {item.images && item.images.length > 0 ? (
+                      <img src={item.images[0]} alt={item.title} className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                        <PackageOpen className="h-4 w-4 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.sku}{item.platform ? ` · ${item.platform}` : ""}</p>
                     </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-slate-900">{item.title}</p>
-                    <p className="text-sm text-slate-500">{item.sku}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-slate-900">${item.listedPrice}</p>
-                  <Badge className={getConditionColor(item.condition)}>
-                    {item.condition || "Unknown"}
-                  </Badge>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <p className="tabular text-sm font-bold">${parseFloat(item.listedPrice).toFixed(2)}</p>
+                      <span
+                        className={`rounded-full px-2 py-px text-[11px] font-semibold capitalize ring-1 ring-inset ${STATUS_STYLES[status] || STATUS_STYLES.unlisted}`}
+                      >
+                        {status}
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

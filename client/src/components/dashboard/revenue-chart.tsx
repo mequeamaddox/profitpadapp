@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,22 +27,42 @@ ChartJS.register(
   Filler
 );
 
+const RANGES: Record<string, number> = { "12months": 12, "6months": 6, "3months": 3 };
+const BRAND = "158 72% 32%";
+const AXIS = "hsl(158 6% 45%)";
+const FONT = "Plus Jakarta Sans";
+
 export default function RevenueChart() {
+  const [range, setRange] = useState("12months");
   const { data: metrics, isLoading } = useQuery<DashboardMetrics>({
     queryKey: ["/api/dashboard/metrics"],
   });
 
+  const points = (metrics?.revenueData || []).slice(-RANGES[range]);
+  const total = points.reduce((acc: number, item: any) => acc + (Number(item.revenue) || 0), 0);
+
   const chartData = {
-    labels: metrics?.revenueData?.map((item: any) => item.month) || [],
+    labels: points.map((item: any) => item.month),
     datasets: [
       {
         label: "Revenue",
-        data: metrics?.revenueData?.map((item: any) => item.revenue) || [],
-        borderColor: "#3B82F6",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        borderWidth: 3,
+        data: points.map((item: any) => item.revenue),
+        borderColor: `hsl(${BRAND})`,
+        backgroundColor: (ctx: any) => {
+          const area = ctx.chart.chartArea;
+          if (!area) return `hsl(${BRAND} / 0.1)`;
+          const gradient = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+          gradient.addColorStop(0, `hsl(${BRAND} / 0.25)`);
+          gradient.addColorStop(1, `hsl(${BRAND} / 0)`);
+          return gradient;
+        },
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderWidth: 2.5,
         fill: true,
-        tension: 0.4,
+        tension: 0.35,
       },
     ],
   };
@@ -49,53 +70,56 @@ export default function RevenueChart() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: "index" as const, intersect: false },
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       tooltip: {
+        backgroundColor: "hsl(165 28% 9%)",
+        padding: 10,
+        cornerRadius: 8,
+        displayColors: false,
+        titleFont: { family: FONT, weight: 600 as const },
+        bodyFont: { family: FONT },
         callbacks: {
-          label: function(context: any) {
-            return `Revenue: $${context.parsed.y.toLocaleString()}`;
-          },
+          label: (context: any) => `Revenue: $${context.parsed.y.toLocaleString()}`,
         },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        grid: {
-          color: "rgba(148, 163, 184, 0.1)",
-        },
+        border: { display: false },
+        grid: { color: "hsl(150 10% 91%)" },
         ticks: {
-          callback: function(value: any) {
-            return "$" + value.toLocaleString();
-          },
+          color: AXIS,
+          font: { family: FONT, size: 11 },
+          maxTicksLimit: 5,
+          callback: (value: any) => "$" + value.toLocaleString(),
         },
       },
       x: {
-        grid: {
-          color: "rgba(148, 163, 184, 0.1)",
-        },
+        border: { display: false },
+        grid: { display: false },
+        ticks: { color: AXIS, font: { family: FONT, size: 11 }, maxRotation: 0, autoSkipPadding: 8 },
       },
     },
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '200ms' }}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
-            <span>Monthly Revenue</span>
-            {!isLoading && (
-              <div className="flex items-center space-x-1 text-sm text-slate-500">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-xs">Live Data</span>
-              </div>
-            )}
-          </CardTitle>
-          <Select defaultValue="12months">
-            <SelectTrigger className="w-40">
+    <Card className="animate-fadeInUp h-full" style={{ animationDelay: "120ms" }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle>Revenue</CardTitle>
+            <p className="tabular mt-2 text-2xl font-extrabold tracking-tight">
+              ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              <span className="ml-2 hidden text-sm font-medium text-muted-foreground sm:inline">
+                last {RANGES[range]} months
+              </span>
+            </p>
+          </div>
+          <Select value={range} onValueChange={setRange}>
+            <SelectTrigger className="h-9 w-[7.5rem] text-xs sm:w-36 sm:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -107,42 +131,11 @@ export default function RevenueChart() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-64">
+        <div className="h-64 md:h-72">
           {isLoading ? (
-            <div className="h-full relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
-              {/* Animated shimmer overlay */}
-              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-              
-              {/* Chart placeholder with animated bars */}
-              <div className="p-6 h-full flex flex-col justify-end">
-                <div className="flex items-end justify-between h-full space-x-2">
-                  {[...Array(12)].map((_, i) => (
-                    <div key={i} className="flex-1 flex flex-col justify-end">
-                      <div 
-                        className="bg-gradient-to-t from-blue-200 to-blue-300 rounded-t animate-pulse-soft w-full"
-                        style={{ 
-                          height: `${Math.random() * 80 + 20}%`,
-                          animationDelay: `${i * 100}ms`
-                        }}
-                      ></div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Axis labels placeholder */}
-                <div className="flex justify-between mt-4 text-xs text-slate-400">
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, i) => (
-                    <span key={month} className="animate-pulse" style={{ animationDelay: `${i * 50}ms` }}>
-                      {month}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <div className="h-full animate-pulse rounded-lg bg-muted" />
           ) : (
-            <div className="animate-bounceIn">
-              <Line data={chartData} options={chartOptions} />
-            </div>
+            <Line data={chartData} options={chartOptions} />
           )}
         </div>
       </CardContent>
