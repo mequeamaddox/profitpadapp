@@ -44,6 +44,7 @@ export default function Billing() {
   const trialExpired = onTrial && daysLeft === 0;
   const planEnd = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
   const planExpired = !onTrial && !!planEnd && planEnd.getTime() < Date.now();
+  const isTeammate = user.teamRole === "member";
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 
   const handlePlanSelect = (planId: PaidPlanId) => {
@@ -72,7 +73,9 @@ export default function Billing() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current plan</p>
                     <p className="mt-0.5 text-xl font-bold">{isAdmin ? "Admin · full access" : PLAN_NAMES[tier] ?? tier}</p>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      {isAdmin
+                      {isTeammate
+                        ? `You're on ${user.teamOwnerName ?? "your owner"}'s team. They manage the plan and billing.`
+                        : isAdmin
                         ? "Admin accounts have every feature with no limits."
                         : trialExpired
                           ? "Your trial has ended. Pick a plan to keep going."
@@ -112,7 +115,8 @@ export default function Billing() {
               )}
             </Card>
 
-            {/* Plans */}
+            {/* Plans (the account owner pays; teammates don't) */}
+            {!isTeammate && (
             <section>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Pick the plan that fits</h2>
@@ -121,7 +125,7 @@ export default function Billing() {
                   <PeriodToggle value={period} onChange={setPeriod} />
                 </div>
               </div>
-              <div className="mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-2 md:items-stretch">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
                 {PLANS.map((plan) => {
                   const isCurrent = !isAdmin && tier === plan.id;
                   return (
@@ -141,8 +145,10 @@ export default function Billing() {
                 })}
               </div>
             </section>
+            )}
 
             {/* Payment info */}
+            {!isTeammate && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card className="flex gap-4 p-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
@@ -168,6 +174,7 @@ export default function Billing() {
                 </Button>
               </Card>
             </div>
+            )}
           </div>
         </div>
       </main>

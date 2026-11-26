@@ -26,6 +26,8 @@ import PrintLabels from "@/pages/print-labels";
 import Onboarding from "@/pages/onboarding";
 import SettingsProfile from "@/pages/settings-profile";
 import SettingsAccount from "@/pages/settings-account";
+import Team from "@/pages/team";
+import JoinTeam from "@/pages/join-team";
 
 function LoadingScreen() {
   return (
@@ -70,7 +72,9 @@ function AuthenticatedRouter() {
   if (
     isAuthenticated &&
     needsOnboarding &&
-    window.location.pathname !== "/onboarding"
+    window.location.pathname !== "/onboarding" &&
+    // Let people accepting a team invite reach it before picking a plan
+    !window.location.pathname.startsWith("/join/")
   ) {
     setLocation("/onboarding");
     return null;
@@ -83,6 +87,7 @@ function AuthenticatedRouter() {
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/join/:token" component={JoinTeam} />
           <Route path="/:rest*" component={Landing} />
         </>
       ) : (
@@ -101,6 +106,8 @@ function AuthenticatedRouter() {
           <Route path="/settings/account" component={SettingsAccount} />
           <Route path="/logout" component={Logout} />
           <Route path="/billing" component={Billing} />
+          <Route path="/team" component={Team} />
+          <Route path="/join/:token" component={JoinTeam} />
           <Route path="/help" component={Help} />
           <Route path="/print-labels" component={PrintLabels} />
         </>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { nextPath } from "@/lib/utils";
 
 export default function Register() {
   const { register } = useAuthContext();
@@ -28,7 +29,7 @@ export default function Register() {
 
     try {
       await register(form);
-      setLocation("/"); // go to dashboard
+      setLocation(nextPath());
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {
@@ -46,7 +47,7 @@ export default function Register() {
           <button
             type="button"
             className="font-semibold text-primary hover:underline"
-            onClick={() => setLocation("/login")}
+            onClick={() => setLocation(`/login${window.location.search}`)}
           >
             Sign in
           </button>

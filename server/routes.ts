@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
+import { registerTeamRoutes, requireAccountOwner } from "./team";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -20,6 +21,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true });
   });
+
+  registerTeamRoutes(app, requireAuth);
 
   // Auth middleware
 
@@ -977,6 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/subscription/activate",
     requireAuth,
+    requireAccountOwner,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -1381,7 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Creates an order for a plan. The price is set on the server.
-  app.post("/paypal/order", requireAuth, async (req: any, res) => {
+  app.post("/paypal/order", requireAuth, requireAccountOwner, async (req: any, res) => {
     const { plan, period = "monthly" } = req.body ?? {};
     if (!isPaidPlanId(plan) || !isBillingPeriod(period)) {
       return res.status(400).json({ error: "Invalid plan" });
@@ -1402,6 +1406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/paypal/order/:orderID/capture",
     requireAuth,
+    requireAccountOwner,
     async (req: any, res) => {
       const paypal = await loadPaypal(res);
       if (!paypal) return;

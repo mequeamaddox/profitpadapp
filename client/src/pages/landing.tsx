@@ -236,7 +236,7 @@ export default function Landing() {
           <div className="mb-8 text-center">
             <PeriodToggle value={period} onChange={setPeriod} />
           </div>
-          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {PLANS.map((plan) => (
               <PlanCard
                 key={plan.id}

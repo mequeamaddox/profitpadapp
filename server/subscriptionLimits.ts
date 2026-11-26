@@ -49,7 +49,6 @@ export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
     apiAccess: false,
     prioritySupport: true,
   },
-  // No longer sold; kept so existing enterprise accounts keep working
   enterprise: {
     inventoryLimit: -1, // unlimited
     salesLimit: -1, // unlimited
@@ -59,7 +58,7 @@ export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
     multiPlatform: true,
     teamAccess: true,
     customReporting: true,
-    apiAccess: true,
+    apiAccess: false,
     prioritySupport: true,
   },
 };

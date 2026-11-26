@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { BillingPeriod, PaidPlanId } from "@shared/plans";
 
 declare global {
   namespace JSX {
@@ -9,8 +10,8 @@ declare global {
 }
 
 interface PayPalButtonProps {
-  plan: "starter" | "professional";
-  period: "monthly" | "yearly";
+  plan: PaidPlanId;
+  period: BillingPeriod;
   onSuccess?: () => void;
   onFailure?: (message: string) => void;
 }

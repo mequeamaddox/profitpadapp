@@ -42,7 +42,7 @@ const TIER_INFO = {
   },
   enterprise: {
     name: "Enterprise",
-    price: "",
+    price: "$49.99",
     color: "bg-amber-500",
     icon: Crown
   }

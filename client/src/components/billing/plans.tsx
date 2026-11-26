@@ -1,6 +1,6 @@
-import { Check, Star, Crown, type LucideIcon } from "lucide-react";
+import { Check, Star, Crown, Building2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
+import { ENTERPRISE_TEAM_SEATS, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 
 export interface Plan {
   id: PaidPlanId;
@@ -39,6 +39,19 @@ export const PLANS: Plan[] = [
       "Unlimited reminders",
       "Advanced analytics & custom reports",
       "CSV import",
+      "Priority support",
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    tagline: "For teams running a reselling business together",
+    icon: Building2,
+    features: [
+      "Everything in Professional",
+      `Team access for up to ${ENTERPRISE_TEAM_SEATS} teammates`,
+      "Shared inventory, sales & expenses",
+      "Owner controls billing and who's on the team",
       "Priority support",
     ],
   },

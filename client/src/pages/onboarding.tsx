@@ -139,7 +139,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-2 md:items-stretch">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.id}
