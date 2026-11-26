@@ -1362,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       return await import("./paypal");
     } catch (error) {
-      console.error("PayPal not configured:", error);
+      console.error("PayPal not configured:", (error as Error)?.message);
       res.status(503).json({ error: "PayPal is not configured" });
       return null;
     }
@@ -1374,7 +1374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await paypal.loadPaypalDefault(req, res);
     } catch (error) {
-      console.error("PayPal setup failed:", error);
+      console.error("PayPal setup failed:", paypal.describePaypalError(error));
       res.status(500).json({ error: "PayPal setup failed" });
     }
   });
@@ -1391,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = await paypal.createPlanOrder(req.user.claims.sub, plan);
       res.json({ id });
     } catch (error) {
-      console.error("Failed to create PayPal order:", error);
+      console.error("Failed to create PayPal order:", paypal.describePaypalError(error));
       res.status(500).json({ error: "Failed to create order" });
     }
   });
@@ -1426,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         res.json({ status: "COMPLETED", plan: result.plan, user: updatedUser });
       } catch (error) {
-        console.error("Failed to capture PayPal order:", error);
+        console.error("Failed to capture PayPal order:", paypal.describePaypalError(error));
         res.status(500).json({ error: "Failed to capture order" });
       }
     },

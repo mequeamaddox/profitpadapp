@@ -2,7 +2,6 @@ import {
   CheckoutPaymentIntent,
   Client,
   Environment,
-  LogLevel,
   OAuthAuthorizationController,
   OrdersController,
 } from "@paypal/paypal-server-sdk";
@@ -29,15 +28,8 @@ const client = new Client({
     process.env.NODE_ENV === "production"
       ? Environment.Production
       : Environment.Sandbox,
-  logging: {
-    logLevel: LogLevel.Info,
-    logRequest: {
-      logBody: true,
-    },
-    logResponse: {
-      logHeaders: true,
-    },
-  },
+  // No SDK request logging: it prints the Authorization header, which
+  // contains the client id and secret.
 });
 const ordersController = new OrdersController(client);
 const oAuthAuthorizationController = new OAuthAuthorizationController(client);
@@ -143,4 +135,13 @@ export async function capturePlanOrder(
   }
 
   return { ok: true, plan: paidPlan, captureId: capture.id };
+}
+
+/** A loggable summary of a PayPal SDK error that never includes request headers. */
+export function describePaypalError(error: unknown): string {
+  const e = error as { statusCode?: number; body?: unknown; message?: string };
+  if (e?.statusCode) {
+    return `PayPal ${e.statusCode}: ${typeof e.body === "string" ? e.body : JSON.stringify(e.body)}`;
+  }
+  return e?.message || String(error);
 }
