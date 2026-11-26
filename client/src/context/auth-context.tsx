@@ -9,6 +9,9 @@ type AuthUser = {
   subscriptionTier?: string | null;
   trialEndsAt?: string | null;
   isAdmin?: boolean | null;
+  planExpiresAt?: string | null;
+  teamRole?: "owner" | "member" | null;
+  teamOwnerName?: string | null;
 };
 
 type AuthContextType = {
@@ -50,9 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    const res = await apiRequest("POST", "/api/auth/login", { email, password });
-    const data = await res.json();
-    setUser(data);
+    await apiRequest("POST", "/api/auth/login", { email, password });
+    // Load the full user (team members get their owner's plan)
+    await refreshUser();
   }
 
   async function register(data: {
@@ -61,9 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstName?: string;
     lastName?: string;
   }) {
-    const res = await apiRequest("POST", "/api/auth/register", data);
-    const user = await res.json();
-    setUser(user);
+    await apiRequest("POST", "/api/auth/register", data);
+    await refreshUser();
   }
 
   async function logout() {

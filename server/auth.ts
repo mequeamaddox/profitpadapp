@@ -4,6 +4,7 @@ import connectPg from "connect-pg-simple";
 import type { Express, RequestHandler } from "express";
 import { pool } from "./db";
 import { storage } from "./storage";
+import { resolveAccount } from "./team";
 
 const PgSession = connectPg(session);
 
@@ -60,11 +61,24 @@ export const requireAuth: RequestHandler = async (req: any, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  req.user = {
-    claims: {
-      sub: userId,
-    },
-  };
+  try {
+    const account = await resolveAccount(userId);
+    if (!account) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // sub is the account whose data is used (the owner's, for teammates);
+    // userId is the person actually signed in.
+    req.user = {
+      claims: {
+        sub: account.accountId,
+        userId,
+        teamRole: account.teamRole,
+      },
+    };
+  } catch (error) {
+    return next(error);
+  }
 
   next();
 };
@@ -179,12 +193,29 @@ export async function currentUserHandler(req: any, res: any) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const user = await storage.getUser(userId);
-    if (!user) {
+    const account = await resolveAccount(userId);
+    if (!account) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    return res.json(sanitizeUser(user));
+    // Teammates see the owner's plan, since that's what applies to them
+    const plan = account.owner
+      ? {
+          subscriptionTier: account.owner.subscriptionTier,
+          trialEndsAt: account.owner.trialEndsAt,
+          planExpiresAt: account.owner.planExpiresAt,
+        }
+      : {};
+
+    return res.json({
+      ...sanitizeUser(account.user),
+      ...plan,
+      teamRole: account.teamRole,
+      teamOwnerName: account.owner
+        ? [account.owner.firstName, account.owner.lastName].filter(Boolean).join(" ") ||
+          account.owner.email
+        : null,
+    });
   } catch (error) {
     console.error("Current user error:", error);
     return res.status(500).json({

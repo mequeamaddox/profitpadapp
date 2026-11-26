@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import PayPalButton from "@/components/PayPalButton";
 import { BrandMark } from "@/components/layout/nav-panel";
-import { PLANS, PlanCard, planPrice } from "@/components/billing/plans";
-import type { PaidPlanId } from "@shared/plans";
+import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
+import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,7 @@ export default function Onboarding() {
 
   const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>("professional");
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   // Starts the free trial only. Paid plans are applied by the server after
@@ -133,6 +134,9 @@ export default function Onboarding() {
           <p className="mt-3 text-lg text-muted-foreground">
             Pay with PayPal to unlock the full plan, or try ProfitPad free for 3 days.
           </p>
+          <div className="mt-6">
+            <PeriodToggle value={period} onChange={setPeriod} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
@@ -140,6 +144,7 @@ export default function Onboarding() {
             <PlanCard
               key={plan.id}
               plan={plan}
+              period={period}
               selected={selectedPlan === plan.id}
               onSelect={() => {
                 setSelectedPlan(plan.id);
@@ -174,12 +179,15 @@ export default function Onboarding() {
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-2">
             <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
-              <p className="tabular text-3xl font-extrabold">${planPrice(selectedPlan)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">charged today for your first month</p>
+              <p className="tabular text-3xl font-extrabold">${planPrice(selectedPlan, period)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                charged today for {period === "monthly" ? "30 days" : "1 year"}
+              </p>
             </div>
             <div className="w-full" data-testid="paypal-button-container">
               <PayPalButton
                 plan={selectedPlan}
+                period={period}
                 onSuccess={handlePaymentSuccess}
                 onFailure={(message) =>
                   toast({

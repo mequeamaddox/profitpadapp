@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, CheckCircle2, Star, Upload, Calculator, LineChart } from "lucide-react";
-// import { useAuth } from "@/hooks/useAuth //
+import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
+import type { BillingPeriod } from "@shared/plans";
 
 export default function Landing() {
-  // const {} = useAuth();//
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -49,55 +51,43 @@ export default function Landing() {
           >
             Start Your Free 3-Day Trial →
           </Button>
-          <p className="text-sm text-slate-500 mt-4">Credit card required • Cancel anytime • Full refund if cancelled within 3 days</p>
+          <p className="text-sm text-slate-500 mt-4">No credit card needed • 3-day free trial • Takes less than a minute</p>
         </div>
 
-        {/* Social Proof */}
+        {/* Why resellers use ProfitPad */}
         <div className="mb-20 bg-white rounded-2xl p-8 shadow-sm border">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Trusted by resellers nationwide</h3>
-            <p className="text-slate-600">See what other sellers are saying</p>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Made for the way resellers work</h3>
+            <p className="text-slate-600">Everything you track in a spreadsheet, without the spreadsheet</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-0 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex mb-3">
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                </div>
-                <p className="text-slate-700 mb-4">"ProfitPad helped me discover I was losing $2 per sale without knowing it. Game changer for my business!"</p>
-                <p className="text-sm text-slate-500">- Sarah M., eBay Seller</p>
-              </CardContent>
-            </Card>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex mb-3">
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                </div>
-                <p className="text-slate-700 mb-4">"Finally ditched my spreadsheets! ProfitPad shows me exactly which items are actually profitable."</p>
-                <p className="text-sm text-slate-500">- Mike T., Pallet Reseller</p>
-              </CardContent>
-            </Card>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex mb-3">
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                </div>
-                <p className="text-slate-700 mb-4">"The fee calculator alone has saved me hundreds. I know my real margins before I even list!"</p>
-                <p className="text-sm text-slate-500">- Jessica L., Amazon FBA</p>
-              </CardContent>
-            </Card>
+            {[
+              {
+                icon: DollarSign,
+                title: "Real profit per sale",
+                body: "Fees, shipping and your cost come out of every sale automatically, so you see what you actually made.",
+              },
+              {
+                icon: Package,
+                title: "Inventory & pallets",
+                body: "Track every item from purchase to sale, scan barcodes, and spread pallet costs across what's inside.",
+              },
+              {
+                icon: Target,
+                title: "Goals & expenses",
+                body: "Set a monthly profit goal, log expenses with receipt photos, and watch your progress on one dashboard.",
+              },
+            ].map((item) => (
+              <Card key={item.title} className="border-0 shadow-sm">
+                <CardContent className="pt-6">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
+                    <item.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="font-semibold text-slate-900 mb-1">{item.title}</p>
+                  <p className="text-slate-600 text-sm">{item.body}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
@@ -122,7 +112,7 @@ export default function Landing() {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-600">
-                  Add items manually or import from your selling platform. Quick and easy setup.
+                  Add items by hand, scan a barcode, or import a CSV. Quick and easy setup.
                 </p>
               </CardContent>
             </Card>
@@ -243,91 +233,22 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Starter Tier */}
-            <Card className="relative">
-              <CardHeader>
-                <CardTitle className="text-2xl">Starter</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">$9.99<span className="text-base font-normal text-slate-500">/month</span></div>
-                <CardDescription>Perfect for getting started</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 100 inventory items</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 100 sales records</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Basic profit analytics</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Task reminders</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>3-day free trial</span></li>
-                </ul>
-                <Button 
-                  className="w-full mt-6"
-                  variant="outline"
-                  onClick={() => window.location.href = "/register"}
-                  data-testid="button-trial-starter"
-                >
-                  Start Free Trial
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Professional Tier */}
-            <Card className="relative border-primary border-2 shadow-xl scale-105">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                MOST POPULAR
-              </div>
-              <CardHeader className="pt-8">
-                <CardTitle className="text-2xl">Professional</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">$19.99<span className="text-base font-normal text-slate-500">/month</span></div>
-                <CardDescription>For growing businesses</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 500 inventory items</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Up to 500 sales records</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Advanced profit analytics</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>CSV import/export reports</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Priority support</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Custom reporting</span></li>
-                </ul>
-                <Button 
-                  className="w-full mt-6"
-                  onClick={() => window.location.href = "/register"}
-                  data-testid="button-trial-professional"
-                >
-                  Start Professional Trial →
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Enterprise Tier */}
-            <Card className="relative">
-              <CardHeader>
-                <CardTitle className="text-2xl">Enterprise</CardTitle>
-                <div className="text-4xl font-bold text-slate-900">$49.99<span className="text-base font-normal text-slate-500">/month</span></div>
-                <CardDescription>For serious entrepreneurs</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Unlimited everything</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Multi-user team access</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>API integrations</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>White-label reporting</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Dedicated account manager</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" /><span>Custom integrations</span></li>
-                </ul>
-                <Button 
-                  variant="outline"
-                  className="w-full mt-6"
-                  onClick={() => window.location.href = "/register"}
-                  data-testid="button-trial-enterprise"
-                >
-                  Start Enterprise Trial
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="mb-8 text-center">
+            <PeriodToggle value={period} onChange={setPeriod} />
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {PLANS.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                period={period}
+                onSelect={() => (window.location.href = "/register")}
+                actionLabel="Start free trial"
+              />
+            ))}
           </div>
           <p className="text-center text-slate-600 mt-8">
-            💳 Credit card required for trial • Cancel anytime for full refund within 3 days • All plans include a 3-day trial period
+            Every account starts with a 3-day free trial. No credit card needed. Pay with PayPal when you're ready.
           </p>
         </div>
 
@@ -337,7 +258,7 @@ export default function Landing() {
             Stop Guessing. Start Growing.
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join hundreds of resellers who've taken control of their profits with ProfitPad
+            Take control of your profits with ProfitPad
           </p>
           <Button 
             size="lg" 
@@ -348,7 +269,7 @@ export default function Landing() {
           >
             Start Your Free 3-Day Trial →
           </Button>
-          <p className="text-sm mt-4 opacity-75">Credit card required • Full refund if cancelled within trial • Takes less than 60 seconds</p>
+          <p className="text-sm mt-4 opacity-75">No credit card needed • Takes less than 60 seconds</p>
         </div>
       </main>
 

@@ -35,8 +35,12 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  subscriptionTier: varchar("subscription_tier").default("trial"), // "trial", "professional", "enterprise"
+  subscriptionTier: varchar("subscription_tier").default("trial"), // "trial", "starter", "professional", "enterprise" (legacy)
   trialEndsAt: timestamp("trial_ends_at"),
+  // End of the paid period. Null on a paid tier means no expiry (granted before plans expired).
+  planExpiresAt: timestamp("plan_expires_at"),
+  // Set when this user is a teammate on an Enterprise owner's account
+  teamOwnerId: varchar("team_owner_id"),
   monthlyGoal: decimal("monthly_goal", { precision: 10, scale: 2 }).default("0.00"),
   isAdmin: boolean("is_admin").default(false),
   // Sales tax settings
@@ -315,6 +319,19 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Enterprise team invitations. The link only works for the invited email.
+export const teamInvites = pgTable("team_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: varchar("owner_id").notNull().references(() => users.id),
+  email: varchar("email").notNull(),
+  token: varchar("token").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+  acceptedBy: varchar("accepted_by"),
+});
+
+export type TeamInvite = typeof teamInvites.$inferSelect;
 
 export const palletsRelations = relations(pallets, ({ one, many }) => ({
   user: one(users, {

@@ -140,13 +140,17 @@ export default function Help() {
         "Setting monthly profit goals",
         "Managing account preferences",
         "Understanding plan features",
-        "Team management (Premium)",
+        "Inviting your team (Enterprise)",
         "Data export and backup"
       ]
     }
   ];
 
   const faqItems = [
+    {
+      question: "How does team access work?",
+      answer: "On the Enterprise plan, go to Team and enter a teammate's email to create an invite link. They sign in with that email and accept, and from then on they work in your account: inventory, sales, expenses and reminders are shared. You stay in charge of billing and can remove anyone at any time. Enterprise includes up to 5 teammates.",
+    },
     {
       question: "How do I calculate accurate profit margins?",
       answer: "To calculate accurate profit margins, make sure to include ALL costs: item cost, platform fees (eBay, Amazon, etc.), shipping costs, payment processing fees, and any other expenses. ProfitPad automatically calculates your profit margin as (Sale Price - Total Costs) / Sale Price × 100."
@@ -169,7 +173,7 @@ export default function Help() {
     },
     {
       question: "What happens when my trial expires?",
-      answer: "After your 3-day trial, you'll need to subscribe to continue using ProfitPad. Your data remains safe and you can immediately access it once you subscribe to the Professional or Enterprise plan."
+      answer: "After your 3-day trial you can still view everything, but adding new items, sales and expenses needs a paid plan (Starter, Professional or Enterprise). Your data stays safe, and you can pick up right where you left off once you choose a plan."
     },
     {
       question: "How do I track expenses for tax purposes?",

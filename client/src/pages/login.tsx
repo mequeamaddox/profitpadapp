@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { nextPath } from "@/lib/utils";
 
 export default function Login() {
   const { login } = useAuthContext();
@@ -23,7 +24,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      setLocation("/");
+      setLocation(nextPath());
     } catch (err: any) {
       setError(err?.message || "Login failed");
     } finally {
@@ -41,7 +42,7 @@ export default function Login() {
           <button
             type="button"
             className="font-semibold text-primary hover:underline"
-            onClick={() => setLocation("/register")}
+            onClick={() => setLocation(`/register${window.location.search}`)}
           >
             Create an account
           </button>

@@ -15,6 +15,7 @@ import {
   Search,
   CreditCard,
   ArrowUpRight,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import type { User, Reminder } from "@shared/schema";
@@ -24,7 +25,11 @@ interface NavItem {
   href: string;
   icon: LucideIcon;
   match?: (location: string) => boolean;
+  /** Only show for users this returns true for */
+  show?: (user: NavUser | undefined) => boolean;
 }
+
+type NavUser = User & { teamRole?: "owner" | "member" | null; teamOwnerName?: string | null };
 
 const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
@@ -48,6 +53,12 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Account",
     items: [
+      {
+        name: "Team",
+        href: "/team",
+        icon: Users,
+        show: (u) => !!u?.teamRole || u?.subscriptionTier === "enterprise",
+      },
       { name: "Billing", href: "/billing", icon: CreditCard },
       { name: "Settings", href: "/settings", icon: Settings, match: (l) => l.startsWith("/settings") },
       { name: "Help Center", href: "/help", icon: HelpCircle },
@@ -82,7 +93,7 @@ export function BrandMark({ className }: { className?: string }) {
 export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
   const [location, setLocation] = useLocation();
 
-  const { data: user } = useQuery<User>({ queryKey: ["/api/auth/user"] });
+  const { data: user } = useQuery<NavUser>({ queryKey: ["/api/auth/user"] });
   const { data: overdueReminders = [] } = useQuery<Reminder[]>({
     queryKey: ["/api/reminders?overdue=true"],
   });
@@ -93,7 +104,11 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   const tier = user?.subscriptionTier || "trial";
-  const planLabel = user?.isAdmin ? "Admin" : PLAN_LABELS[tier] ?? "Free trial";
+  const planLabel = user?.isAdmin
+    ? "Admin"
+    : user?.teamRole === "member"
+      ? `Team · ${user.teamOwnerName ?? "Enterprise"}`
+      : PLAN_LABELS[tier] ?? "Free trial";
   const initials =
     [user?.firstName?.[0], user?.lastName?.[0]].filter(Boolean).join("").toUpperCase() ||
     user?.email?.[0]?.toUpperCase() ||
@@ -112,7 +127,7 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
               {section.label}
             </p>
             <div className="space-y-0.5">
-              {section.items.map((item) => {
+              {section.items.filter((item) => !item.show || item.show(user)).map((item) => {
                 const active = item.match ? item.match(location) : location === item.href;
                 const badge = item.href === "/reminders" && overdueReminders.length > 0 ? overdueReminders.length : null;
                 return (
@@ -150,7 +165,7 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="space-y-3 border-t border-sidebar-border p-3">
-        {!user?.isAdmin && tier !== "enterprise" && (
+        {!user?.isAdmin && user?.teamRole !== "member" && tier !== "enterprise" && (
           <button
             onClick={() => go("/billing")}
             className="group w-full rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 p-3 text-left ring-1 ring-inset ring-emerald-400/20 transition hover:ring-emerald-400/40"
@@ -161,7 +176,13 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
               </span>
               <ArrowUpRight className="h-4 w-4 text-emerald-300 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
-            <p className="mt-1 text-sm font-medium text-white">Upgrade for more room to grow</p>
+            <p className="mt-1 text-sm font-medium text-white">
+              {tier === "professional"
+                ? "Bring your team with Enterprise"
+                : tier === "starter"
+                  ? "Go unlimited with Professional"
+                  : "Pick a plan to keep growing"}
+            </p>
           </button>
         )}
 

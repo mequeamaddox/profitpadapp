@@ -34,6 +34,17 @@ export const checkTrialExpired = async (req: Request, res: Response, next: NextF
     }
   }
 
+  // Check if a paid plan has run out (null expiry = no expiry)
+  if (userData.subscriptionTier !== 'trial' && userData.planExpiresAt) {
+    if (new Date() > new Date(userData.planExpiresAt)) {
+      return res.status(402).json({
+        message: "Plan expired",
+        planExpired: true,
+        planExpiredAt: userData.planExpiresAt
+      });
+    }
+  }
+
   next();
 };
 

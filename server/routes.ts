@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
+import { registerTeamRoutes, requireAccountOwner } from "./team";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -13,13 +14,15 @@ import {
   insertPalletSchema,
   insertNotificationSettingsSchema,
 } from "@shared/schema";
-import { isPaidPlanId } from "@shared/plans";
+import { extendPlan, isBillingPeriod, isPaidPlanId } from "@shared/plans";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true });
   });
+
+  registerTeamRoutes(app, requireAuth);
 
   // Auth middleware
 
@@ -964,6 +967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reminders: remindersCount,
         },
         isAdmin: userData.isAdmin || false,
+        planExpiresAt: userData.planExpiresAt,
       });
     } catch (error) {
       console.error("Error fetching subscription usage:", error);
@@ -976,6 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/subscription/activate",
     requireAuth,
+    requireAccountOwner,
     async (req: any, res) => {
       try {
         const userId = req.user.claims.sub;
@@ -1380,15 +1385,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Creates an order for a plan. The price is set on the server.
-  app.post("/paypal/order", requireAuth, async (req: any, res) => {
-    const { plan } = req.body ?? {};
-    if (!isPaidPlanId(plan)) {
+  app.post("/paypal/order", requireAuth, requireAccountOwner, async (req: any, res) => {
+    const { plan, period = "monthly" } = req.body ?? {};
+    if (!isPaidPlanId(plan) || !isBillingPeriod(period)) {
       return res.status(400).json({ error: "Invalid plan" });
     }
     const paypal = await loadPaypal(res);
     if (!paypal) return;
     try {
-      const id = await paypal.createPlanOrder(req.user.claims.sub, plan);
+      const id = await paypal.createPlanOrder(req.user.claims.sub, plan, period);
       res.json({ id });
     } catch (error) {
       console.error("Failed to create PayPal order:", paypal.describePaypalError(error));
@@ -1397,10 +1402,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Captures the order and, only once PayPal confirms the payment for this
-  // user and plan, switches the user to that plan.
+  // user and plan, switches the user to that plan for the period paid for.
   app.post(
     "/paypal/order/:orderID/capture",
     requireAuth,
+    requireAccountOwner,
     async (req: any, res) => {
       const paypal = await loadPaypal(res);
       if (!paypal) return;
@@ -1416,13 +1422,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
+        const planExpiresAt = extendPlan(
+          user.subscriptionTier,
+          user.planExpiresAt,
+          result.plan,
+          result.period,
+        );
         const updatedUser = await storage.upsertUser({
           ...user,
           subscriptionTier: result.plan,
+          planExpiresAt,
         });
 
         console.log(
-          `User ${userId} paid for ${result.plan} (PayPal capture ${result.captureId})`,
+          `User ${userId} paid for ${result.plan} ${result.period} until ${planExpiresAt.toISOString()} (PayPal capture ${result.captureId})`,
         );
         res.json({ status: "COMPLETED", plan: result.plan, user: updatedUser });
       } catch (error) {
