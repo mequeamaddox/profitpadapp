@@ -23,7 +23,7 @@ import {
   type DashboardMetrics,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte, count, sum, sql } from "drizzle-orm";
+import { eq, desc, and, gte, lt, lte, count, sum, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -470,9 +470,8 @@ export class DatabaseStorage implements IStorage {
   async getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
     const [totalSalesResult] = await db
       .select({ total: sum(salesRecords.salePrice) })
@@ -500,7 +499,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd),
+          lt(salesRecords.saleDate, monthStart),
         ),
       );
 
@@ -511,7 +510,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd),
+          lt(salesRecords.saleDate, monthStart),
         ),
       );
 
@@ -526,7 +525,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, prevMonthStart),
-          lte(salesRecords.saleDate, prevMonthEnd),
+          lt(salesRecords.saleDate, monthStart),
         ),
       );
 
@@ -536,13 +535,32 @@ export class DatabaseStorage implements IStorage {
       return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
     };
 
-    const currentSales = parseFloat(totalSalesResult?.total || "0");
+    // Month-over-month: this month so far vs last month
+    const [thisMonthResult] = await db
+      .select({
+        sales: sum(salesRecords.salePrice),
+        profit: sum(salesRecords.profit),
+        count: count(),
+      })
+      .from(salesRecords)
+      .where(
+        and(
+          eq(salesRecords.userId, userId),
+          gte(salesRecords.saleDate, monthStart),
+          lt(salesRecords.saleDate, nextMonthStart),
+        ),
+      );
+
+    const currentSales = parseFloat(thisMonthResult?.sales || "0");
     const prevSales = parseFloat(prevMonthSalesResult?.total || "0");
     const salesChange = calculateChange(currentSales, prevSales);
 
-    const profitChange = calculateChange(totalProfit, prevMonthProfit);
+    const profitChange = calculateChange(
+      parseFloat(thisMonthResult?.profit || "0"),
+      prevMonthProfit,
+    );
 
-    const currentItemsSold = itemsSoldResult?.count || 0;
+    const currentItemsSold = thisMonthResult?.count || 0;
     const prevItemsSold = prevMonthItemsSoldResult?.count || 0;
     const itemsSoldChange = calculateChange(currentItemsSold, prevItemsSold);
 
@@ -558,7 +576,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(salesRecords.userId, userId),
           gte(salesRecords.saleDate, monthStart),
-          lte(salesRecords.saleDate, monthEnd),
+          lt(salesRecords.saleDate, nextMonthStart),
         ),
       );
 
@@ -586,8 +604,10 @@ export class DatabaseStorage implements IStorage {
         salePrice: salesRecords.salePrice,
         platform: salesRecords.platform,
         saleDate: salesRecords.saleDate,
-        itemTitle: inventoryItems.title,
+        // Sales recorded without a linked inventory item keep their own title
+        itemTitle: sql<string>`coalesce(${inventoryItems.title}, ${salesRecords.itemTitle})`,
         itemSku: inventoryItems.sku,
+        profit: salesRecords.profit,
         itemImages: inventoryItems.images,
       })
       .from(salesRecords)

@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Package, DollarSign, Target } from "lucide-react";
 import { DashboardMetrics } from "@shared/schema";
+
+const money = (v: string | number) =>
+  `$${parseFloat(String(v)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function InventoryValue() {
   const { data: metrics, isLoading } = useQuery<DashboardMetrics>({
@@ -10,24 +12,19 @@ export default function InventoryValue() {
 
   const inventoryValue = metrics?.inventoryValue;
 
+  const header = (
+    <CardHeader className="pb-3">
+      <CardTitle>Resell value</CardTitle>
+      <p className="text-sm text-muted-foreground">What your current stock is worth at listed prices</p>
+    </CardHeader>
+  );
+
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Inventory Resell Value
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="animate-pulse space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex justify-between">
-                <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-              </div>
-            ))}
-          </div>
+        {header}
+        <CardContent>
+          <div className="h-40 animate-pulse rounded-lg bg-muted" />
         </CardContent>
       </Card>
     );
@@ -36,16 +33,9 @@ export default function InventoryValue() {
   if (!inventoryValue) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Inventory Resell Value
-          </CardTitle>
-        </CardHeader>
+        {header}
         <CardContent>
-          <p className="text-slate-500 text-center py-8">
-            No inventory data available
-          </p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No inventory data yet</p>
         </CardContent>
       </Card>
     );
@@ -54,71 +44,40 @@ export default function InventoryValue() {
   const potentialProfit = parseFloat(inventoryValue.potentialProfit);
   const totalInvestment = parseFloat(inventoryValue.totalInvestment);
   const potentialRevenue = parseFloat(inventoryValue.potentialRevenue);
-  const profitMargin = totalInvestment > 0 ? (potentialProfit / totalInvestment) * 100 : 0;
+  const margin = totalInvestment > 0 ? (potentialProfit / totalInvestment) * 100 : 0;
+  // Share of potential revenue that is cost vs profit
+  const costShare = potentialRevenue > 0 ? Math.min(100, (totalInvestment / potentialRevenue) * 100) : 0;
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '1200ms' }}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-          <span>Inventory Resell Value</span>
-          {totalInvestment > 0 && (
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          )}
-        </CardTitle>
-        <p className="text-sm text-slate-600">
-          Potential profit from current inventory at listed prices
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4">
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1300ms' }}>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-blue-600 transition-transform duration-300 hover:scale-110" />
-              <span className="text-sm font-medium text-blue-900">Total Investment</span>
-            </div>
-            <span className="font-semibold text-blue-900">
-              ${inventoryValue.totalInvestment}
+    <Card className="animate-fadeInUp h-full" style={{ animationDelay: "360ms" }}>
+      {header}
+      <CardContent className="space-y-5">
+        <div>
+          <div className="flex items-baseline justify-between">
+            <p className="tabular text-3xl font-extrabold tracking-tight text-emerald-700">{money(potentialProfit)}</p>
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+              {margin.toFixed(0)}% ROI
             </span>
           </div>
-
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1400ms' }}>
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-green-600 transition-transform duration-300 hover:scale-110" />
-              <span className="text-sm font-medium text-green-900">Potential Revenue</span>
-            </div>
-            <span className="font-semibold text-green-900">
-              ${inventoryValue.potentialRevenue}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-all duration-300 hover:scale-[1.02] animate-fadeInUp" style={{ animationDelay: '1500ms' }}>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-emerald-600 transition-transform duration-300 hover:scale-110" />
-              <span className="text-sm font-medium text-emerald-900">Potential Profit</span>
-            </div>
-            <span className="font-semibold text-emerald-900">
-              ${inventoryValue.potentialProfit}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-medium text-slate-700">Items in Stock</span>
-            </div>
-            <span className="font-semibold text-slate-700">
-              {inventoryValue.itemCount}
-            </span>
-          </div>
+          <p className="mt-1 text-sm text-muted-foreground">potential profit across {inventoryValue.itemCount} items</p>
         </div>
 
-        <div className="pt-3 border-t">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Profit Margin:</span>
-            <span className={`font-semibold ${profitMargin > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {profitMargin.toFixed(1)}%
-            </span>
+        <div>
+          <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-slate-400" style={{ width: `${costShare}%` }} />
+            <div className="h-full flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600" />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+              <span className="text-muted-foreground">Invested</span>
+              <span className="tabular font-semibold">{money(totalInvestment)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+              <span className="text-muted-foreground">If all sell</span>
+              <span className="tabular font-semibold">{money(potentialRevenue)}</span>
+            </div>
           </div>
         </div>
       </CardContent>

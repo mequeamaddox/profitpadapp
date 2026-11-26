@@ -4,24 +4,13 @@ import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  BarChart3,
-  CheckCircle2,
-  Star,
-  Crown,
-  Building2,
-  Loader2,
-} from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import PayPalButton from "@/components/PayPalButton";
+import { BrandMark } from "@/components/layout/nav-panel";
+import { PLANS, PlanCard, planPrice } from "@/components/billing/plans";
+import type { PaidPlanId } from "@shared/plans";
 import {
   Dialog,
   DialogContent,
@@ -30,66 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const plans = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "9.99",
-    period: "/month",
-    description: "Perfect for getting started",
-    features: [
-      "Up to 100 inventory items",
-      "Up to 100 sales records",
-      "Basic profit analytics",
-      "Task reminders",
-      "3-day free trial",
-    ],
-    icon: Star,
-    popular: false,
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    price: "19.99",
-    period: "/month",
-    description: "For growing businesses",
-    features: [
-      "Up to 500 inventory items",
-      "Up to 500 sales records",
-      "Advanced profit analytics",
-      "CSV import/export",
-      "Priority support",
-      "Custom reporting",
-    ],
-    icon: Crown,
-    popular: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "49.99",
-    period: "/month",
-    description: "For serious entrepreneurs",
-    features: [
-      "Unlimited everything",
-      "Multi-user team access",
-      "API integrations",
-      "White-label reporting",
-      "Dedicated account manager",
-      "Custom integrations",
-    ],
-    icon: Building2,
-    popular: false,
-  },
-];
-
 export default function Onboarding() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading, refreshUser } = useAuthContext();
 
-  const [selectedPlan, setSelectedPlan] = useState<string>("professional");
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>("professional");
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
@@ -133,15 +69,6 @@ export default function Onboarding() {
     }, 2000);
   };
 
-  const handlePlanSelect = (planId: string) => {
-    setSelectedPlan(planId);
-  };
-
-  const handleContinueToPayment = () => {
-    setShowPayPalDialog(true);
-  };
-
-
   const handlePaymentDialogClose = (open: boolean) => {
     if (!open && !paymentCompleted) {
       setShowPayPalDialog(false);
@@ -150,27 +77,20 @@ export default function Onboarding() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-slate-600">Loading...</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Please log in
-            </h2>
-            <p className="text-slate-600 mb-4">
-              You need to be logged in to choose a plan.
-            </p>
-            <Button onClick={() => setLocation("/login")}>Go to Login</Button>
+            <h2 className="mb-2 text-xl font-bold">Please log in</h2>
+            <p className="mb-4 text-muted-foreground">You need to be logged in to choose a plan.</p>
+            <Button onClick={() => setLocation("/login")}>Go to login</Button>
           </CardContent>
         </Card>
       </div>
@@ -179,173 +99,87 @@ export default function Onboarding() {
 
   if (paymentCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              Welcome to ProfitPad!
-            </h2>
-            <p className="text-slate-600">
-              Your subscription has been activated. Redirecting to your
-              dashboard...
-            </p>
+          <CardContent className="pt-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+            </div>
+            <h2 className="mb-2 text-2xl font-extrabold">You're all set!</h2>
+            <p className="text-muted-foreground">Taking you to your dashboard...</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const selectedPlanData = plans.find((p) => p.id === selectedPlan);
+  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <header className="px-6 py-4 border-b bg-white/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-slate-900">ProfitPad</span>
-          </div>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border/70 bg-background/80 px-5 py-4 backdrop-blur md:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <BrandMark />
+          <span className="text-sm text-muted-foreground">Signed in as {user.email}</span>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <Badge className="mb-4">Step 1 of 2</Badge>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Choose Your Plan
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Pick a plan and pay with PayPal, or start a free 3-day trial.
+      <main className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-14">
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <p className="mb-3 inline-flex rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-foreground">
+            Last step
+          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">Choose your plan</h1>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Pay with PayPal to unlock the full plan, or try ProfitPad free for 3 days.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            const isSelected = selectedPlan === plan.id;
-
-            return (
-              <Card
-                key={plan.id}
-                className={`relative cursor-pointer transition-all hover:shadow-lg ${
-                  isSelected ? "ring-2 ring-primary shadow-xl" : ""
-                } ${plan.popular ? "border-primary border-2" : ""}`}
-                onClick={() => handlePlanSelect(plan.id)}
-                data-testid={`card-plan-${plan.id}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-white">MOST POPULAR</Badge>
-                  </div>
-                )}
-
-                {isSelected && (
-                  <div className="absolute -top-3 right-4">
-                    <Badge className="bg-green-500 text-white">Selected</Badge>
-                  </div>
-                )}
-
-                <CardHeader className="text-center pb-4">
-                  <div
-                    className={`w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center ${
-                      plan.id === "starter"
-                        ? "bg-blue-100 text-blue-600"
-                        : plan.id === "professional"
-                          ? "bg-purple-100 text-purple-600"
-                          : "bg-yellow-100 text-yellow-600"
-                    }`}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">${plan.price}</span>
-                    <span className="text-slate-500">{plan.period}</span>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-slate-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
+          {PLANS.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              selected={selectedPlan === plan.id}
+              onSelect={() => {
+                setSelectedPlan(plan.id);
+                setShowPayPalDialog(true);
+              }}
+              actionLabel={`Get ${plan.name}`}
+            />
+          ))}
         </div>
 
-        <Card className="max-w-2xl mx-auto mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-primary">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Selected Plan: {selectedPlanData?.name}
-                </h3>
-                <p className="text-slate-600">
-                  ${selectedPlanData?.price}/month
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-primary">
-                  ${selectedPlanData?.price}
-                </p>
-                <p className="text-sm text-slate-600">per month</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-slate-700 mb-2">
-                💳 <strong>Payment Details:</strong>
-              </p>
-              <ul className="text-sm text-slate-600 space-y-1 ml-6 list-disc">
-                <li>Pay ${selectedPlanData?.price} today to unlock the full plan</li>
-                <li>Or start a free 3-day trial with trial limits</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="text-center">
+        <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <Button
-            size="lg"
-            className="px-12 py-6 text-lg"
-            onClick={handleContinueToPayment}
-            data-testid="button-continue-payment"
+            variant="ghost"
+            className="text-base text-primary hover:bg-accent hover:text-primary"
+            onClick={() => startTrialMutation.mutate()}
+            disabled={startTrialMutation.isPending}
+            data-testid="button-start-trial"
           >
-            Continue to Payment →
+            {startTrialMutation.isPending ? "Starting your trial..." : "Not ready? Start a free 3-day trial →"}
           </Button>
-          <p className="text-sm text-slate-500 mt-4">
-            Secure payment processed by PayPal
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4" /> Secure payments by PayPal
           </p>
         </div>
       </main>
 
       <Dialog open={showPayPalDialog} onOpenChange={handlePaymentDialogClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="rounded-2xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Complete Payment</DialogTitle>
-            <DialogDescription>
-              Subscribe to {selectedPlanData?.name}
-            </DialogDescription>
+            <DialogTitle>Get {selectedPlanData?.name}</DialogTitle>
+            <DialogDescription>Complete your payment with PayPal.</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="text-center mb-4">
-              <p className="text-2xl font-bold text-slate-900">
-                ${selectedPlanData?.price}
-              </p>
-              <p className="text-sm text-slate-600">charged today for your first month</p>
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
+              <p className="tabular text-3xl font-extrabold">${planPrice(selectedPlan)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">charged today for your first month</p>
             </div>
             <div className="w-full" data-testid="paypal-button-container">
               <PayPalButton
-                plan={selectedPlan as "starter" | "professional" | "enterprise"}
+                plan={selectedPlan}
                 onSuccess={handlePaymentSuccess}
                 onFailure={(message) =>
                   toast({
@@ -356,22 +190,14 @@ export default function Onboarding() {
                 }
               />
             </div>
-            <p className="text-xs text-slate-500 text-center mt-2">
-              Your payment is securely processed by PayPal.
-            </p>
-            <div className="w-full mt-4">
-              <Button
-                variant="outline"
-                onClick={() => startTrialMutation.mutate()}
-                className="w-full"
-                data-testid="button-start-trial"
-                disabled={startTrialMutation.isPending}
-              >
-                {startTrialMutation.isPending
-                  ? "Starting..."
-                  : "Start 3-day free trial instead"}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => startTrialMutation.mutate()}
+              className="w-full"
+              disabled={startTrialMutation.isPending}
+            >
+              {startTrialMutation.isPending ? "Starting..." : "Start 3-day free trial instead"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

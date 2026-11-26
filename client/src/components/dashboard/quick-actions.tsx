@@ -1,88 +1,61 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, DollarSign, Upload, Bell } from "lucide-react";
+import { Plus, DollarSign, Bell, Receipt } from "lucide-react";
+import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 import InventoryForm from "@/components/forms/inventory-form";
 import SalesForm from "@/components/forms/sales-form";
 import ReminderForm from "@/components/forms/reminder-form";
 
 export default function QuickActions() {
   const [openDialog, setOpenDialog] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
 
   const actions = [
-    {
-      id: "inventory",
-      title: "Add Inventory Item",
-      icon: Plus,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      id: "sales",
-      title: "Record Sale",
-      icon: DollarSign,
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-    },
-    {
-      id: "csv",
-      title: "Import CSV",
-      icon: Upload,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-    },
-    {
-      id: "reminder",
-      title: "Create Reminder",
-      icon: Bell,
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
-    },
+    { id: "inventory", title: "Add item", hint: "New inventory", icon: Plus, tint: "bg-emerald-50 text-emerald-700" },
+    { id: "sales", title: "Record sale", hint: "Log a sale", icon: DollarSign, tint: "bg-sky-50 text-sky-700" },
+    { id: "expense", title: "Add expense", hint: "Track costs", icon: Receipt, tint: "bg-amber-50 text-amber-700" },
+    { id: "reminder", title: "Reminder", hint: "Follow up", icon: Bell, tint: "bg-violet-50 text-violet-700" },
   ];
 
   const handleActionClick = (actionId: string) => {
-    if (actionId === "csv") {
-      // TODO: Implement CSV import functionality
+    if (actionId === "expense") {
+      setLocation("/expenses");
       return;
     }
     setOpenDialog(actionId);
   };
 
-  const handleDialogClose = () => {
-    setOpenDialog(null);
-  };
+  const handleDialogClose = () => setOpenDialog(null);
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-all duration-300 animate-fadeInUp" style={{ animationDelay: '800ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <span>Quick Actions</span>
-            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
-          </CardTitle>
+      <Card className="animate-fadeInUp h-full" style={{ animationDelay: "240ms" }}>
+        <CardHeader className="pb-3">
+          <CardTitle>Quick actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {actions.map((action, index) => (
-              <Button
+          <div className="grid grid-cols-2 gap-3">
+            {actions.map((action) => (
+              <button
                 key={action.id}
-                variant="outline"
-                className="w-full justify-start p-3 h-auto hover:shadow-md hover:scale-[1.02] transition-all duration-300 border-gray-200 hover:border-gray-300 animate-fadeInUp group/button"
-                style={{ animationDelay: `${800 + (index * 100)}ms` }}
                 onClick={() => handleActionClick(action.id)}
+                className="group flex flex-col items-start gap-3 rounded-xl border border-border/80 bg-card p-3.5 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lift"
               >
-                <div className={`w-8 h-8 ${action.iconBg} rounded-lg flex items-center justify-center mr-3 transition-all duration-300 group-hover/button:scale-110 group-hover/button:rotate-3`}>
-                  <action.icon className={`${action.iconColor} text-sm transition-all duration-300`} size={16} />
+                <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg", action.tint)}>
+                  <action.icon className="h-[18px] w-[18px]" />
                 </div>
-                <span className="font-medium text-slate-900 group-hover/button:text-slate-800 transition-colors">{action.title}</span>
-              </Button>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{action.title}</p>
+                  <p className="text-xs text-muted-foreground">{action.hint}</p>
+                </div>
+              </button>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Inventory Form Dialog */}
       <Dialog open={openDialog === "inventory"} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -92,7 +65,6 @@ export default function QuickActions() {
         </DialogContent>
       </Dialog>
 
-      {/* Sales Form Dialog */}
       <Dialog open={openDialog === "sales"} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -102,7 +74,6 @@ export default function QuickActions() {
         </DialogContent>
       </Dialog>
 
-      {/* Reminder Form Dialog */}
       <Dialog open={openDialog === "reminder"} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
