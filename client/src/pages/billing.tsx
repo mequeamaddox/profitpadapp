@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, ShieldCheck, Sparkles, LifeBuoy } from "lucide-react";
 import PayPalButton from "@/components/PayPalButton";
-import { PLANS, PlanCard, planPrice } from "@/components/billing/plans";
-import type { PaidPlanId } from "@shared/plans";
+import { PLANS, PLAN_NAMES, PeriodToggle, PlanCard } from "@/components/billing/plans";
+import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 import {
   Dialog,
   DialogContent,
@@ -17,18 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const TIER_NAMES: Record<string, string> = {
-  trial: "Free trial",
-  starter: "Starter",
-  professional: "Professional",
-  enterprise: "Enterprise",
-};
-
 export default function Billing() {
   const { toast } = useToast();
   const { user, isLoading, refreshUser } = useAuthContext();
   const [selectedPlan, setSelectedPlan] = useState<PaidPlanId | null>(null);
   const [showPayPalDialog, setShowPayPalDialog] = useState(false);
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
 
   if (isLoading) {
     return (
@@ -48,6 +42,9 @@ export default function Billing() {
   const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86_400_000)) : null;
   const onTrial = tier === "trial";
   const trialExpired = onTrial && daysLeft === 0;
+  const planEnd = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
+  const planExpired = !onTrial && !!planEnd && planEnd.getTime() < Date.now();
+  const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 
   const handlePlanSelect = (planId: PaidPlanId) => {
     setSelectedPlan(planId);
@@ -73,7 +70,7 @@ export default function Billing() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current plan</p>
-                    <p className="mt-0.5 text-xl font-bold">{isAdmin ? "Admin · full access" : TIER_NAMES[tier] ?? tier}</p>
+                    <p className="mt-0.5 text-xl font-bold">{isAdmin ? "Admin · full access" : PLAN_NAMES[tier] ?? tier}</p>
                     <p className="mt-0.5 text-sm text-muted-foreground">
                       {isAdmin
                         ? "Admin accounts have every feature with no limits."
@@ -83,10 +80,20 @@ export default function Billing() {
                             ? `Trial ends ${trialEnd.toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
                             : onTrial
                               ? "Choose a plan whenever you're ready."
-                              : "Thanks for being a ProfitPad subscriber."}
+                              : planExpired
+                                ? `Your plan ended ${fmtDate(planEnd!)}. Renew to keep adding items and sales.`
+                                : planEnd
+                                  ? `Paid through ${fmtDate(planEnd)}. Renew any time to add more time.`
+                                  : "Thanks for being a ProfitPad subscriber."}
                     </p>
                   </div>
                 </div>
+                {planExpired && !isAdmin && (
+                  <div className="flex items-center gap-2 self-start rounded-full bg-rose-50 px-3.5 py-2 text-sm font-semibold text-rose-700 md:self-auto">
+                    <CalendarClock className="h-4 w-4" />
+                    Plan expired
+                  </div>
+                )}
                 {onTrial && daysLeft !== null && !isAdmin && (
                   <div
                     className={`flex items-center gap-2 self-start rounded-full px-3.5 py-2 text-sm font-semibold md:self-auto ${
@@ -110,18 +117,25 @@ export default function Billing() {
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Pick the plan that fits</h2>
                 <p className="mt-2 text-muted-foreground">Simple pricing. Pay securely with PayPal.</p>
+                <div className="mt-5">
+                  <PeriodToggle value={period} onChange={setPeriod} />
+                </div>
               </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
+              <div className="mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-2 md:items-stretch">
                 {PLANS.map((plan) => {
                   const isCurrent = !isAdmin && tier === plan.id;
                   return (
                     <PlanCard
                       key={plan.id}
                       plan={plan}
+                      period={period}
                       current={isCurrent}
-                      disabled={isCurrent}
                       onSelect={() => handlePlanSelect(plan.id)}
-                      actionLabel={isCurrent ? "Your current plan" : `Choose ${plan.name}`}
+                      actionLabel={
+                        isCurrent
+                          ? `Renew ${plan.name} · add ${period === "monthly" ? "a month" : "a year"}`
+                          : `Choose ${plan.name}`
+                      }
                     />
                   );
                 })}
@@ -161,17 +175,22 @@ export default function Billing() {
       <Dialog open={showPayPalDialog} onOpenChange={setShowPayPalDialog}>
         <DialogContent className="rounded-2xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Upgrade to {selected?.name}</DialogTitle>
+            <DialogTitle>
+              {tier === selectedPlan ? "Renew" : "Upgrade to"} {selected?.name}
+            </DialogTitle>
             <DialogDescription>Complete your payment with PayPal.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-2">
             <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
-              <p className="tabular text-3xl font-extrabold">${selectedPlan ? planPrice(selectedPlan) : ""}</p>
-              <p className="mt-1 text-sm text-muted-foreground">charged today</p>
+              <p className="tabular text-3xl font-extrabold">${selectedPlan ? planPrice(selectedPlan, period) : ""}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                charged today for {period === "monthly" ? "30 days" : "1 year"}
+              </p>
             </div>
             {selectedPlan && (
               <PayPalButton
                 plan={selectedPlan}
+                period={period}
                 onSuccess={async () => {
                   await refreshUser();
                   setShowPayPalDialog(false);

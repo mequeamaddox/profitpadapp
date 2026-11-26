@@ -1,6 +1,6 @@
-import { Check, Star, Crown, Building2, type LucideIcon } from "lucide-react";
+import { Check, Star, Crown, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PAID_PLAN_PRICES, type PaidPlanId } from "@shared/plans";
+import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 
 export interface Plan {
   id: PaidPlanId;
@@ -19,10 +19,11 @@ export const PLANS: Plan[] = [
     tagline: "For side hustles getting off the ground",
     icon: Star,
     features: [
-      "Up to 100 inventory items",
-      "Up to 100 sales records",
+      "Up to 250 inventory items",
+      "Up to 250 sales records",
       "50 reminders",
       "Profit & fee tracking",
+      "Expenses & receipt photos",
       "Barcode scanning",
     ],
   },
@@ -33,32 +34,68 @@ export const PLANS: Plan[] = [
     icon: Crown,
     popular: true,
     features: [
-      "Up to 500 inventory items",
-      "Up to 500 sales records",
-      "200 reminders",
-      "CSV import & custom reports",
-      "Advanced analytics",
-      "Priority support",
-    ],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    tagline: "For teams and high-volume stores",
-    icon: Building2,
-    features: [
-      "Unlimited inventory & sales",
+      "Unlimited inventory items",
+      "Unlimited sales records",
       "Unlimited reminders",
-      "Team access",
-      "Everything in Professional",
+      "Advanced analytics & custom reports",
+      "CSV import",
+      "Priority support",
     ],
   },
 ];
 
-export const planPrice = (id: PaidPlanId) => PAID_PLAN_PRICES[id];
+export const PLAN_NAMES: Record<string, string> = {
+  trial: "Free trial",
+  starter: "Starter",
+  professional: "Professional",
+  enterprise: "Enterprise",
+};
+
+/** Months free when paying yearly, for the savings label. */
+function yearlySavings(plan: PaidPlanId) {
+  const monthly = parseFloat(planPrice(plan, "monthly"));
+  const yearly = parseFloat(planPrice(plan, "yearly"));
+  return Math.round(12 - yearly / monthly);
+}
+
+export function PeriodToggle({
+  value,
+  onChange,
+}: {
+  value: BillingPeriod;
+  onChange: (period: BillingPeriod) => void;
+}) {
+  return (
+    <div className="inline-flex items-center rounded-full border border-border bg-card p-1 shadow-card">
+      {(["monthly", "yearly"] as const).map((period) => (
+        <button
+          key={period}
+          onClick={() => onChange(period)}
+          className={cn(
+            "rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+            value === period ? "bg-sidebar text-white" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {period === "monthly" ? "Monthly" : "Yearly"}
+          {period === "yearly" && (
+            <span
+              className={cn(
+                "ml-1.5 rounded-full px-1.5 py-px text-[11px] font-bold",
+                value === period ? "bg-emerald-400/20 text-emerald-300" : "bg-emerald-50 text-emerald-700",
+              )}
+            >
+              2 months free
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function PlanCard({
   plan,
+  period,
   selected,
   current,
   onSelect,
@@ -66,6 +103,7 @@ export function PlanCard({
   disabled,
 }: {
   plan: Plan;
+  period: BillingPeriod;
   selected?: boolean;
   current?: boolean;
   onSelect: () => void;
@@ -73,6 +111,8 @@ export function PlanCard({
   disabled?: boolean;
 }) {
   const featured = plan.popular;
+  const price = planPrice(plan.id, period);
+  const perMonth = (parseFloat(price) / 12).toFixed(2);
   return (
     <div
       className={cn(
@@ -118,11 +158,16 @@ export function PlanCard({
       </p>
 
       <p className="mt-5 flex items-baseline gap-1">
-        <span className="tabular text-4xl font-extrabold tracking-tight">${planPrice(plan.id)}</span>
-        <span className={cn("text-sm", featured ? "text-sidebar-foreground" : "text-muted-foreground")}>/month</span>
+        <span className="tabular text-4xl font-extrabold tracking-tight">${price}</span>
+        <span className={cn("text-sm", featured ? "text-sidebar-foreground" : "text-muted-foreground")}>
+          /{period === "monthly" ? "month" : "year"}
+        </span>
+      </p>
+      <p className={cn("mt-1 h-5 text-xs", featured ? "text-emerald-300" : "text-emerald-700")}>
+        {period === "yearly" ? `$${perMonth}/mo · ${yearlySavings(plan.id)} months free` : ""}
       </p>
 
-      <ul className="mt-6 flex-1 space-y-3">
+      <ul className="mt-5 flex-1 space-y-3">
         {plan.features.map((feature) => (
           <li key={feature} className="flex items-start gap-2.5 text-sm">
             <span

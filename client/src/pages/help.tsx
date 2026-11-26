@@ -140,7 +140,6 @@ export default function Help() {
         "Setting monthly profit goals",
         "Managing account preferences",
         "Understanding plan features",
-        "Team management (Premium)",
         "Data export and backup"
       ]
     }
@@ -169,7 +168,7 @@ export default function Help() {
     },
     {
       question: "What happens when my trial expires?",
-      answer: "After your 3-day trial, you'll need to subscribe to continue using ProfitPad. Your data remains safe and you can immediately access it once you subscribe to the Professional or Enterprise plan."
+      answer: "After your 3-day trial you can still view everything, but adding new items, sales and expenses needs a Starter or Professional plan. Your data stays safe, and you can pick up right where you left off once you choose a plan."
     },
     {
       question: "How do I track expenses for tax purposes?",

@@ -35,8 +35,10 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  subscriptionTier: varchar("subscription_tier").default("trial"), // "trial", "professional", "enterprise"
+  subscriptionTier: varchar("subscription_tier").default("trial"), // "trial", "starter", "professional", "enterprise" (legacy)
   trialEndsAt: timestamp("trial_ends_at"),
+  // End of the paid period. Null on a paid tier means no expiry (granted before plans expired).
+  planExpiresAt: timestamp("plan_expires_at"),
   monthlyGoal: decimal("monthly_goal", { precision: 10, scale: 2 }).default("0.00"),
   isAdmin: boolean("is_admin").default(false),
   // Sales tax settings

@@ -6,7 +6,13 @@ import {
   OrdersController,
 } from "@paypal/paypal-server-sdk";
 import { Request, Response } from "express";
-import { PAID_PLAN_PRICES, type PaidPlanId } from "@shared/plans";
+import {
+  isBillingPeriod,
+  isPaidPlanId,
+  planPrice,
+  type BillingPeriod,
+  type PaidPlanId,
+} from "@shared/plans";
 
 /* PayPal Controllers Setup */
 
@@ -61,17 +67,18 @@ export async function loadPaypalDefault(_req: Request, res: Response) {
 /* Plan purchases
  *
  * The price comes from PAID_PLAN_PRICES on the server, and the buyer's user
- * id and plan are stamped on the order as custom_id, so a capture can be
- * checked against who is capturing it and what they paid.
+ * id, plan and billing period are stamped on the order as custom_id, so a
+ * capture can be checked against who is capturing it and what they paid.
  */
 
-function planCustomId(userId: string, plan: PaidPlanId) {
-  return `${userId}:${plan}`;
+function planCustomId(userId: string, plan: PaidPlanId, period: BillingPeriod) {
+  return `${userId}:${plan}:${period}`;
 }
 
 export async function createPlanOrder(
   userId: string,
   plan: PaidPlanId,
+  period: BillingPeriod,
 ): Promise<string> {
   const { body } = await ordersController.createOrder({
     body: {
@@ -80,10 +87,10 @@ export async function createPlanOrder(
         {
           amount: {
             currencyCode: "USD",
-            value: PAID_PLAN_PRICES[plan],
+            value: planPrice(plan, period),
           },
-          customId: planCustomId(userId, plan),
-          description: `ProfitPad ${plan} plan`,
+          customId: planCustomId(userId, plan, period),
+          description: `ProfitPad ${plan} plan (${period})`,
         },
       ],
     },
@@ -98,7 +105,7 @@ export async function createPlanOrder(
 }
 
 export type PlanCaptureResult =
-  | { ok: true; plan: PaidPlanId; captureId: string }
+  | { ok: true; plan: PaidPlanId; period: BillingPeriod; captureId: string }
   | { ok: false; reason: string };
 
 export async function capturePlanOrder(
@@ -121,20 +128,19 @@ export async function capturePlanOrder(
   }
 
   const customId: string = capture.custom_id ?? order.purchase_units?.[0]?.custom_id ?? "";
-  const [orderUserId, plan] = customId.split(":");
-  if (orderUserId !== userId || !(plan in PAID_PLAN_PRICES)) {
+  const [orderUserId, plan, period] = customId.split(":");
+  if (orderUserId !== userId || !isPaidPlanId(plan) || !isBillingPeriod(period)) {
     return { ok: false, reason: "Order does not belong to this user" };
   }
 
-  const paidPlan = plan as PaidPlanId;
   if (
     capture.amount?.currency_code !== "USD" ||
-    capture.amount?.value !== PAID_PLAN_PRICES[paidPlan]
+    capture.amount?.value !== planPrice(plan, period)
   ) {
     return { ok: false, reason: "Paid amount does not match the plan price" };
   }
 
-  return { ok: true, plan: paidPlan, captureId: capture.id };
+  return { ok: true, plan, period, captureId: capture.id };
 }
 
 /** A loggable summary of a PayPal SDK error that never includes request headers. */

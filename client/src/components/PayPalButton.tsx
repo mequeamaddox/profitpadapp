@@ -9,21 +9,25 @@ declare global {
 }
 
 interface PayPalButtonProps {
-  plan: "starter" | "professional" | "enterprise";
+  plan: "starter" | "professional";
+  period: "monthly" | "yearly";
   onSuccess?: () => void;
   onFailure?: (message: string) => void;
 }
 
 export default function PayPalButton({
   plan,
+  period,
   onSuccess,
   onFailure,
 }: PayPalButtonProps) {
   // The SDK is wired up once on mount, so read the latest props via refs.
   const planRef = useRef(plan);
+  const periodRef = useRef(period);
   const onSuccessRef = useRef(onSuccess);
   const onFailureRef = useRef(onFailure);
   planRef.current = plan;
+  periodRef.current = period;
   onSuccessRef.current = onSuccess;
   onFailureRef.current = onFailure;
 
@@ -33,7 +37,7 @@ export default function PayPalButton({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ plan: planRef.current }),
+      body: JSON.stringify({ plan: planRef.current, period: periodRef.current }),
     });
     const output = await response.json();
     return { orderId: output.id };

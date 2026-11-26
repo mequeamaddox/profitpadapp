@@ -9,6 +9,7 @@ type AuthUser = {
   subscriptionTier?: string | null;
   trialEndsAt?: string | null;
   isAdmin?: boolean | null;
+  planExpiresAt?: string | null;
 };
 
 type AuthContextType = {

@@ -26,8 +26,8 @@ export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
     prioritySupport: false,
   },
   starter: {
-    inventoryLimit: 100,
-    salesLimit: 100,
+    inventoryLimit: 250,
+    salesLimit: 250,
     remindersLimit: 50,
     csvImport: false,
     advancedAnalytics: false,
@@ -38,17 +38,18 @@ export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
     prioritySupport: false,
   },
   professional: {
-    inventoryLimit: 500,
-    salesLimit: 500,
-    remindersLimit: 200,
+    inventoryLimit: -1, // unlimited
+    salesLimit: -1,
+    remindersLimit: -1,
     csvImport: true,
     advancedAnalytics: true,
     multiPlatform: true,
     teamAccess: false,
     customReporting: true,
-    apiAccess: true,
+    apiAccess: false,
     prioritySupport: true,
   },
+  // No longer sold; kept so existing enterprise accounts keep working
   enterprise: {
     inventoryLimit: -1, // unlimited
     salesLimit: -1, // unlimited

@@ -42,7 +42,7 @@ const TIER_INFO = {
   },
   enterprise: {
     name: "Enterprise",
-    price: "$49.99",
+    price: "",
     color: "bg-amber-500",
     icon: Crown
   }
@@ -66,12 +66,8 @@ export function UpgradeModal({
   const tierInfo = TIER_INFO[currentTier as keyof typeof TIER_INFO] || TIER_INFO.trial;
   const TierIcon = tierInfo.icon;
 
-  const getRecommendedTier = () => {
-    if (currentTier === 'trial' || currentTier === 'starter') {
-      return 'professional';
-    }
-    return 'enterprise';
-  };
+  // Professional is unlimited, so it's the upgrade from any capped plan
+  const getRecommendedTier = () => (currentTier === 'trial' ? 'starter' : 'professional');
 
   const recommendedTier = getRecommendedTier();
   const recommendedTierInfo = TIER_INFO[recommendedTier as keyof typeof TIER_INFO];
@@ -116,10 +112,10 @@ export function UpgradeModal({
                 )}
               </div>
               <p className="text-sm text-slate-600">
-                {recommendedTier === 'professional' ? (
-                  <>Get up to <strong>500 {limitLabel}</strong> plus advanced analytics and CSV exports</>
+                {recommendedTier === 'starter' ? (
+                  <>Get up to <strong>250 {limitLabel}</strong>, or go unlimited with Professional</>
                 ) : (
-                  <>Get <strong>unlimited {limitLabel}</strong> and all premium features</>
+                  <>Get <strong>unlimited {limitLabel}</strong> plus advanced analytics and CSV import</>
                 )}
               </p>
             </div>

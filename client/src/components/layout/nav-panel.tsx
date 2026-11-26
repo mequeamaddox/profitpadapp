@@ -150,7 +150,7 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="space-y-3 border-t border-sidebar-border p-3">
-        {!user?.isAdmin && tier !== "enterprise" && (
+        {!user?.isAdmin && (tier === "trial" || tier === "starter") && (
           <button
             onClick={() => go("/billing")}
             className="group w-full rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 p-3 text-left ring-1 ring-inset ring-emerald-400/20 transition hover:ring-emerald-400/40"
@@ -161,7 +161,9 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
               </span>
               <ArrowUpRight className="h-4 w-4 text-emerald-300 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
-            <p className="mt-1 text-sm font-medium text-white">Upgrade for more room to grow</p>
+            <p className="mt-1 text-sm font-medium text-white">
+              {tier === "starter" ? "Go unlimited with Professional" : "Pick a plan to keep growing"}
+            </p>
           </button>
         )}
 
