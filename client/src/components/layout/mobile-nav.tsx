@@ -16,6 +16,7 @@ import {
   FileText, 
   Receipt, 
   Calculator, 
+  CreditCard,
   Menu,
   LogOut,
   User as UserIcon
@@ -48,6 +49,7 @@ export default function MobileNav() {
     },
     { name: "Reports", href: "/reports", icon: FileText, current: location === "/reports" },
     { name: "Profit Estimator", href: "/profit-estimator", icon: Calculator, current: location === "/profit-estimator" },
+    { name: "Billing", href: "/billing", icon: CreditCard, current: location === "/billing" },
     { name: "Settings", href: "/settings", icon: Settings, current: location === "/settings" },
     { name: "Help Center", href: "/help", icon: HelpCircle, current: location === "/help" },
   ];
