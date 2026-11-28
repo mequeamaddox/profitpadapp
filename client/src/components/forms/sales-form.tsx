@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { estimateFee, feeRule } from "@shared/fees";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
@@ -134,6 +135,17 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
   const shippingCost = parseFloat(form.watch("shippingCost") || "0");
   const otherFees = parseFloat(form.watch("otherFees") || "0");
   
+  // Pre-fill the platform fee from the marketplace's usual rate, until the
+  // seller types their own (an existing sale keeps the fee it was saved with).
+  const platformName = form.watch("platform");
+  const [feeTouched, setFeeTouched] = useState(!!sale && parseFloat(sale.platformFee ?? "0") > 0);
+  const rule = feeRule(platformName);
+  useEffect(() => {
+    if (feeTouched) return;
+    const fee = estimateFee(platformName, salePrice);
+    if (fee !== null) form.setValue("platformFee", fee.toFixed(2));
+  }, [platformName, salePrice, feeTouched, form]);
+
   // Auto-update profit when costs change
   useEffect(() => {
     const profit = salePrice - purchasePrice - platformFee - shippingCost - otherFees;
@@ -245,8 +257,17 @@ export default function SalesForm({ sale, onSuccess }: SalesFormProps) {
                     placeholder="0.00"
                     {...field}
                     value={field.value ?? ""}
+                    onChange={(e) => {
+                      setFeeTouched(true);
+                      field.onChange(e);
+                    }}
                   />
                 </FormControl>
+                {rule && !feeTouched && salePrice > 0 && (
+                  <FormDescription>
+                    Estimated from {platformName}'s usual fee ({rule.note}). Change it if yours was different.
+                  </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}

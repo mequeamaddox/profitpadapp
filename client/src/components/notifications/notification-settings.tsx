@@ -272,14 +272,14 @@ export default function NotificationSettings() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Weekly Report</FormLabel>
+                      <FormLabel className="text-base">Weekly Summary Email</FormLabel>
                       <FormDescription>
-                        Get a comprehensive weekly business performance report
+                        Every Monday: last week's profit and sales, your monthly goal pace, and items that need repricing
                       </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value ?? false}
+                        checked={field.value ?? true}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>

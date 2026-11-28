@@ -46,6 +46,8 @@ export const users = pgTable("users", {
   // Sales tax settings
   salesTaxRate: decimal("sales_tax_rate", { precision: 5, scale: 4 }).default("0.0000"), // e.g., 0.0825 for 8.25%
   taxInclusiveSales: boolean("tax_inclusive_sales").default(true), // true = tax included in sale price, false = tax added on top
+  // When the last weekly summary email went out (so restarts never send twice)
+  weeklyDigestSentAt: timestamp("weekly_digest_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -332,6 +334,22 @@ export const teamInvites = pgTable("team_invites", {
 });
 
 export type TeamInvite = typeof teamInvites.$inferSelect;
+
+// Expenses that log themselves every month (store subscriptions, software, storage...)
+export const recurringExpenses = pgTable("recurring_expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  category: varchar("category").notNull(),
+  vendor: varchar("vendor"),
+  deductible: boolean("deductible").default(true),
+  dayOfMonth: integer("day_of_month").notNull(), // 1-31; short months use their last day
+  lastLoggedMonth: varchar("last_logged_month").notNull(), // "YYYY-MM"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type RecurringExpense = typeof recurringExpenses.$inferSelect;
 
 // One-time "forgot password" links. Only a hash of the token is stored.
 export const passwordResetTokens = pgTable("password_reset_tokens", {
