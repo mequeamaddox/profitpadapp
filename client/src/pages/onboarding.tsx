@@ -1,52 +1,21 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
+import { useCheckout } from "@/hooks/use-checkout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, CheckCircle2, Loader2, LogOut, ShieldCheck } from "lucide-react";
-import PayPalButton from "@/components/PayPalButton";
+import { BadgeCheck, Loader2, LogOut, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/layout/nav-panel";
 import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { MONEY_BACK_DAYS, SUPPORT_EMAIL, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MONEY_BACK_DAYS, SUPPORT_EMAIL, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 
 export default function Onboarding() {
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const { user, isLoading: authLoading, refreshUser } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
+  const { checkout, pendingPlan } = useCheckout("onboarding");
 
   const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>("professional");
-  const [showPayPalDialog, setShowPayPalDialog] = useState(false);
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-
-  const handlePaymentSuccess = async () => {
-    await refreshUser();
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    setPaymentCompleted(true);
-    toast({
-      title: "Payment received",
-      description: "Your plan is active.",
-    });
-    setTimeout(() => {
-      setLocation("/");
-    }, 2000);
-  };
-
-  const handlePaymentDialogClose = (open: boolean) => {
-    if (!open && !paymentCompleted) {
-      setShowPayPalDialog(false);
-    }
-  };
 
   if (authLoading) {
     return (
@@ -69,24 +38,6 @@ export default function Onboarding() {
       </div>
     );
   }
-
-  if (paymentCompleted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="max-w-md">
-          <CardContent className="pt-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
-            </div>
-            <h2 className="mb-2 text-2xl font-extrabold">You're all set!</h2>
-            <p className="text-muted-foreground">Taking you to your dashboard...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan);
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,9 +77,10 @@ export default function Onboarding() {
               selected={selectedPlan === plan.id}
               onSelect={() => {
                 setSelectedPlan(plan.id);
-                setShowPayPalDialog(true);
+                checkout(plan.id, period);
               }}
-              actionLabel={`Get ${plan.name}`}
+              disabled={pendingPlan !== null}
+              actionLabel={pendingPlan === plan.id ? "Taking you to checkout…" : `Get ${plan.name}`}
             />
           ))}
         </div>
@@ -144,44 +96,11 @@ export default function Onboarding() {
             within {MONEY_BACK_DAYS} days of your first payment for a full refund.
           </p>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4" /> Secure payments by PayPal
+            <ShieldCheck className="h-4 w-4" /> Secure checkout with PayPal · card or PayPal account
           </p>
         </div>
       </main>
 
-      <Dialog open={showPayPalDialog} onOpenChange={handlePaymentDialogClose}>
-        <DialogContent className="rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Get {selectedPlanData?.name}</DialogTitle>
-            <DialogDescription>Complete your payment with PayPal.</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
-              <p className="tabular text-3xl font-extrabold">${planPrice(selectedPlan, period)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                charged today for {period === "monthly" ? "30 days" : "1 year"}
-              </p>
-            </div>
-            <div className="w-full" data-testid="paypal-button-container">
-              <PayPalButton
-                plan={selectedPlan}
-                period={period}
-                onSuccess={handlePaymentSuccess}
-                onFailure={(message) =>
-                  toast({
-                    title: "Payment not completed",
-                    description: message,
-                    variant: "destructive",
-                  })
-                }
-              />
-            </div>
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <BadgeCheck className="h-4 w-4 text-emerald-600" /> {MONEY_BACK_DAYS}-day money-back guarantee
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

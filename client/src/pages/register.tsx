@@ -29,7 +29,10 @@ export default function Register() {
 
     try {
       await register(form);
-      setLocation(nextPath());
+      const next = nextPath();
+      // Server routes (like finishing a PayPal checkout) need a full page load
+      if (next.startsWith("/paypal/")) window.location.href = next;
+      else setLocation(next);
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {

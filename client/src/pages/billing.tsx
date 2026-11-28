@@ -1,27 +1,17 @@
 import { useState } from "react";
 import { useAuthContext } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
+import { useCheckout } from "@/hooks/use-checkout";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, ShieldCheck, Sparkles, LifeBuoy } from "lucide-react";
-import PayPalButton from "@/components/PayPalButton";
 import { PLANS, PLAN_NAMES, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { MONEY_BACK_DAYS, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MONEY_BACK_DAYS, type BillingPeriod } from "@shared/plans";
 
 export default function Billing() {
-  const { toast } = useToast();
-  const { user, isLoading, refreshUser } = useAuthContext();
-  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId | null>(null);
-  const [showPayPalDialog, setShowPayPalDialog] = useState(false);
+  const { user, isLoading } = useAuthContext();
+  const { checkout, pendingPlan } = useCheckout("billing");
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
 
   if (isLoading) {
@@ -44,13 +34,6 @@ export default function Billing() {
   const planExpired = !noPlan && !!planEnd && planEnd.getTime() < Date.now();
   const isTeammate = user.teamRole === "member";
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
-
-  const handlePlanSelect = (planId: PaidPlanId) => {
-    setSelectedPlan(planId);
-    setShowPayPalDialog(true);
-  };
-
-  const selected = PLANS.find((p) => p.id === selectedPlan);
 
   return (
     <div className="flex h-screen bg-background">
@@ -115,9 +98,12 @@ export default function Billing() {
                       plan={plan}
                       period={period}
                       current={isCurrent}
-                      onSelect={() => handlePlanSelect(plan.id)}
+                      onSelect={() => checkout(plan.id, period)}
+                      disabled={pendingPlan !== null}
                       actionLabel={
-                        isCurrent
+                        pendingPlan === plan.id
+                          ? "Taking you to checkout…"
+                          : isCurrent
                           ? `Renew ${plan.name} · add ${period === "monthly" ? "a month" : "a year"}`
                           : `Choose ${plan.name}`
                       }
@@ -160,46 +146,6 @@ export default function Billing() {
         </div>
       </main>
 
-      <Dialog open={showPayPalDialog} onOpenChange={setShowPayPalDialog}>
-        <DialogContent className="rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {tier === selectedPlan ? "Renew" : "Upgrade to"} {selected?.name}
-            </DialogTitle>
-            <DialogDescription>Complete your payment with PayPal.</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
-              <p className="tabular text-3xl font-extrabold">${selectedPlan ? planPrice(selectedPlan, period) : ""}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                charged today for {period === "monthly" ? "30 days" : "1 year"}
-              </p>
-            </div>
-            {selectedPlan && (
-              <PayPalButton
-                plan={selectedPlan}
-                period={period}
-                onSuccess={async () => {
-                  await refreshUser();
-                  setShowPayPalDialog(false);
-                  toast({
-                    title: "Payment received",
-                    description: "Your plan has been upgraded.",
-                  });
-                }}
-                onFailure={(message) =>
-                  toast({
-                    title: "Payment not completed",
-                    description: message,
-                    variant: "destructive",
-                  })
-                }
-              />
-            )}
-            <p className="text-center text-xs text-muted-foreground">Payments are processed securely by PayPal.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

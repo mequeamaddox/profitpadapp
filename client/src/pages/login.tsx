@@ -24,7 +24,10 @@ export default function Login() {
 
     try {
       await login(email, password);
-      setLocation(nextPath());
+      const next = nextPath();
+      // Server routes (like finishing a PayPal checkout) need a full page load
+      if (next.startsWith("/paypal/")) window.location.href = next;
+      else setLocation(next);
     } catch (err: any) {
       setError(err?.message || "Login failed");
     } finally {
