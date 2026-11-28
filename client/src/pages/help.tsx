@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SUPPORT_EMAIL } from "@shared/plans";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -173,7 +174,7 @@ export default function Help() {
     },
     {
       question: "Is there a free trial?",
-      answer: "Instead of a free trial, every plan comes with a 30-day money-back guarantee. If ProfitPad isn't right for you, contact support within 30 days of your first payment and we'll refund you in full."
+      answer: `Instead of a free trial, every plan comes with a 30-day money-back guarantee. If ProfitPad isn't right for you, email ${SUPPORT_EMAIL} within 30 days of your first payment and we'll refund you in full.`
     },
     {
       question: "How do I track expenses for tax purposes?",
@@ -415,7 +416,7 @@ export default function Help() {
                       <Mail className="h-5 w-5 text-slate-400" />
                       <div>
                         <p className="font-medium">Email Support</p>
-                        <p className="text-sm text-slate-600">support@profitpad.com</p>
+                        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-sm text-primary hover:underline">{SUPPORT_EMAIL}</a>
                         <p className="text-xs text-slate-500">Response within 24 hours</p>
                       </div>
                     </div>

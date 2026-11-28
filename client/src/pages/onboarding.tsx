@@ -9,7 +9,7 @@ import { BadgeCheck, CheckCircle2, Loader2, LogOut, ShieldCheck } from "lucide-r
 import PayPalButton from "@/components/PayPalButton";
 import { BrandMark } from "@/components/layout/nav-panel";
 import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { MONEY_BACK_DAYS, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
+import { MONEY_BACK_DAYS, SUPPORT_EMAIL, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 import {
   Dialog,
   DialogContent,
@@ -137,8 +137,11 @@ export default function Onboarding() {
           <BadgeCheck className="h-8 w-8 text-emerald-600" />
           <p className="text-lg font-bold">{MONEY_BACK_DAYS}-day money-back guarantee</p>
           <p className="text-sm text-muted-foreground">
-            If ProfitPad isn't right for you, contact us within {MONEY_BACK_DAYS} days of your first payment for a
-            full refund.
+            If ProfitPad isn't right for you, email{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-primary hover:underline">
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            within {MONEY_BACK_DAYS} days of your first payment for a full refund.
           </p>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <ShieldCheck className="h-4 w-4" /> Secure payments by PayPal
