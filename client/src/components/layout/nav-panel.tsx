@@ -70,7 +70,7 @@ const PLAN_LABELS: Record<string, string> = {
   starter: "Starter",
   professional: "Professional",
   enterprise: "Enterprise",
-  trial: "Free trial",
+  trial: "No plan yet",
 };
 
 export function BrandMark({ className }: { className?: string }) {
@@ -108,7 +108,7 @@ export default function NavPanel({ onNavigate }: { onNavigate?: () => void }) {
     ? "Admin"
     : user?.teamRole === "member"
       ? `Team · ${user.teamOwnerName ?? "Enterprise"}`
-      : PLAN_LABELS[tier] ?? "Free trial";
+      : PLAN_LABELS[tier] ?? "No plan yet";
   const initials =
     [user?.firstName?.[0], user?.lastName?.[0]].filter(Boolean).join("").toUpperCase() ||
     user?.email?.[0]?.toUpperCase() ||

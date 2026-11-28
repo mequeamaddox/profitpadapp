@@ -24,7 +24,10 @@ export default function Login() {
 
     try {
       await login(email, password);
-      setLocation(nextPath());
+      const next = nextPath();
+      // Server routes (like finishing a PayPal checkout) need a full page load
+      if (next.startsWith("/paypal/")) window.location.href = next;
+      else setLocation(next);
     } catch (err: any) {
       setError(err?.message || "Login failed");
     } finally {
@@ -71,7 +74,16 @@ export default function Login() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <button
+              type="button"
+              className="text-sm font-medium text-primary hover:underline"
+              onClick={() => setLocation("/forgot-password")}
+            >
+              Forgot password?
+            </button>
+          </div>
           <Input
             id="password"
             type="password"

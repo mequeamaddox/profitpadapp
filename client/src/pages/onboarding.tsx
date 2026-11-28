@@ -1,80 +1,31 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useCheckout } from "@/hooks/use-checkout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
-import PayPalButton from "@/components/PayPalButton";
+import { BadgeCheck, Loader2, LogOut, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/layout/nav-panel";
 import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MONEY_BACK_DAYS, SUPPORT_EMAIL, isBillingPeriod, isPaidPlanId, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 
 export default function Onboarding() {
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const { user, isLoading: authLoading, refreshUser } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
+  const { checkout, pendingPlan } = useCheckout("onboarding");
 
-  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>("professional");
-  const [showPayPalDialog, setShowPayPalDialog] = useState(false);
-  const [period, setPeriod] = useState<BillingPeriod>("monthly");
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-
-  // Starts the free trial only. Paid plans are applied by the server after
-  // PayPal confirms the payment.
-  const startTrialMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/subscription/activate", {});
-    },
-    onSuccess: async () => {
-      await refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setPaymentCompleted(true);
-      toast({
-        title: "Free trial started",
-        description: "Enjoy ProfitPad free for 3 days.",
-      });
-      setTimeout(() => {
-        setLocation("/");
-      }, 2000);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to start your trial. Please try again.",
-        variant: "destructive",
-      });
-    },
+  // A plan picked before signing up arrives as ?plan=&period=
+  const [picked] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    const period = params.get("period");
+    return {
+      plan: isPaidPlanId(plan) ? plan : null,
+      period: isBillingPeriod(period) ? period : "monthly",
+    } as { plan: PaidPlanId | null; period: BillingPeriod };
   });
-
-  const handlePaymentSuccess = async () => {
-    await refreshUser();
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    setPaymentCompleted(true);
-    toast({
-      title: "Payment received",
-      description: "Your plan is active.",
-    });
-    setTimeout(() => {
-      setLocation("/");
-    }, 2000);
-  };
-
-  const handlePaymentDialogClose = (open: boolean) => {
-    if (!open && !paymentCompleted) {
-      setShowPayPalDialog(false);
-    }
-  };
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>(picked.plan ?? "professional");
+  const [period, setPeriod] = useState<BillingPeriod>(picked.period);
 
   if (authLoading) {
     return (
@@ -98,30 +49,17 @@ export default function Onboarding() {
     );
   }
 
-  if (paymentCompleted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="max-w-md">
-          <CardContent className="pt-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
-            </div>
-            <h2 className="mb-2 text-2xl font-extrabold">You're all set!</h2>
-            <p className="text-muted-foreground">Taking you to your dashboard...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan);
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/70 bg-background/80 px-5 py-4 backdrop-blur md:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <BrandMark />
-          <span className="text-sm text-muted-foreground">Signed in as {user.email}</span>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="hidden sm:inline">Signed in as {user.email}</span>
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/logout")}>
+              <LogOut /> Sign out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -132,8 +70,27 @@ export default function Onboarding() {
           </p>
           <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">Choose your plan</h1>
           <p className="mt-3 text-lg text-muted-foreground">
-            Pay with PayPal to unlock the full plan, or try ProfitPad free for 3 days.
+            Pick the plan that fits your business. Every plan comes with a {MONEY_BACK_DAYS}-day money-back
+            guarantee.
           </p>
+          {picked.plan ? (
+            <div className="mx-auto mt-7 max-w-md rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">You picked</p>
+              <p className="mt-1 text-xl font-bold">
+                {PLANS.find((p) => p.id === selectedPlan)?.name} · ${planPrice(selectedPlan, period)}/
+                {period === "monthly" ? "month" : "year"}
+              </p>
+              <Button
+                className="mt-4 h-11 w-full text-base"
+                disabled={pendingPlan !== null}
+                onClick={() => checkout(selectedPlan, period)}
+              >
+                {pendingPlan ? <Loader2 className="animate-spin" /> : null}
+                {pendingPlan ? "Taking you to checkout…" : "Continue to secure checkout"}
+              </Button>
+              <p className="mt-2 text-xs text-muted-foreground">Pay with PayPal or a debit/credit card. Or choose a different plan below.</p>
+            </div>
+          ) : null}
           <div className="mt-6">
             <PeriodToggle value={period} onChange={setPeriod} />
           </div>
@@ -148,67 +105,30 @@ export default function Onboarding() {
               selected={selectedPlan === plan.id}
               onSelect={() => {
                 setSelectedPlan(plan.id);
-                setShowPayPalDialog(true);
+                checkout(plan.id, period);
               }}
-              actionLabel={`Get ${plan.name}`}
+              disabled={pendingPlan !== null}
+              actionLabel={pendingPlan === plan.id ? "Taking you to checkout…" : `Get ${plan.name}`}
             />
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-3 text-center">
-          <Button
-            variant="ghost"
-            className="text-base text-primary hover:bg-accent hover:text-primary"
-            onClick={() => startTrialMutation.mutate()}
-            disabled={startTrialMutation.isPending}
-            data-testid="button-start-trial"
-          >
-            {startTrialMutation.isPending ? "Starting your trial..." : "Not ready? Start a free 3-day trial →"}
-          </Button>
+        <div className="mx-auto mt-10 flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-border/80 bg-card p-6 text-center shadow-card">
+          <BadgeCheck className="h-8 w-8 text-emerald-600" />
+          <p className="text-lg font-bold">{MONEY_BACK_DAYS}-day money-back guarantee</p>
+          <p className="text-sm text-muted-foreground">
+            If ProfitPad isn't right for you, email{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-primary hover:underline">
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            within {MONEY_BACK_DAYS} days of your first payment for a full refund.
+          </p>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4" /> Secure payments by PayPal
+            <ShieldCheck className="h-4 w-4" /> Secure checkout with PayPal · card or PayPal account
           </p>
         </div>
       </main>
 
-      <Dialog open={showPayPalDialog} onOpenChange={handlePaymentDialogClose}>
-        <DialogContent className="rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Get {selectedPlanData?.name}</DialogTitle>
-            <DialogDescription>Complete your payment with PayPal.</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="w-full rounded-xl bg-muted/60 p-4 text-center">
-              <p className="tabular text-3xl font-extrabold">${planPrice(selectedPlan, period)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                charged today for {period === "monthly" ? "30 days" : "1 year"}
-              </p>
-            </div>
-            <div className="w-full" data-testid="paypal-button-container">
-              <PayPalButton
-                plan={selectedPlan}
-                period={period}
-                onSuccess={handlePaymentSuccess}
-                onFailure={(message) =>
-                  toast({
-                    title: "Payment not completed",
-                    description: message,
-                    variant: "destructive",
-                  })
-                }
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => startTrialMutation.mutate()}
-              className="w-full"
-              disabled={startTrialMutation.isPending}
-            >
-              {startTrialMutation.isPending ? "Starting..." : "Start 3-day free trial instead"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

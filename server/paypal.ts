@@ -2,10 +2,10 @@ import {
   CheckoutPaymentIntent,
   Client,
   Environment,
-  OAuthAuthorizationController,
   OrdersController,
+  PaypalExperienceUserAction,
+  PaypalWalletContextShippingPreference,
 } from "@paypal/paypal-server-sdk";
-import { Request, Response } from "express";
 import {
   isBillingPeriod,
   isPaidPlanId,
@@ -38,31 +38,6 @@ const client = new Client({
   // contains the client id and secret.
 });
 const ordersController = new OrdersController(client);
-const oAuthAuthorizationController = new OAuthAuthorizationController(client);
-
-/* Token generation helpers */
-
-export async function getClientToken() {
-  const auth = Buffer.from(
-    `${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`,
-  ).toString("base64");
-
-  const { result } = await oAuthAuthorizationController.requestToken(
-    {
-      authorization: `Basic ${auth}`,
-    },
-    { intent: "sdk_init", response_type: "client_token" },
-  );
-
-  return result.accessToken;
-}
-
-export async function loadPaypalDefault(_req: Request, res: Response) {
-  const clientToken = await getClientToken();
-  res.json({
-    clientToken,
-  });
-}
 
 /* Plan purchases
  *
@@ -75,10 +50,17 @@ function planCustomId(userId: string, plan: PaidPlanId, period: BillingPeriod) {
   return `${userId}:${plan}:${period}`;
 }
 
-export async function createPlanOrder(
+/**
+ * Creates an order for a plan and returns the PayPal checkout page to send
+ * the buyer to. PayPal sends them back to returnUrl (with ?token=<order id>)
+ * once they approve, or to cancelUrl if they back out.
+ */
+export async function createPlanCheckout(
   userId: string,
   plan: PaidPlanId,
   period: BillingPeriod,
+  returnUrl: string,
+  cancelUrl: string,
 ): Promise<string> {
   const { body } = await ordersController.createOrder({
     body: {
@@ -93,15 +75,35 @@ export async function createPlanOrder(
           description: `ProfitPad ${plan} plan (${period})`,
         },
       ],
+      paymentSource: {
+        paypal: {
+          experienceContext: {
+            brandName: "ProfitPad",
+            userAction: PaypalExperienceUserAction.PayNow,
+            shippingPreference: PaypalWalletContextShippingPreference.NoShipping,
+            returnUrl,
+            cancelUrl,
+          },
+        },
+      },
     },
-    prefer: "return=minimal",
+    prefer: "return=representation",
   });
 
   const order = JSON.parse(String(body));
-  if (!order?.id) {
-    throw new Error("PayPal did not return an order id");
+  const link = (order?.links ?? []).find(
+    (l: { rel?: string; href?: string }) => l.rel === "payer-action" || l.rel === "approve",
+  );
+  if (!link?.href) {
+    throw new Error("PayPal did not return a checkout link");
   }
-  return order.id;
+  return link.href;
+}
+
+/** True when PayPal refused a capture because the order was already captured. */
+export function isAlreadyCaptured(error: unknown): boolean {
+  const e = error as { statusCode?: number; body?: unknown };
+  return e?.statusCode === 422 && String(e.body ?? "").includes("ORDER_ALREADY_CAPTURED");
 }
 
 export type PlanCaptureResult =

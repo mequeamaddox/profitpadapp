@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SUPPORT_EMAIL } from "@shared/plans";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -172,8 +173,8 @@ export default function Help() {
       answer: "Create a new sale entry with a negative amount for the refund. Make sure to link it to the original inventory item to maintain accurate profit tracking."
     },
     {
-      question: "What happens when my trial expires?",
-      answer: "After your 3-day trial you can still view everything, but adding new items, sales and expenses needs a paid plan (Starter, Professional or Enterprise). Your data stays safe, and you can pick up right where you left off once you choose a plan."
+      question: "Is there a free trial?",
+      answer: `Instead of a free trial, every plan comes with a 30-day money-back guarantee. If ProfitPad isn't right for you, email ${SUPPORT_EMAIL} within 30 days of your first payment and we'll refund you in full.`
     },
     {
       question: "How do I track expenses for tax purposes?",
@@ -415,7 +416,7 @@ export default function Help() {
                       <Mail className="h-5 w-5 text-slate-400" />
                       <div>
                         <p className="font-medium">Email Support</p>
-                        <p className="text-sm text-slate-600">support@profitpad.com</p>
+                        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-sm text-primary hover:underline">{SUPPORT_EMAIL}</a>
                         <p className="text-xs text-slate-500">Response within 24 hours</p>
                       </div>
                     </div>

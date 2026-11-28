@@ -58,7 +58,7 @@ export const PLANS: Plan[] = [
 ];
 
 export const PLAN_NAMES: Record<string, string> = {
-  trial: "Free trial",
+  trial: "No plan yet",
   starter: "Starter",
   professional: "Professional",
   enterprise: "Enterprise",

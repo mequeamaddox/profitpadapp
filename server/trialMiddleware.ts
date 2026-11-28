@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
 
-// Check if user's trial has expired
+// Adding data needs an active paid plan. There's no free trial: the "trial"
+// tier is what new accounts have before they pick a plan.
 export const checkTrialExpired = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
   
@@ -20,18 +21,11 @@ export const checkTrialExpired = async (req: Request, res: Response, next: NextF
     return next();
   }
 
-  // Check if trial has expired
-  if (userData.subscriptionTier === 'trial' && userData.trialEndsAt) {
-    const now = new Date();
-    const trialEnd = new Date(userData.trialEndsAt);
-    
-    if (now > trialEnd) {
-      return res.status(402).json({ 
-        message: "Trial expired", 
-        trialExpired: true,
-        trialEndedAt: userData.trialEndsAt
-      });
-    }
+  if (!userData.subscriptionTier || userData.subscriptionTier === 'trial') {
+    return res.status(402).json({
+      message: "Choose a plan to continue",
+      needsPlan: true,
+    });
   }
 
   // Check if a paid plan has run out (null expiry = no expiry)
@@ -47,15 +41,3 @@ export const checkTrialExpired = async (req: Request, res: Response, next: NextF
 
   next();
 };
-
-// Get remaining trial days
-export function getRemainingTrialDays(trialEndsAt: Date | null): number {
-  if (!trialEndsAt) return 0;
-  
-  const now = new Date();
-  const trialEnd = new Date(trialEndsAt);
-  const diffTime = trialEnd.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  return Math.max(0, diffDays);
-}

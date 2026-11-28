@@ -333,6 +333,16 @@ export const teamInvites = pgTable("team_invites", {
 
 export type TeamInvite = typeof teamInvites.$inferSelect;
 
+// One-time "forgot password" links. Only a hash of the token is stored.
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  tokenHash: varchar("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const palletsRelations = relations(pallets, ({ one, many }) => ({
   user: one(users, {
     fields: [pallets.userId],

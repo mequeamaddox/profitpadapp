@@ -46,7 +46,7 @@ function sanitizeUser(user: any) {
   return safeUser;
 }
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   return bcrypt.hash(password, 12);
 }
 
@@ -91,6 +91,10 @@ export async function registerHandler(req: any, res: any) {
       return res.status(400).json({
         message: "Email and password are required",
       });
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({ message: "Use a password with at least 8 characters" });
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
 import { registerTeamRoutes, requireAccountOwner } from "./team";
+import { registerPasswordResetRoutes } from "./passwordReset";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -15,6 +16,7 @@ import {
   insertNotificationSettingsSchema,
 } from "@shared/schema";
 import { extendPlan, isBillingPeriod, isPaidPlanId } from "@shared/plans";
+import { RECEIPT_SCANNING_ENABLED } from "@shared/features";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -23,6 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   registerTeamRoutes(app, requireAuth);
+  registerPasswordResetRoutes(app);
 
   // Auth middleware
 
@@ -975,41 +978,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start the free trial. Paid plans are only granted by a verified
-  // PayPal capture in /paypal/order/:orderID/capture.
-  app.post(
-    "/api/subscription/activate",
-    requireAuth,
-    requireAccountOwner,
-    async (req: any, res) => {
-      try {
-        const userId = req.user.claims.sub;
-        const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        if ((user.subscriptionTier || "trial") !== "trial" || user.trialEndsAt) {
-          return res.json({ message: "Trial already started", user });
-        }
-
-        const trialEndsAt = new Date();
-        trialEndsAt.setDate(trialEndsAt.getDate() + 3);
-
-        const updatedUser = await storage.upsertUser({
-          ...user,
-          subscriptionTier: "trial",
-          trialEndsAt,
-        });
-
-        res.json({ message: "Trial started", user: updatedUser });
-      } catch (error) {
-        console.error("Error starting trial:", error);
-        res.status(500).json({ message: "Failed to start trial" });
-      }
-    },
-  );
-
   // Pallets routes
   app.get("/api/pallets", requireAuth, async (req: any, res) => {
     try {
@@ -1217,6 +1185,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OCR endpoint to analyze receipt images
   app.post("/api/analyze-receipt", requireAuth, async (req: any, res) => {
+    if (!RECEIPT_SCANNING_ENABLED) {
+      return res.status(404).json({ error: "Receipt scanning is turned off" });
+    }
     if (!req.body.imageData) {
       return res.status(400).json({ error: "imageData is required" });
     }
@@ -1373,77 +1344,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  app.get("/paypal/setup", requireAuth, async (req, res) => {
-    const paypal = await loadPaypal(res);
-    if (!paypal) return;
-    try {
-      await paypal.loadPaypalDefault(req, res);
-    } catch (error) {
-      console.error("PayPal setup failed:", paypal.describePaypalError(error));
-      res.status(500).json({ error: "PayPal setup failed" });
-    }
-  });
+  // Checkout: the buyer picks a plan, we create the order (the price is set
+  // on the server) and send them to PayPal's checkout page. PayPal sends
+  // them back to /paypal/return, where the payment is captured and checked.
+  const checkoutFrom = (value: unknown) => (value === "onboarding" ? "onboarding" : "billing");
 
-  // Creates an order for a plan. The price is set on the server.
-  app.post("/paypal/order", requireAuth, requireAccountOwner, async (req: any, res) => {
+  app.post("/paypal/checkout", requireAuth, requireAccountOwner, async (req: any, res) => {
     const { plan, period = "monthly" } = req.body ?? {};
     if (!isPaidPlanId(plan) || !isBillingPeriod(period)) {
       return res.status(400).json({ error: "Invalid plan" });
     }
+    const from = checkoutFrom(req.body?.from);
     const paypal = await loadPaypal(res);
     if (!paypal) return;
     try {
-      const id = await paypal.createPlanOrder(req.user.claims.sub, plan, period);
-      res.json({ id });
+      const origin = `${req.protocol}://${req.get("host")}`;
+      const url = await paypal.createPlanCheckout(
+        req.user.claims.sub,
+        plan,
+        period,
+        `${origin}/paypal/return?from=${from}`,
+        `${origin}/${from}?checkout=cancelled`,
+      );
+      res.json({ url });
     } catch (error) {
-      console.error("Failed to create PayPal order:", paypal.describePaypalError(error));
-      res.status(500).json({ error: "Failed to create order" });
+      console.error("Failed to start PayPal checkout:", paypal.describePaypalError(error));
+      res.status(500).json({ error: "Couldn't start checkout" });
     }
   });
 
-  // Captures the order and, only once PayPal confirms the payment for this
-  // user and plan, switches the user to that plan for the period paid for.
-  app.post(
-    "/paypal/order/:orderID/capture",
-    requireAuth,
-    requireAccountOwner,
-    async (req: any, res) => {
+  // PayPal returns the buyer here with ?token=<order id>. The plan only
+  // changes once PayPal confirms the payment for this user, plan and price.
+  app.get("/paypal/return", async (req: any, res) => {
+    const from = checkoutFrom(req.query.from);
+    const orderId = typeof req.query.token === "string" ? req.query.token : "";
+    if (!req.session?.userId) {
+      // Signed out mid-checkout: sign in, then come back here to finish.
+      return res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+    }
+    if (!orderId) {
+      return res.redirect(`/${from}?checkout=failed`);
+    }
+    requireAuth(req, res, async (err?: unknown) => {
+      if (err) return res.redirect(`/${from}?checkout=failed`);
+      if (req.user.claims.teamRole === "member") return res.redirect("/billing");
       const paypal = await loadPaypal(res);
       if (!paypal) return;
+      const userId = req.user.claims.sub;
       try {
-        const userId = req.user.claims.sub;
-        const result = await paypal.capturePlanOrder(req.params.orderID, userId);
+        const result = await paypal.capturePlanOrder(orderId, userId);
         if (!result.ok) {
           console.warn(`PayPal capture rejected for user ${userId}: ${result.reason}`);
-          return res.status(402).json({ error: result.reason });
+          return res.redirect(`/${from}?checkout=failed`);
         }
 
         const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ error: "User not found" });
-        }
+        if (!user) return res.redirect(`/${from}?checkout=failed`);
         const planExpiresAt = extendPlan(
           user.subscriptionTier,
           user.planExpiresAt,
           result.plan,
           result.period,
         );
-        const updatedUser = await storage.upsertUser({
-          ...user,
-          subscriptionTier: result.plan,
-          planExpiresAt,
-        });
+        await storage.upsertUser({ ...user, subscriptionTier: result.plan, planExpiresAt });
 
         console.log(
           `User ${userId} paid for ${result.plan} ${result.period} until ${planExpiresAt.toISOString()} (PayPal capture ${result.captureId})`,
         );
-        res.json({ status: "COMPLETED", plan: result.plan, user: updatedUser });
+        res.redirect("/billing?checkout=success");
       } catch (error) {
+        if (paypal.isAlreadyCaptured(error)) {
+          // Reloaded the return page: this payment was already applied.
+          return res.redirect("/billing");
+        }
         console.error("Failed to capture PayPal order:", paypal.describePaypalError(error));
-        res.status(500).json({ error: "Failed to capture order" });
+        res.redirect(`/${from}?checkout=failed`);
       }
-    },
-  );
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

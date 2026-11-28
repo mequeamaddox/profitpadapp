@@ -1,35 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Package, DollarSign, Bell, Target, TrendingUp, CheckCircle2, Star, Upload, Calculator, LineChart } from "lucide-react";
 import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import type { BillingPeriod } from "@shared/plans";
+import { ENTERPRISE_TEAM_SEATS, MONEY_BACK_DAYS, SUPPORT_EMAIL, type BillingPeriod } from "@shared/plans";
+import { PublicHeader, PublicFooter } from "@/components/layout/public-layout";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Is there a free trial?",
+    a: `No. Instead, every plan has a ${MONEY_BACK_DAYS}-day money-back guarantee: if ProfitPad isn't right for you, email ${SUPPORT_EMAIL} within ${MONEY_BACK_DAYS} days of your first payment for a full refund.`,
+  },
+  {
+    q: "How do I pay? Do I need a PayPal account?",
+    a: "You pay at checkout through PayPal, using your PayPal account or a debit or credit card. In most countries you can pay by card without creating a PayPal account. ProfitPad never sees your card details.",
+  },
+  {
+    q: "Will I be charged automatically? How do I cancel?",
+    a: "Plans never renew automatically. A monthly payment covers 30 days and a yearly payment covers a full year. When it's up, you choose whether to renew, so there's nothing to cancel and no surprise charges.",
+  },
+  {
+    q: "What happens to my data if my plan ends?",
+    a: "It stays in your account. You can still sign in and see everything; you'll just need to renew before adding new items, sales or expenses.",
+  },
+  {
+    q: "Which marketplaces does it work with?",
+    a: "Any of them. Tag each item and sale with eBay, Poshmark, Mercari, Depop, Etsy, Amazon, Facebook Marketplace, StockX, Shopify and more, or as a direct sale. Each sale's fees and shipping come off its profit, and the Profit Estimator knows typical fee rates for the big marketplaces.",
+  },
+  {
+    q: "Can I import my existing inventory?",
+    a: "Yes. On the Professional and Enterprise plans you can import a CSV from a spreadsheet. Columns like title, sku, cost, price, platform, condition, category and quantity are picked up automatically.",
+  },
+  {
+    q: "Can my team use it?",
+    a: `Yes, with Enterprise. The account owner can invite up to ${ENTERPRISE_TEAM_SEATS} teammates who share the same inventory, sales and expenses. The owner manages billing and who's on the team.`,
+  },
+  {
+    q: "Can I export my data for taxes?",
+    a: "Yes. Reports can be exported as CSV files that work with most accounting software, so you're not scrambling at tax time.",
+  },
+];
 
 export default function Landing() {
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  // /pricing, /faq and /#pricing style links land on the right section
+  useEffect(() => {
+    const fromPath = window.location.pathname.replace(/^\//, "");
+    const id = window.location.hash.slice(1) || (["pricing", "faq", "features"].includes(fromPath) ? fromPath : "");
+    if (id) setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 50);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="px-6 py-4 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-slate-900">ProfitPad</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button 
-              onClick={() => window.location.href = "/login"}
-              data-testid="button-signin-header"
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-6 py-16">
@@ -47,11 +75,11 @@ export default function Landing() {
             size="lg" 
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/register"}
-            data-testid="button-start-trial-hero"
+            data-testid="button-get-started-hero"
           >
-            Start Your Free 3-Day Trial →
+            Start Tracking Your Profit →
           </Button>
-          <p className="text-sm text-slate-500 mt-4">No credit card needed • 3-day free trial • Takes less than a minute</p>
+          <p className="text-sm text-slate-500 mt-4">Plans from $9.99/mo • {MONEY_BACK_DAYS}-day money-back guarantee • Pay with PayPal or card</p>
         </div>
 
         {/* Why resellers use ProfitPad */}
@@ -150,7 +178,7 @@ export default function Landing() {
         </div>
 
         {/* Features as Benefits */}
-        <div className="mb-20">
+        <div className="mb-20 scroll-mt-24" id="features">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
               Everything You Need to Scale
@@ -223,7 +251,7 @@ export default function Landing() {
         </div>
 
         {/* Pricing Tiers */}
-        <div className="mb-20" id="pricing">
+        <div className="mb-20 scroll-mt-24" id="pricing">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
               Simple, Transparent Pricing
@@ -242,14 +270,36 @@ export default function Landing() {
                 key={plan.id}
                 plan={plan}
                 period={period}
-                onSelect={() => (window.location.href = "/register")}
-                actionLabel="Start free trial"
+                onSelect={() => (window.location.href = `/register?plan=${plan.id}&period=${period}`)}
+                actionLabel={`Start with ${plan.name}`}
               />
             ))}
           </div>
           <p className="text-center text-slate-600 mt-8">
-            Every account starts with a 3-day free trial. No credit card needed. Pay with PayPal when you're ready.
+            Pay with PayPal or a debit/credit card. Plans never renew automatically. Every plan is backed by a{" "}
+            <a href="/refund-policy" className="font-medium text-primary hover:underline">{MONEY_BACK_DAYS}-day money-back guarantee</a>.
           </p>
+        </div>
+
+        {/* FAQ */}
+        <div className="mb-20 scroll-mt-24" id="faq">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Questions, answered</h2>
+            <p className="text-xl text-slate-600">
+              Anything else? Email <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">{SUPPORT_EMAIL}</a>
+            </p>
+          </div>
+          <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
+            {FAQS.map((item, i) => (
+              <Collapsible key={item.q} open={openFaq === i} onOpenChange={(o) => setOpenFaq(o ? i : null)}>
+                <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold">
+                  {item.q}
+                  <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-5 pb-5 text-slate-600">{item.a}</CollapsibleContent>
+              </Collapsible>
+            ))}
+          </div>
         </div>
 
         {/* Final CTA Section */}
@@ -265,20 +315,15 @@ export default function Landing() {
             variant="secondary"
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/register"}
-            data-testid="button-start-trial-footer"
+            data-testid="button-get-started-footer"
           >
-            Start Your Free 3-Day Trial →
+            Start Tracking Your Profit →
           </Button>
-          <p className="text-sm mt-4 opacity-75">No credit card needed • Takes less than 60 seconds</p>
+          <p className="text-sm mt-4 opacity-75">{MONEY_BACK_DAYS}-day money-back guarantee • Set up in under a minute</p>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-8 text-center text-slate-600">
-          <p className="text-sm">© 2026 ProfitPad. Built for resellers who want to maximize every flip.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

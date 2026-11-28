@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { RECEIPT_SCANNING_ENABLED } from "@shared/features";
 import Webcam from 'react-webcam';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -54,8 +55,9 @@ export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: Re
 
     setIsUploading(true);
     try {
-      // First, analyze the receipt with OCR
+      // First, analyze the receipt with OCR (when receipt scanning is on)
       let receiptData: ReceiptData | undefined;
+      if (RECEIPT_SCANNING_ENABLED) {
       setIsAnalyzing(true);
       try {
         const ocrResponse = await fetch('/api/analyze-receipt', {
@@ -80,6 +82,7 @@ export default function ReceiptCapture({ isOpen, onClose, onCaptureSuccess }: Re
         });
       } finally {
         setIsAnalyzing(false);
+      }
       }
 
       // Get upload URL from backend

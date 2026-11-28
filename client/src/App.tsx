@@ -9,6 +9,9 @@ import { BarChart3 } from "lucide-react";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
+import { Terms, Privacy, RefundPolicy, Contact } from "@/pages/legal";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
@@ -48,22 +51,21 @@ function LoadingScreen() {
   );
 }
 
+const PUBLIC_PAGES = ["/terms", "/privacy", "/refund-policy", "/refund", "/refunds", "/contact", "/support", "/reset-password"];
+
 function AuthenticatedRouter() {
   const { user, isLoading } = useAuthContext();
   const [, setLocation] = useLocation();
 
   const isAuthenticated = !!user;
+  // No free trial: everyone picks a paid plan first. Admins and teammates
+  // (who use their owner's plan) skip this.
   const needsOnboarding =
     !!user &&
-    !user.trialEndsAt &&
+    !user.isAdmin &&
+    user.teamRole !== "member" &&
     (!user.subscriptionTier || user.subscriptionTier === "trial");
 
-  console.log("🔍 AuthenticatedRouter:", {
-    isAuthenticated,
-    isLoading,
-    user: user?.id,
-    needsOnboarding,
-  });
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -74,7 +76,9 @@ function AuthenticatedRouter() {
     needsOnboarding &&
     window.location.pathname !== "/onboarding" &&
     // Let people accepting a team invite reach it before picking a plan
-    !window.location.pathname.startsWith("/join/")
+    !window.location.pathname.startsWith("/join/") &&
+    window.location.pathname !== "/logout" &&
+    !PUBLIC_PAGES.includes(window.location.pathname)
   ) {
     setLocation("/onboarding");
     return null;
@@ -87,12 +91,29 @@ function AuthenticatedRouter() {
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/terms" component={Terms} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/refund-policy" component={RefundPolicy} />
+          <Route path="/refund" component={RefundPolicy} />
+          <Route path="/refunds" component={RefundPolicy} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/support" component={Contact} />
           <Route path="/join/:token" component={JoinTeam} />
           <Route path="/:rest*" component={Landing} />
         </>
       ) : (
         <>
           <Route path="/onboarding" component={Onboarding} />
+          <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/terms" component={Terms} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/refund-policy" component={RefundPolicy} />
+          <Route path="/refund" component={RefundPolicy} />
+          <Route path="/refunds" component={RefundPolicy} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/support" component={Contact} />
           <Route path="/" component={Dashboard} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/sales" component={Sales} />
