@@ -42,3 +42,6 @@ export function extendPlan(
 
 // Teammates an Enterprise owner can add (not counting the owner)
 export const ENTERPRISE_TEAM_SEATS = 5;
+
+// No free trial; every plan comes with a money-back guarantee instead.
+export const MONEY_BACK_DAYS = 30;

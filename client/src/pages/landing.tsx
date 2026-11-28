@@ -47,11 +47,11 @@ export default function Landing() {
             size="lg" 
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/register"}
-            data-testid="button-start-trial-hero"
+            data-testid="button-get-started-hero"
           >
-            Start Your Free 3-Day Trial →
+            Get Started →
           </Button>
-          <p className="text-sm text-slate-500 mt-4">No credit card needed • 3-day free trial • Takes less than a minute</p>
+          <p className="text-sm text-slate-500 mt-4">30-day money-back guarantee • Pay securely with PayPal • Set up in minutes</p>
         </div>
 
         {/* Why resellers use ProfitPad */}
@@ -243,12 +243,12 @@ export default function Landing() {
                 plan={plan}
                 period={period}
                 onSelect={() => (window.location.href = "/register")}
-                actionLabel="Start free trial"
+                actionLabel="Get started"
               />
             ))}
           </div>
           <p className="text-center text-slate-600 mt-8">
-            Every account starts with a 3-day free trial. No credit card needed. Pay with PayPal when you're ready.
+            Every plan comes with a 30-day money-back guarantee. Not happy? Get a full refund within 30 days of your first payment.
           </p>
         </div>
 
@@ -265,11 +265,11 @@ export default function Landing() {
             variant="secondary"
             className="px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
             onClick={() => window.location.href = "/register"}
-            data-testid="button-start-trial-footer"
+            data-testid="button-get-started-footer"
           >
-            Start Your Free 3-Day Trial →
+            Get Started →
           </Button>
-          <p className="text-sm mt-4 opacity-75">No credit card needed • Takes less than 60 seconds</p>
+          <p className="text-sm mt-4 opacity-75">30-day money-back guarantee • Set up in minutes</p>
         </div>
       </main>
 

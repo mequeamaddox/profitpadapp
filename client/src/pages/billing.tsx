@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarClock, ShieldCheck, Sparkles, LifeBuoy } from "lucide-react";
 import PayPalButton from "@/components/PayPalButton";
 import { PLANS, PLAN_NAMES, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
+import { MONEY_BACK_DAYS, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 import {
   Dialog,
   DialogContent,
@@ -38,12 +38,10 @@ export default function Billing() {
 
   const tier = user.subscriptionTier || "trial";
   const isAdmin = user.isAdmin;
-  const trialEnd = user.trialEndsAt ? new Date(user.trialEndsAt) : null;
-  const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86_400_000)) : null;
-  const onTrial = tier === "trial";
-  const trialExpired = onTrial && daysLeft === 0;
+  // "trial" means no plan yet (there's no free trial)
+  const noPlan = tier === "trial";
   const planEnd = user.planExpiresAt ? new Date(user.planExpiresAt) : null;
-  const planExpired = !onTrial && !!planEnd && planEnd.getTime() < Date.now();
+  const planExpired = !noPlan && !!planEnd && planEnd.getTime() < Date.now();
   const isTeammate = user.teamRole === "member";
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 
@@ -77,13 +75,9 @@ export default function Billing() {
                         ? `You're on ${user.teamOwnerName ?? "your owner"}'s team. They manage the plan and billing.`
                         : isAdmin
                         ? "Admin accounts have every feature with no limits."
-                        : trialExpired
-                          ? "Your trial has ended. Pick a plan to keep going."
-                          : onTrial && trialEnd
-                            ? `Trial ends ${trialEnd.toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
-                            : onTrial
-                              ? "Choose a plan whenever you're ready."
-                              : planExpired
+                        : noPlan
+                          ? "Pick a plan below to start adding items and sales."
+                          : planExpired
                                 ? `Your plan ended ${fmtDate(planEnd!)}. Renew to keep adding items and sales.`
                                 : planEnd
                                   ? `Paid through ${fmtDate(planEnd)}. Renew any time to add more time.`
@@ -97,22 +91,7 @@ export default function Billing() {
                     Plan expired
                   </div>
                 )}
-                {onTrial && daysLeft !== null && !isAdmin && (
-                  <div
-                    className={`flex items-center gap-2 self-start rounded-full px-3.5 py-2 text-sm font-semibold md:self-auto ${
-                      trialExpired ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"
-                    }`}
-                  >
-                    <CalendarClock className="h-4 w-4" />
-                    {trialExpired ? "Trial expired" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
-                  </div>
-                )}
               </div>
-              {onTrial && daysLeft !== null && !trialExpired && !isAdmin && (
-                <div className="h-1 bg-muted">
-                  <div className="h-full bg-amber-400" style={{ width: `${(daysLeft / 3) * 100}%` }} />
-                </div>
-              )}
             </Card>
 
             {/* Plans (the account owner pays; teammates don't) */}
@@ -120,7 +99,9 @@ export default function Billing() {
             <section>
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Pick the plan that fits</h2>
-                <p className="mt-2 text-muted-foreground">Simple pricing. Pay securely with PayPal.</p>
+                <p className="mt-2 text-muted-foreground">
+                  Simple pricing, paid securely with PayPal. {MONEY_BACK_DAYS}-day money-back guarantee.
+                </p>
                 <div className="mt-5">
                   <PeriodToggle value={period} onChange={setPeriod} />
                 </div>

@@ -172,8 +172,8 @@ export default function Help() {
       answer: "Create a new sale entry with a negative amount for the refund. Make sure to link it to the original inventory item to maintain accurate profit tracking."
     },
     {
-      question: "What happens when my trial expires?",
-      answer: "After your 3-day trial you can still view everything, but adding new items, sales and expenses needs a paid plan (Starter, Professional or Enterprise). Your data stays safe, and you can pick up right where you left off once you choose a plan."
+      question: "Is there a free trial?",
+      answer: "Instead of a free trial, every plan comes with a 30-day money-back guarantee. If ProfitPad isn't right for you, contact support within 30 days of your first payment and we'll refund you in full."
     },
     {
       question: "How do I track expenses for tax purposes?",

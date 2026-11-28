@@ -23,8 +23,8 @@ interface UpgradeModalProps {
 
 const TIER_INFO = {
   trial: {
-    name: "Trial",
-    price: "Free",
+    name: "No plan",
+    price: "",
     color: "bg-slate-500",
     icon: AlertCircle
   },

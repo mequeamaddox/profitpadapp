@@ -15,6 +15,7 @@ import {
   insertNotificationSettingsSchema,
 } from "@shared/schema";
 import { extendPlan, isBillingPeriod, isPaidPlanId } from "@shared/plans";
+import { RECEIPT_SCANNING_ENABLED } from "@shared/features";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -975,41 +976,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start the free trial. Paid plans are only granted by a verified
-  // PayPal capture in /paypal/order/:orderID/capture.
-  app.post(
-    "/api/subscription/activate",
-    requireAuth,
-    requireAccountOwner,
-    async (req: any, res) => {
-      try {
-        const userId = req.user.claims.sub;
-        const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        if ((user.subscriptionTier || "trial") !== "trial" || user.trialEndsAt) {
-          return res.json({ message: "Trial already started", user });
-        }
-
-        const trialEndsAt = new Date();
-        trialEndsAt.setDate(trialEndsAt.getDate() + 3);
-
-        const updatedUser = await storage.upsertUser({
-          ...user,
-          subscriptionTier: "trial",
-          trialEndsAt,
-        });
-
-        res.json({ message: "Trial started", user: updatedUser });
-      } catch (error) {
-        console.error("Error starting trial:", error);
-        res.status(500).json({ message: "Failed to start trial" });
-      }
-    },
-  );
-
   // Pallets routes
   app.get("/api/pallets", requireAuth, async (req: any, res) => {
     try {
@@ -1217,6 +1183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OCR endpoint to analyze receipt images
   app.post("/api/analyze-receipt", requireAuth, async (req: any, res) => {
+    if (!RECEIPT_SCANNING_ENABLED) {
+      return res.status(404).json({ error: "Receipt scanning is turned off" });
+    }
     if (!req.body.imageData) {
       return res.status(400).json({ error: "imageData is required" });
     }

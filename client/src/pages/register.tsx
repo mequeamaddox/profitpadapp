@@ -118,7 +118,7 @@ export default function Register() {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">
-          Free 3-day trial. No card needed to start.
+          Every plan comes with a 30-day money-back guarantee.
         </p>
       </form>
     </AuthLayout>

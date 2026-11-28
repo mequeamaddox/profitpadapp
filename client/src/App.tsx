@@ -53,17 +53,14 @@ function AuthenticatedRouter() {
   const [, setLocation] = useLocation();
 
   const isAuthenticated = !!user;
+  // No free trial: everyone picks a paid plan first. Admins and teammates
+  // (who use their owner's plan) skip this.
   const needsOnboarding =
     !!user &&
-    !user.trialEndsAt &&
+    !user.isAdmin &&
+    user.teamRole !== "member" &&
     (!user.subscriptionTier || user.subscriptionTier === "trial");
 
-  console.log("🔍 AuthenticatedRouter:", {
-    isAuthenticated,
-    isLoading,
-    user: user?.id,
-    needsOnboarding,
-  });
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -74,7 +71,8 @@ function AuthenticatedRouter() {
     needsOnboarding &&
     window.location.pathname !== "/onboarding" &&
     // Let people accepting a team invite reach it before picking a plan
-    !window.location.pathname.startsWith("/join/")
+    !window.location.pathname.startsWith("/join/") &&
+    window.location.pathname !== "/logout"
   ) {
     setLocation("/onboarding");
     return null;
