@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   Users,
   type LucideIcon,
+  Car,
 } from "lucide-react";
 import type { User, Reminder } from "@shared/schema";
 
@@ -39,6 +40,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { name: "Inventory", href: "/inventory", icon: Package, match: (l) => l.startsWith("/inventory") },
       { name: "Sales", href: "/sales", icon: DollarSign },
       { name: "Expenses", href: "/expenses", icon: Receipt },
+      { name: "Mileage", href: "/mileage", icon: Car },
       { name: "Reminders", href: "/reminders", icon: Bell },
     ],
   },

@@ -105,6 +105,12 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
   const queryClient = useQueryClient();
   const { subscriptionData, tier } = useSubscription();
 
+  // Places this seller has bought from before, for quick picking
+  const { data: allItems = [] } = useQuery<InventoryItem[]>({ queryKey: ["/api/inventory"] });
+  const knownSources = Array.from(
+    new Set(allItems.map((i) => i.source?.trim()).filter((v): v is string => !!v)),
+  ).sort();
+
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showSkuBuilder, setShowSkuBuilder] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -131,6 +137,7 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
       status: item?.status || "unlisted",
       platform: item?.platform || "",
       category: item?.category || "",
+      source: item?.source || "",
       purchasePrice: item?.purchasePrice || "",
       listedPrice: item?.listedPrice || "",
       soldPrice: item?.soldPrice || "",
@@ -616,6 +623,30 @@ export default function InventoryForm({ item, onSuccess }: InventoryFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="source"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Where you bought it</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Goodwill on Main, estate sale, pallet supplier…"
+                    list="inventory-sources"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <datalist id="inventory-sources">
+                  {knownSources.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
                 <FormMessage />
               </FormItem>
             )}

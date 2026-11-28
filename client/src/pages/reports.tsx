@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ProfitBreakdown from "@/components/reports/profit-breakdown";
 import { useQuery } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -296,10 +297,10 @@ export default function Reports() {
 
       {/* Detailed Reports */}
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap justify-start">
           <TabsTrigger value="sales">Sales Analysis</TabsTrigger>
           <TabsTrigger value="inventory">Inventory Report</TabsTrigger>
-          <TabsTrigger value="platforms">Platform Performance</TabsTrigger>
+          <TabsTrigger value="platforms">Where You Profit</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="taxes">Sales Tax</TabsTrigger>
         </TabsList>
@@ -393,29 +394,7 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="platforms" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Platform Performance</CardTitle>
-              <CardDescription>Sales breakdown by selling platform</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {reportMetrics?.salesByPlatform?.map((platform, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded">
-                    <div>
-                      <p className="font-medium">{platform.platform}</p>
-                      <p className="text-sm text-muted-foreground">{platform.count} sales</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${platform.revenue}</p>
-                    </div>
-                  </div>
-                )) || (
-                  <p className="text-muted-foreground text-center py-4">No platform data available</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ProfitBreakdown sales={sales} inventory={inventory} {...getDateRangeForPreset(dateRange)} />
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">

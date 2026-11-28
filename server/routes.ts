@@ -5,6 +5,7 @@ import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserH
 import { registerTeamRoutes, requireAccountOwner } from "./team";
 import { registerPasswordResetRoutes } from "./passwordReset";
 import { createRecurringFromExpense, registerAutomationRoutes } from "./automations";
+import { registerInsightRoutes } from "./insights";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -28,6 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerTeamRoutes(app, requireAuth);
   registerPasswordResetRoutes(app);
   registerAutomationRoutes(app, requireAuth, requireAccountOwner);
+  registerInsightRoutes(app, requireAuth, checkTrialExpired);
 
   // Auth middleware
 

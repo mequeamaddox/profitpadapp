@@ -173,7 +173,7 @@ export async function buildWeeklySummary(user: User, now = new Date()): Promise<
   return {
     firstName: user.firstName,
     weekLabel: `${fmt(weekStart)} – ${fmt(new Date(weekEnd.getTime() - 86_400_000))}`,
-    sales: week.length,
+    sales: week.filter((s) => !s.returnedAt).length,
     revenue: sum(week, (s) => s.salePrice),
     profit: sum(week, (s) => s.profit),
     prevProfit: sum(prev, (s) => s.profit),

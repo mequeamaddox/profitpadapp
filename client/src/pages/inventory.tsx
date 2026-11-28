@@ -517,6 +517,7 @@ export default function Inventory() {
             platform: values[headers.indexOf("platform")] || "",
             condition: values[headers.indexOf("condition")] || "Good",
             category: values[headers.indexOf("category")] || "",
+            source: values[headers.indexOf("source")] || values[headers.indexOf("where_bought")] || "",
             quantity: parseInt(values[headers.indexOf("quantity")] || "1"),
             notes:
               values[headers.indexOf("notes")] ||
