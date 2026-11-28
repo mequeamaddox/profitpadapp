@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
 import { registerTeamRoutes, requireAccountOwner } from "./team";
 import { registerPasswordResetRoutes } from "./passwordReset";
+import { createRecurringFromExpense, registerAutomationRoutes } from "./automations";
+import { registerInsightRoutes } from "./insights";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -26,6 +28,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   registerTeamRoutes(app, requireAuth);
   registerPasswordResetRoutes(app);
+  registerAutomationRoutes(app, requireAuth, requireAccountOwner);
+  registerInsightRoutes(app, requireAuth, checkTrialExpired);
 
   // Auth middleware
 
@@ -546,11 +550,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.body.expenseDate = new Date(req.body.expenseDate);
         }
 
+        const repeatMonthly = req.body.repeatMonthly === true;
         const validatedData = insertExpenseSchema.parse(req.body);
         const expense = await storage.createExpense({
           ...validatedData,
           userId,
         });
+        if (repeatMonthly) {
+          await createRecurringFromExpense(userId, expense);
+        }
         res.status(201).json(expense);
       } catch (error) {
         if (error instanceof z.ZodError) {

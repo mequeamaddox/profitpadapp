@@ -25,6 +25,7 @@ import {
 import { format } from "date-fns";
 import { type Expense } from "@shared/schema";
 import ExpenseForm from "@/components/forms/expense-form";
+import RecurringExpenses from "@/components/expenses/recurring-expenses";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 
@@ -241,6 +242,8 @@ export default function Expenses() {
               </CardContent>
             </Card>
           </div>
+
+          <RecurringExpenses />
 
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">

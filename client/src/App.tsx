@@ -12,6 +12,7 @@ import NotFound from "@/pages/not-found";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import { Terms, Privacy, RefundPolicy, Contact } from "@/pages/legal";
+import Mileage from "@/pages/mileage";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
@@ -118,6 +119,7 @@ function AuthenticatedRouter() {
           <Route path="/inventory" component={Inventory} />
           <Route path="/sales" component={Sales} />
           <Route path="/expenses" component={Expenses} />
+          <Route path="/mileage" component={Mileage} />
           <Route path="/reminders" component={Reminders} />
           <Route path="/reports" component={Reports} />
           <Route path="/research" component={Research} />

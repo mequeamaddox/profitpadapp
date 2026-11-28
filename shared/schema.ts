@@ -46,6 +46,8 @@ export const users = pgTable("users", {
   // Sales tax settings
   salesTaxRate: decimal("sales_tax_rate", { precision: 5, scale: 4 }).default("0.0000"), // e.g., 0.0825 for 8.25%
   taxInclusiveSales: boolean("tax_inclusive_sales").default(true), // true = tax included in sale price, false = tax added on top
+  // When the last weekly summary email went out (so restarts never send twice)
+  weeklyDigestSentAt: timestamp("weekly_digest_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -74,6 +76,7 @@ export const inventoryItems = pgTable("inventory_items", {
   images: text("images").array(),
   barcode: varchar("barcode"),
   archived: boolean("archived").default(false),
+  source: varchar("source"), // where it was bought: thrift store, garage sale, pallet supplier...
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -99,6 +102,10 @@ export const salesRecords = pgTable("sales_records", {
   salesTaxRate: decimal("sales_tax_rate", { precision: 5, scale: 4 }), // Tax rate used for this sale
   salesTaxAmount: decimal("sales_tax_amount", { precision: 10, scale: 2 }), // Actual tax amount for this sale
   taxIncluded: boolean("tax_included").default(true), // Whether tax was included in sale price
+  // Returns: the sale's amounts are zeroed and the loss goes in otherFees, so every
+  // total stays right; the original price is kept here for display.
+  returnedAt: timestamp("returned_at"),
+  returnedSalePrice: decimal("returned_sale_price", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -256,6 +263,8 @@ export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit
 export const insertSalesRecordSchema = createInsertSchema(salesRecords).omit({
   id: true,
   userId: true,
+  returnedAt: true,
+  returnedSalePrice: true,
   createdAt: true,
   updatedAt: true,
 }).partial({
@@ -332,6 +341,36 @@ export const teamInvites = pgTable("team_invites", {
 });
 
 export type TeamInvite = typeof teamInvites.$inferSelect;
+
+// Expenses that log themselves every month (store subscriptions, software, storage...)
+export const recurringExpenses = pgTable("recurring_expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  category: varchar("category").notNull(),
+  vendor: varchar("vendor"),
+  deductible: boolean("deductible").default(true),
+  dayOfMonth: integer("day_of_month").notNull(), // 1-31; short months use their last day
+  lastLoggedMonth: varchar("last_logged_month").notNull(), // "YYYY-MM"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type RecurringExpense = typeof recurringExpenses.$inferSelect;
+
+// Business miles driven (sourcing runs, post office, supply pickups) for the mileage deduction
+export const mileageTrips = pgTable("mileage_trips", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  tripDate: timestamp("trip_date").notNull(),
+  miles: decimal("miles", { precision: 8, scale: 1 }).notNull(),
+  purpose: text("purpose").notNull(),
+  route: text("route"), // e.g. "Home → Goodwill → Post office"
+  ratePerMile: decimal("rate_per_mile", { precision: 5, scale: 3 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type MileageTrip = typeof mileageTrips.$inferSelect;
 
 // One-time "forgot password" links. Only a hash of the token is stored.
 export const passwordResetTokens = pgTable("password_reset_tokens", {

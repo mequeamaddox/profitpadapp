@@ -6,6 +6,7 @@ import { passwordResetTokens, users } from "@shared/schema";
 import { storage } from "./storage";
 import { hashPassword } from "./auth";
 import { SUPPORT_EMAIL } from "@shared/plans";
+import { appUrl, emailEnabled, sendEmail } from "./email";
 
 const RESET_TTL_MS = 60 * 60 * 1000; // links work for 1 hour
 const MIN_PASSWORD = 8;
@@ -16,21 +17,11 @@ const RESEND_GAP_MS = 2 * 60 * 1000;
 
 const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
 
-/** Password reset email goes out through Resend when RESEND_API_KEY is set. */
-export const passwordResetEmailEnabled = () => !!process.env.RESEND_API_KEY;
+export const passwordResetEmailEnabled = emailEnabled;
 
 async function sendResetEmail(to: string, link: string) {
-  const from = process.env.MAIL_FROM || "ProfitPad <no-reply@profitpadapp.com>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      reply_to: SUPPORT_EMAIL,
+  await sendEmail({
+      to,
       subject: "Reset your ProfitPad password",
       text:
         `Someone (hopefully you) asked to reset the password for your ProfitPad account.\n\n` +
@@ -47,11 +38,7 @@ async function sendResetEmail(to: string, link: string) {
           <p style="color:#64748b;font-size:14px">This link works for 1 hour. If you didn't ask for this, ignore this email; your password won't change.</p>
           <p style="color:#64748b;font-size:14px">Questions? Write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
         </div>`,
-    }),
   });
-  if (!res.ok) {
-    throw new Error(`Resend ${res.status}: ${await res.text()}`);
-  }
 }
 
 export function registerPasswordResetRoutes(app: Express) {
@@ -82,9 +69,7 @@ export function registerPasswordResetRoutes(app: Express) {
         });
         // Never build this link from the request's Host header: a forged
         // header would send the token to someone else's site.
-        const origin =
-          process.env.APP_URL ||
-          (process.env.NODE_ENV === "production" ? "https://profitpadapp.com" : `${req.protocol}://${req.get("host")}`);
+        const origin = appUrl(`${req.protocol}://${req.get("host")}`);
         await sendResetEmail(user.email!, `${origin}/reset-password?token=${token}`);
       }
     } catch (error) {

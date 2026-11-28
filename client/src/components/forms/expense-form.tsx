@@ -47,6 +47,7 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showReceiptCapture, setShowReceiptCapture] = useState(false);
+  const [repeatMonthly, setRepeatMonthly] = useState(false);
 
 
   const { data: user } = useQuery<User>({
@@ -73,14 +74,17 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertExpense) => {
-      return await apiRequest("POST", "/api/expenses", data);
+      return await apiRequest("POST", "/api/expenses", { ...data, repeatMonthly });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/recurring-expenses"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       toast({
         title: "Success",
-        description: "Expense recorded successfully",
+        description: repeatMonthly
+          ? "Expense recorded. It will log itself on the same day every month."
+          : "Expense recorded successfully",
       });
       onSuccess?.();
     },
@@ -371,6 +375,19 @@ export default function ExpenseForm({ expense, onSuccess }: ExpenseFormProps) {
             )}
           />
         </div>
+
+        {!expense && (
+          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <p className="text-base font-medium">Repeat every month</p>
+              <div className="text-sm text-muted-foreground">
+                For store subscriptions, software, storage and other regular costs. ProfitPad logs it for you on the
+                same day each month.
+              </div>
+            </div>
+            <Switch checked={repeatMonthly} onCheckedChange={setRepeatMonthly} aria-label="Repeat every month" />
+          </div>
+        )}
 
         <FormField
           control={form.control}

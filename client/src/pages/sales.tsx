@@ -32,7 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Download, Undo2 } from "lucide-react";
+import ReturnDialog from "@/components/sales/return-dialog";
 import type { SalesRecord } from "@shared/schema";
 
 export default function Sales() {
@@ -67,6 +68,7 @@ export default function Sales() {
     }
   }, [isAuthenticated, isLoading, toast, setLocation]);
 
+  const [returningSale, setReturningSale] = useState<SalesRecord | null>(null);
   const { data: sales = [], isLoading: salesLoading } = useQuery<SalesRecord[]>({
     queryKey: ["/api/sales"],
     enabled: isAuthenticated,
@@ -129,7 +131,11 @@ export default function Sales() {
     setEditingSale(null);
   };
 
+  const formatSigned = (n: number) => (n < 0 ? "-" : "") + "$" + Math.abs(n).toFixed(2);
+
   const calculateProfit = (sale: SalesRecord) => {
+    // A return's loss is stored in otherFees/profit
+    if (sale.returnedAt) return parseFloat(sale.profit || "0");
     const salePrice = parseFloat(sale.salePrice || "0");
     const platformFee = parseFloat(sale.platformFee || "0");
     const shippingCost = parseFloat(sale.shippingCost || "0");
@@ -218,13 +224,9 @@ export default function Sales() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  $
-                  {sales
-                    .reduce(
-                      (sum: number, sale: SalesRecord) => sum + calculateProfit(sale),
-                      0,
-                    )
-                    .toFixed(2)}
+                  {formatSigned(
+                    sales.reduce((sum: number, sale: SalesRecord) => sum + calculateProfit(sale), 0),
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -236,7 +238,7 @@ export default function Sales() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{sales.length}</div>
+                <div className="text-2xl font-bold">{sales.filter((s) => !s.returnedAt).length}</div>
               </CardContent>
             </Card>
           </div>
@@ -276,9 +278,12 @@ export default function Sales() {
                             : "N/A"}
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">
-                            {sale.inventoryItemId ? "Linked Item" : "Manual Entry"}
-                          </div>
+                          <div className="font-medium">{sale.itemTitle}</div>
+                          {sale.returnedAt && (
+                            <Badge variant="outline" className="mt-1 border-rose-200 bg-rose-50 text-rose-700">
+                              Returned · was ${sale.returnedSalePrice}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{sale.platform || "-"}</Badge>
@@ -286,8 +291,8 @@ export default function Sales() {
                         <TableCell>${sale.salePrice}</TableCell>
                         <TableCell>${sale.platformFee || "0.00"}</TableCell>
                         <TableCell>${sale.shippingCost || "0.00"}</TableCell>
-                        <TableCell className="font-semibold">
-                          ${calculateProfit(sale).toFixed(2)}
+                        <TableCell className={`font-semibold ${calculateProfit(sale) < 0 ? "text-rose-700" : ""}`}>
+                          {calculateProfit(sale) < 0 ? "-" : ""}${Math.abs(calculateProfit(sale)).toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
@@ -298,6 +303,17 @@ export default function Sales() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
+                            {!sale.returnedAt && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Mark as returned"
+                                aria-label="Mark as returned"
+                                onClick={() => setReturningSale(sale)}
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -316,6 +332,7 @@ export default function Sales() {
           </Card>
         </div>
       </main>
+      <ReturnDialog sale={returningSale} onClose={() => setReturningSale(null)} />
     </div>
   );
 }
