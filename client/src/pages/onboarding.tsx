@@ -7,15 +7,25 @@ import { Button } from "@/components/ui/button";
 import { BadgeCheck, Loader2, LogOut, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/layout/nav-panel";
 import { PLANS, PeriodToggle, PlanCard } from "@/components/billing/plans";
-import { MONEY_BACK_DAYS, SUPPORT_EMAIL, type BillingPeriod, type PaidPlanId } from "@shared/plans";
+import { MONEY_BACK_DAYS, SUPPORT_EMAIL, isBillingPeriod, isPaidPlanId, planPrice, type BillingPeriod, type PaidPlanId } from "@shared/plans";
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuthContext();
   const { checkout, pendingPlan } = useCheckout("onboarding");
 
-  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>("professional");
-  const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  // A plan picked before signing up arrives as ?plan=&period=
+  const [picked] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    const period = params.get("period");
+    return {
+      plan: isPaidPlanId(plan) ? plan : null,
+      period: isBillingPeriod(period) ? period : "monthly",
+    } as { plan: PaidPlanId | null; period: BillingPeriod };
+  });
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlanId>(picked.plan ?? "professional");
+  const [period, setPeriod] = useState<BillingPeriod>(picked.period);
 
   if (authLoading) {
     return (
@@ -63,6 +73,24 @@ export default function Onboarding() {
             Pick the plan that fits your business. Every plan comes with a {MONEY_BACK_DAYS}-day money-back
             guarantee.
           </p>
+          {picked.plan ? (
+            <div className="mx-auto mt-7 max-w-md rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">You picked</p>
+              <p className="mt-1 text-xl font-bold">
+                {PLANS.find((p) => p.id === selectedPlan)?.name} · ${planPrice(selectedPlan, period)}/
+                {period === "monthly" ? "month" : "year"}
+              </p>
+              <Button
+                className="mt-4 h-11 w-full text-base"
+                disabled={pendingPlan !== null}
+                onClick={() => checkout(selectedPlan, period)}
+              >
+                {pendingPlan ? <Loader2 className="animate-spin" /> : null}
+                {pendingPlan ? "Taking you to checkout…" : "Continue to secure checkout"}
+              </Button>
+              <p className="mt-2 text-xs text-muted-foreground">Pay with PayPal or a debit/credit card. Or choose a different plan below.</p>
+            </div>
+          ) : null}
           <div className="mt-6">
             <PeriodToggle value={period} onChange={setPeriod} />
           </div>

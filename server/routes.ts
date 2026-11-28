@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, registerHandler, loginHandler, logoutHandler, currentUserHandler, } from "./auth";
 import { registerTeamRoutes, requireAccountOwner } from "./team";
+import { registerPasswordResetRoutes } from "./passwordReset";
 import { checkTrialExpired } from "./trialMiddleware";
 import { checkSubscriptionLimit } from "./subscriptionMiddleware";
 import { getSubscriptionLimits } from "./subscriptionLimits";
@@ -24,6 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   registerTeamRoutes(app, requireAuth);
+  registerPasswordResetRoutes(app);
 
   // Auth middleware
 
